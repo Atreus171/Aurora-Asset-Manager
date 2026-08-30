@@ -275,7 +275,9 @@ TEXT = {
         "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
-        "m_rename": "Renomear jogo...",
+        "search_title": "Pesquisar título...",
+        "debug_db": "Debug DB",
+        "m_search": "Pesquisar título...",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
         "set_ftp": "Enviar por FTP (console):",
@@ -445,7 +447,9 @@ TEXT = {
         "cover_missing_both": "  cover not found on x360db or XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
-        "m_rename": "Rename game...",
+        "search_title": "Search title...",
+        "debug_db": "Debug DB",
+        "m_search": "Search title...",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
         "set_ftp": "Send via FTP (console):",
@@ -615,7 +619,9 @@ TEXT = {
         "cover_missing_both": "  portada no encontrada en x360db ni XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
-        "m_rename": "Renombrar juego...",
+        "search_title": "Buscar título...",
+        "debug_db": "Debug DB",
+        "m_search": "Buscar título...",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
         "set_ftp": "Enviar por FTP (consola):",
@@ -785,7 +791,9 @@ TEXT = {
         "cover_missing_both": "  jaquette non trouvée sur x360db ni XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
-        "m_rename": "Renommer le jeu...",
+        "search_title": "Rechercher titre...",
+        "debug_db": "Debug DB",
+        "m_search": "Rechercher titre...",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
         "set_ftp": "Envoyer par FTP (console):",
@@ -955,7 +963,9 @@ TEXT = {
         "cover_missing_both": "  x360dbおよびXboxUnityでカバーが見つかりません。",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
-        "m_rename": "ゲーム名を変更...",
+        "search_title": "タイトルを検索...",
+        "debug_db": "DB デバッグ",
+        "m_search": "タイトルを検索...",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
         "set_ftp": "FTPで送信 (コンソール):",
@@ -1125,7 +1135,9 @@ TEXT = {
         "cover_missing_both": "  обложка не найдена ни в x360db, ни в XboxUnity.",
         "sort_asc": "А-Я",
         "sort_desc": "Я-А",
-        "m_rename": "Переименовать игру...",
+        "search_title": "Поиск названия...",
+        "debug_db": "Отладка БД",
+        "m_search": "Поиск названия...",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
         "set_ftp": "Отправить по FTP (консоль):",
@@ -1767,7 +1779,116 @@ def is_installed(tid, kind):
         return False
 
 
+def scan_aurora_db(root, logger=None):
+    """Lê o content.db do Aurora para obter nomes reais dos jogos."""
+    def _log(msg):
+        if logger:
+            logger(msg)
+        else:
+            print(msg)
+    games = []
+    # Tenta vários caminhos comuns do content.db
+    db_paths = [
+        os.path.join(root, "Aurora", "Data", "Databases", "content.db"),
+        os.path.join(root, "Data", "Databases", "content.db"),
+        os.path.join(root, "Aurora", "Data", "content.db"),
+    ]
+    db_path = None
+    for p in db_paths:
+        if os.path.isfile(p):
+            db_path = p
+            break
+    if not db_path:
+        return games
+    
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        conn.row_factory = sqlite3.Row
+        
+        # Tenta descobrir a tabela e colunas corretas
+        tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+        _log(f"  [DB] Tabelas encontradas: {tables}")
+        
+        # Tenta várias tabelas possíveis
+        content_table = None
+        for t in ["Content", "Games", "GameList", "Titles", "ContentItems", "ContentList"]:
+            if t in tables:
+                content_table = t
+                _log(f"  [DB] Usando tabela: {content_table}")
+                break
+        
+        if not content_table:
+            log(f"  [DB] Nenhuma tabela conhecida encontrada")
+            conn.close()
+            return games
+        
+        # Descobre colunas disponíveis
+        cols = [row[1] for row in conn.execute(f"PRAGMA table_info({content_table})")]
+        _log(f"  [DB] Colunas em {content_table}: {cols}")
+        
+        # Mapeia colunas esperadas
+        col_tid = next((c for c in cols if c.lower() in ("titleid", "tid", "title_id")), "TitleID")
+        col_title = next((c for c in cols if c.lower() in ("title", "name", "gamename", "displayname")), "Title")
+        col_dbid = next((c for c in cols if c.lower() in ("databaseid", "dbid", "db_id")), "DatabaseID")
+        col_mediaid = next((c for c in cols if c.lower() in ("mediaid", "media_id")), "MediaID")
+        col_path = next((c for c in cols if c.lower() in ("path", "gamepath", "location", "directory", "dir")), "Path")
+        col_type = next((c for c in cols if c.lower() in ("titletype", "type", "gametype", "title_type")), "TitleType")
+        
+        _log(f"  [DB] Mapeamento: tid={col_tid}, title={col_title}, type={col_type}")
+        
+        # Tenta query sem filtro de tipo primeiro (mais robusto)
+        query = f"""
+            SELECT {col_tid}, {col_title}, {col_dbid}, {col_mediaid}, {col_path}, {col_type}
+            FROM {content_table}
+            ORDER BY {col_title}
+        """
+        
+        _log(f"  [DB] Query: {query}")
+        cur = conn.execute(query)
+        count = 0
+        for row in cur:
+            count += 1
+            tid = (row[col_tid] or "").upper()
+            if not tid or tid == "00000000":
+                continue
+            title = (row[col_title] or "").strip()
+            if not title:
+                continue
+            dname = title
+            path = row[col_path]
+            folder = None
+            if path and os.path.isdir(os.path.join(root, path.lstrip("\\/"))):
+                folder = os.path.join(root, path.lstrip("\\/"))
+            has_cover = False
+            if folder:
+                for fn in os.listdir(folder):
+                    if fn.upper().startswith("GC"):
+                        try:
+                            if os.path.getsize(os.path.join(folder, fn)) >= MIN_ASSET_SIZE:
+                                has_cover = True
+                                break
+                        except OSError:
+                            pass
+            games.append({
+                "folder": folder,
+                "tid": tid,
+                "folder_name": os.path.basename(folder) if folder else tid,
+                "dname": dname,
+                "has_cover": has_cover,
+            })
+        conn.close()
+        _log(f"  [DB] Total jogos carregados: {len(games)} (de {count} linhas)")
+    except Exception as e:
+        _log(f"  [DB] Erro ao ler banco: {e}")
+    return games
+
+
 def scan_aurora(root):
+    # Primeiro tenta ler do SQLite do Aurora (nomes reais)
+    games = scan_aurora_db(root, logger=lambda m: log(m))
+    if games:
+        return games
+    # Fallback: escaneia pastas GameData
     games = []
     gamedata = os.path.join(root, "Data", "GameData")
     if not os.path.isdir(gamedata):
@@ -2098,6 +2219,14 @@ class App:
             btn_row, text=tr("sort_asc"), command=self.toggle_sort
         )
         self.btn_sort.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_search = ttk.Button(
+            btn_row, text=tr("search_title"), command=self.search_title, state=tk.DISABLED
+        )
+        self.btn_search.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_debug_db = ttk.Button(
+            btn_row, text=tr("debug_db"), command=self.debug_database, state=tk.DISABLED
+        )
+        self.btn_debug_db.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_cancel = ttk.Button(btn_row, text=tr("cancel"), command=self.cancel_worker, state=tk.DISABLED)
         self.btn_cancel.pack(side=tk.LEFT, padx=(8, 0))
         tk.Label(
@@ -2426,6 +2555,75 @@ class App:
             pass
         self.refresh_tree()
 
+    def search_title(self):
+        g = self.selected_game()
+        if not g:
+            return
+        tid = g["tid"]
+        # Busca no x360db
+        name = self.db.title_name(tid)
+        if name != tid:
+            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {name} (x360db)")
+            return
+        # Busca no XboxUnity
+        unity_name = self.unity.get_best_title(tid)
+        if unity_name:
+            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {unity_name} (XboxUnity)")
+            return
+        # Fallback: dname
+        if g.get("dname"):
+            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {g['dname']} (pasta)")
+            return
+        messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {tid} (não encontrado)")
+
+    def debug_database(self):
+        path = self.aurora_path.get().strip().strip('"')
+        if not path or not os.path.isdir(path):
+            messagebox.showerror(tr("warn"), tr("pick_aurora"))
+            return
+        import sqlite3
+        db_paths = [
+            os.path.join(path, "Aurora", "Data", "Databases", "content.db"),
+            os.path.join(path, "Data", "Databases", "content.db"),
+            os.path.join(path, "Aurora", "Data", "content.db"),
+        ]
+        db_path = None
+        for p in db_paths:
+            if os.path.isfile(p):
+                db_path = p
+                break
+        if not db_path:
+            messagebox.showerror(tr("debug_db"), "content.db não encontrado")
+            return
+        try:
+            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+            info = f"DB: {db_path}\n\nTabelas:\n"
+            for t in tables:
+                cols = [row[1] for row in conn.execute(f"PRAGMA table_info({t})")]
+                info += f"\n{t}: {cols}"
+                # Sample data
+                try:
+                    sample = conn.execute(f"SELECT * FROM {t} LIMIT 3").fetchall()
+                    if sample:
+                        info += f"\n  Exemplo: {sample}"
+                except:
+                    pass
+            conn.close()
+            # Show in a scrollable dialog
+            dlg = tk.Toplevel(self.root)
+            dlg.title(tr("debug_db"))
+            dlg.geometry("800x600")
+            txt = tk.Text(dlg, wrap="word")
+            txt.pack(fill=tk.BOTH, expand=True)
+            txt.insert("1.0", info)
+            txt.configure(state=tk.DISABLED)
+            sb = ttk.Scrollbar(dlg, command=txt.yview)
+            sb.pack(side=tk.RIGHT, fill=tk.Y)
+            txt.configure(yscrollcommand=sb.set)
+        except Exception as e:
+            messagebox.showerror(tr("debug_db"), f"Erro: {e}")
+
     def rename_game(self, g):
         current = self.game_title(g)
         name = simpledialog.askstring(
@@ -2473,9 +2671,13 @@ class App:
         g = self.selected_game()
         if g is None:
             self.btn_custom.configure(state=tk.DISABLED)
+            self.btn_search.configure(state=tk.DISABLED)
+            self.btn_debug_db.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
         self.btn_custom.configure(state=tk.NORMAL)
+        self.btn_search.configure(state=tk.NORMAL)
+        self.btn_debug_db.configure(state=tk.NORMAL)
         self.show_preview(g)
 
     def load_cover(self, g):
@@ -3038,7 +3240,7 @@ class App:
         add_row(tr("ftp_base_lbl"), ftp_base_ent)
 
         # Credits
-        ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pay=(12, 4))
+        ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(12, 4))
         row_idx += 1
         tk.Label(
             outer,
@@ -3112,8 +3314,6 @@ class App:
             except Exception as exc:
                 messagebox.showerror(tr("warn"), tr("save_fail", exc))
 
-        bf = ttk.Frame(outer)
-        bf.pack(pady=(8, 0))
         ttk.Button(bf, text=tr("save"), command=_save).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("cancel2"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
         dlg.grab_set()
