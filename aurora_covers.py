@@ -2872,118 +2872,130 @@ class App:
         outer = ttk.Frame(dlg, padding=12)
         outer.pack(fill=tk.BOTH, expand=True)
 
-        def row(parent, label_text, widget, padx=0):
-            r = ttk.Frame(parent)
-            r.pack(fill=tk.X, pady=4)
-            ttk.Label(r, text=label_text).pack(anchor="w")
-            widget.pack(anchor="w", padx=padx)
+        # Two-column grid: label (col 0), control (col 1)
+        row_idx = 0
+
+        def add_row(label_text, widget, colspan=1):
+            nonlocal row_idx
+            ttk.Label(outer, text=label_text).grid(row=row_idx, column=0, sticky="w", pady=4, padx=(0, 12))
+            if colspan == 1:
+                widget.grid(row=row_idx, column=1, sticky="w", pady=4)
+            else:
+                widget.grid(row=row_idx, column=1, columnspan=colspan, sticky="ew", pady=4)
+            row_idx += 1
+
+        def add_section(title):
+            nonlocal row_idx
+            if row_idx > 0:
+                ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(8, 4))
+                row_idx += 1
+            ttk.Label(outer, text=title, font=("Segoe UI", 9, "bold")).grid(row=row_idx, column=0, columnspan=2, sticky="w", pady=(0, 4))
+            row_idx += 1
+
+        outer.columnconfigure(1, weight=1)
+
+        # General
+        add_section(tr("set_title"))
 
         theme_var = tk.StringVar(value=self.theme)
         tf = ttk.Frame(outer)
-        tf.pack(fill=tk.X, pady=4)
-        ttk.Label(tf, text=tr("set_theme")).pack(anchor="w")
-        r = ttk.Frame(tf)
-        r.pack(anchor="w", pady=(2, 0))
-        ttk.Radiobutton(r, text=tr("theme_dark"), variable=theme_var, value="escuro").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(r, text=tr("theme_light"), variable=theme_var, value="claro").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(r, text=tr("theme_system"), variable=theme_var, value="sistema").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(tf, text=tr("theme_dark"), variable=theme_var, value="escuro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(tf, text=tr("theme_light"), variable=theme_var, value="claro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(tf, text=tr("theme_system"), variable=theme_var, value="sistema").pack(side=tk.LEFT, padx=6)
+        add_row(tr("set_theme"), tf)
 
         lang_var = tk.StringVar(value=CURRENT_LANG)
         lf = ttk.Frame(outer)
-        lf.pack(fill=tk.X, pady=4)
-        ttk.Label(lf, text=tr("set_lang")).pack(anchor="w")
-        r = ttk.Frame(lf)
-        r.pack(anchor="w", pady=(2, 0))
         for code, name in LANGUAGES.items():
-            ttk.Radiobutton(r, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
+            ttk.Radiobutton(lf, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
+        add_row(tr("set_lang"), lf)
 
         show_status_var = tk.BooleanVar(value=self.show_status)
         show_log_var = tk.BooleanVar(value=self.show_log)
         sf2 = ttk.Frame(outer)
-        sf2.pack(fill=tk.X, pady=4)
         ttk.Checkbutton(sf2, text=tr("set_show_status"), variable=show_status_var).pack(anchor="w")
         ttk.Checkbutton(sf2, text=tr("set_log"), variable=show_log_var).pack(anchor="w")
+        add_row(tr("set_show_status"), sf2)
+
+        # Covers
+        add_section(tr("set_repo"))
 
         repo_var = tk.StringVar(value=self.repo)
         rf = ttk.Frame(outer)
-        rf.pack(fill=tk.X, pady=4)
-        ttk.Label(rf, text=tr("set_repo")).pack(anchor="w")
-        r = ttk.Frame(rf)
-        r.pack(anchor="w", pady=(2, 0))
-        ttk.Radiobutton(r, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(r, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
+        add_row(tr("set_repo"), rf)
 
         f_var = tk.StringVar(value=self.cover_format)
         cf = ttk.Frame(outer)
-        cf.pack(fill=tk.X, pady=4)
-        ttk.Label(cf, text=tr("set_format")).pack(anchor="w")
-        r = ttk.Frame(cf)
-        r.pack(anchor="w", pady=(2, 0))
-        ttk.Radiobutton(r, text=tr("format_portrait"), variable=f_var, value="retrato").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(r, text=tr("format_landscape"), variable=f_var, value="paisagem").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(cf, text=tr("format_portrait"), variable=f_var, value="retrato").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(cf, text=tr("format_landscape"), variable=f_var, value="paisagem").pack(side=tk.LEFT, padx=6)
+        add_row(tr("set_format"), cf)
 
         sf = ttk.Frame(outer)
-        sf.pack(fill=tk.X, pady=4)
-        ttk.Label(sf, text=tr("set_screenshots")).pack(anchor="w")
         spin = ttk.Spinbox(sf, from_=0, to=20, width=4)
         spin.set(str(self.ss_max))
-        spin.pack(anchor="w", pady=(2, 0))
+        spin.pack(anchor="w")
+        add_row(tr("set_screenshots"), sf)
 
-        regf = ttk.Frame(outer)
-        regf.pack(fill=tk.X, pady=4)
-        ttk.Label(regf, text=tr("set_region")).pack(anchor="w")
+        # Region
+        add_section(tr("set_region"))
+
         region_names = list(REGIONS.values())
         region_codes = list(REGIONS.keys())
         region_var = tk.StringVar(
             value=REGIONS.get(self.region, REGIONS.get("global"))
         )
         region_box = ttk.Combobox(
-            regf, values=region_names, state="readonly", width=24,
+            outer, values=region_names, state="readonly", width=24,
+            textvariable=region_var,
         )
         region_box.set(REGIONS.get(self.region, REGIONS.get("global")))
-        region_box.pack(anchor="w", pady=(2, 0))
-        ttk.Label(
-            outer, text=tr("region_note"), wraplength=430,
-        ).pack(pady=(0, 8), fill=tk.X)
+        add_row(tr("set_region"), region_box)
 
-        ftf = ttk.Frame(outer)
-        ftf.pack(fill=tk.X, pady=(0, 8))
-        ttk.Label(ftf, text=tr("set_ftp")).pack(anchor="w")
-        g1 = ttk.Frame(ftf)
-        g1.pack(fill=tk.X, pady=(4, 0))
-        ttk.Label(g1, text=tr("ftp_host_lbl")).pack(anchor="w")
-        ftp_host_ent = ttk.Entry(g1, width=16)
+        note_lbl = ttk.Label(outer, text=tr("region_note"), wraplength=460)
+        note_lbl.grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        row_idx += 1
+
+        # FTP
+        add_section(tr("set_ftp"))
+
+        ftp_host_ent = ttk.Entry(outer, width=16)
         ftp_host_ent.insert(0, self.ftp_host)
-        ftp_host_ent.pack(anchor="w", pady=(2, 0))
-        ttk.Label(g1, text=tr("ftp_port_lbl")).pack(anchor="w")
-        ftp_port_ent = ttk.Entry(g1, width=6)
-        ftp_port_ent.insert(0, str(self.ftp_port))
-        ftp_port_ent.pack(anchor="w", pady=(2, 0))
-        ttk.Label(g1, text=tr("ftp_user_lbl")).pack(anchor="w")
-        ftp_user_ent = ttk.Entry(g1, width=10)
-        ftp_user_ent.insert(0, self.ftp_user)
-        ftp_user_ent.pack(anchor="w", pady=(2, 0))
-        ttk.Label(g1, text=tr("ftp_pass_lbl")).pack(anchor="w")
-        ftp_pass_ent = ttk.Entry(g1, width=10, show="*")
-        ftp_pass_ent.insert(0, self.ftp_pass)
-        ftp_pass_ent.pack(anchor="w", pady=(2, 0))
-        ttk.Label(g1, text=tr("ftp_base_lbl")).pack(anchor="w")
-        ftp_base_ent = ttk.Entry(g1)
-        ftp_base_ent.insert(0, self.ftp_base)
-        ftp_base_ent.pack(anchor="w", fill=tk.X, pady=(2, 0))
+        add_row(tr("ftp_host_lbl"), ftp_host_ent)
 
-        # Credits section
-        cred_f = ttk.Frame(outer)
-        cred_f.pack(pady=(12, 0), fill=tk.X)
-        ttk.Separator(cred_f, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(0, 8))
+        ftp_port_ent = ttk.Entry(outer, width=6)
+        ftp_port_ent.insert(0, str(self.ftp_port))
+        add_row(tr("ftp_port_lbl"), ftp_port_ent)
+
+        ftp_user_ent = ttk.Entry(outer, width=10)
+        ftp_user_ent.insert(0, self.ftp_user)
+        add_row(tr("ftp_user_lbl"), ftp_user_ent)
+
+        ftp_pass_ent = ttk.Entry(outer, width=10, show="*")
+        ftp_pass_ent.insert(0, self.ftp_pass)
+        add_row(tr("ftp_pass_lbl"), ftp_pass_ent)
+
+        ftp_base_ent = ttk.Entry(outer)
+        ftp_base_ent.insert(0, self.ftp_base)
+        add_row(tr("ftp_base_lbl"), ftp_base_ent)
+
+        # Credits
+        ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(12, 4))
+        row_idx += 1
         tk.Label(
-            cred_f,
+            outer,
             text=tr("credits"),
             justify=tk.CENTER,
             fg=th.get("fg", "#ffffff"),
             bg=th["bg"],
             font=("Segoe UI", 8),
-        ).pack()
+        ).grid(row=row_idx, column=0, columnspan=2, pady=(0, 8))
+        row_idx += 1
+
+        # Buttons
+        bf = ttk.Frame(outer)
+        bf.grid(row=row_idx, column=0, columnspan=2, pady=(8, 0))
 
         def _save():
             try:
