@@ -237,13 +237,6 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/Atreus171/Aurora-Asset-Manager/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Atreus171/Aurora-Asset-Manager/discussions)
-
----
-
 <p align="center">
   Made with ❤️ for the Xbox 360 homebrew community
 </p>
