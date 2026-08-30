@@ -2304,6 +2304,7 @@ class App:
         path = filedialog.askdirectory(title=tr("aurora_folder"))
         if path:
             self.aurora_path.set(path)
+            self.root.after(100, self.start_scan)
 
     def set_busy(self, busy):
         self.busy = busy
@@ -3608,6 +3609,7 @@ class App:
         self._alt_dlg = dlg
         self._alt_lb = lb
         self._alt_msg = msg
+        self._alt_g = g
         dlg.protocol("WM_DELETE_WINDOW", self._close_alt_dlg)
         threading.Thread(target=self._alt_fetch, args=(tid,), daemon=True).start()
 
@@ -3622,6 +3624,7 @@ class App:
         self._alt_msg = None
         self._alt_preview = None
         self._alt_photo = None
+        self._alt_g = None
 
     def _alt_fetch(self, tid):
         try:
@@ -3711,7 +3714,7 @@ class App:
             self._alt_preview.configure(image="", text="Sem preview")
 
     def _alt_install_sel(self):
-        if self.busy or self._alt_lb is None:
+        if self.busy or self._alt_lb is None or self._alt_g is None:
             return
         sel = self._alt_lb.curselection()
         if not sel:
@@ -3719,9 +3722,7 @@ class App:
                 self._alt_msg.configure(text="Selecione uma capa primeiro.")
             return
         item = self._alt_items[sel[0]]
-        g = self.item_to_game.get(self.tree.selection()[0]) if self.tree.selection() else None
-        if g is None:
-            return
+        g = self._alt_g
         path = self.aurora_path.get().strip().strip('"')
         if self._alt_msg is not None:
             self._alt_msg.configure(text="Baixando...")
