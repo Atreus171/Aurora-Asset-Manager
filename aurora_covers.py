@@ -94,6 +94,7 @@ DEFAULT_CONFIG = {
     "show_status": True,
     "show_log": True,
     "auto_search_titles": True,
+    "show_debug_button": False,
     "ftp_host": "",
     "ftp_port": 21,
     "ftp_user": "xbox",
@@ -279,6 +280,7 @@ TEXT = {
         "search_title": "Pesquisar título...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
+        "show_debug_button": "Mostrar botão Debug DB",
         "m_search": "Pesquisar título...",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
@@ -452,6 +454,7 @@ TEXT = {
         "search_title": "Search title...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Auto-search titles (XboxUnity)",
+        "show_debug_button": "Show Debug DB button",
         "m_search": "Search title...",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
@@ -625,6 +628,7 @@ TEXT = {
         "search_title": "Buscar título...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
+        "show_debug_button": "Mostrar botón Debug DB",
         "m_search": "Buscar título...",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
@@ -798,6 +802,7 @@ TEXT = {
         "search_title": "Rechercher titre...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Recherche auto des titres (XboxUnity)",
+        "show_debug_button": "Afficher bouton Debug DB",
         "m_search": "Rechercher titre...",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
@@ -971,6 +976,7 @@ TEXT = {
         "search_title": "タイトルを検索...",
         "debug_db": "DB デバッグ",
         "auto_search_titles": "タイトル自動検索 (XboxUnity)",
+        "show_debug_button": "Debug DB ボタンを表示",
         "m_search": "タイトルを検索...",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
@@ -1144,6 +1150,7 @@ TEXT = {
         "search_title": "Поиск названия...",
         "debug_db": "Отладка БД",
         "auto_search_titles": "Автопоиск названий (XboxUnity)",
+        "show_debug_button": "Показать кнопку Debug DB",
         "m_search": "Поиск названия...",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
@@ -2087,6 +2094,7 @@ def selftest():
         "show_status": True,
         "show_log": True,
         "auto_search_titles": True,
+        "show_debug_button": False,
         "ftp_host": "",
         "ftp_port": 21,
         "ftp_user": "xbox",
@@ -2392,6 +2400,10 @@ class App:
         self.apply_show_log()
         self._paint_status()
         self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
+        if self.cfg.get("show_debug_button", False):
+            self.btn_debug_db.configure(state=tk.NORMAL)
+        else:
+            self.btn_debug_db.configure(state=tk.DISABLED)
         self.root.after(0, self.apply_theme)
 
     def log(self, message):
@@ -3313,6 +3325,9 @@ class App:
         auto_search_var = tk.BooleanVar(value=self.cfg.get("auto_search_titles", True))
         add_row(tr("auto_search_titles"), ttk.Checkbutton(outer, text=tr("auto_search_titles"), variable=auto_search_var))
 
+        show_debug_var = tk.BooleanVar(value=self.cfg.get("show_debug_button", False))
+        add_row(tr("show_debug_button"), ttk.Checkbutton(outer, text=tr("show_debug_button"), variable=show_debug_var))
+
         # FTP
         add_section(tr("set_ftp"))
 
@@ -3386,6 +3401,7 @@ class App:
                     show_status=self.show_status,
                     show_log=self.show_log,
                     auto_search_titles=bool(auto_search_var.get()),
+                    show_debug_button=bool(show_debug_var.get()),
                     ftp_host=self.ftp_host,
                     ftp_port=self.ftp_port,
                     ftp_user=self.ftp_user,
