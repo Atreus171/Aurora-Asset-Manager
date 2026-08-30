@@ -93,7 +93,6 @@ DEFAULT_CONFIG = {
     "lang": "pt",
     "show_status": True,
     "show_log": True,
-    "region": "global",
     "ftp_host": "",
     "ftp_port": 21,
     "ftp_user": "xbox",
@@ -104,7 +103,7 @@ DEFAULT_CONFIG = {
 def detect_system_lang():
     try:
         import locale
-        lang_code, _ = locale.getdefaultlocale()
+        lang_code = locale.getlocale()[0]
         if lang_code:
             lang_code = lang_code.lower().split('_')[0]
             if lang_code in LANGUAGES:
@@ -123,16 +122,6 @@ LANGUAGES = {
     "fr": "Français",
     "ja": "日本語",
     "ru": "Русский",
-}
-
-REGIONS = {
-    "global": "Global",
-    "br": "Brasil (Português)",
-    "us": "EUA (Inglês)",
-    "uk": "Reino Unido (Inglês)",
-    "de": "Alemanha (Alemão)",
-    "fr": "França (Francês)",
-    "es": "Espanha (Espanhol)",
 }
 
 TEXT = {
@@ -283,9 +272,7 @@ TEXT = {
         "no_games_notice": "Nenhum jogo precisa de download.",
         "done_notice": "Concluído! No Xbox: boot Aurora e aperte Y -> Refresh no jogo (ou use Import).",
         "set_log": "Mostrar log (caixa de texto)",
-        "set_region": "Região (capa/descrição):",
-        "region_note": "Nota: as fontes atuais (x360db e XboxUnity) só oferecem capas/descrições em inglês; a região fica salva e será usada quando houver suporte.",
-        "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity (região: %s).",
+        "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "m_rename": "Renomear jogo...",
@@ -369,7 +356,7 @@ TEXT = {
         "format_portrait": "Portrait (900x1233)",
         "format_landscape": "Landscape (900x600)",
         "set_screenshots": "Screenshots per game:",
-        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d, region: %s).",
+        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d).",
         "save": "Save",
         "cancel2": "Cancel",
         "restart_title": "Restart app",
@@ -447,7 +434,7 @@ TEXT = {
         "alt_failed": "Failed to install the cover.",
         "alt_select_first": "Select a cover first.",
         "alt_downloading": "Downloading...",
-        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d, region: %s).",
+        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d).",
         "canceled": "Operation cancelled by the user.",
         "unity_fallback": "XboxUnity has no usable cover; using x360db as fallback.",
         "unity_no_cover": "XboxUnity has no covers for %s; using x360db as fallback.",
@@ -455,9 +442,7 @@ TEXT = {
         "no_games_notice": "No games need a download.",
         "done_notice": "Done! On the Xbox: boot Aurora and press Y -> Refresh on the game (or use Import).",
         "set_log": "Show log (text box)",
-        "set_region": "Region (cover/description):",
-        "region_note": "Note: the current sources (x360db and XboxUnity) only offer covers/descriptions in English; the region is saved and will be used when supported.",
-        "cover_missing_both": "  cover not found on x360db or XboxUnity (region: %s).",
+        "cover_missing_both": "  cover not found on x360db or XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "m_rename": "Rename game...",
@@ -619,7 +604,7 @@ TEXT = {
         "alt_failed": "Falló la instalación de la portada.",
         "alt_select_first": "Seleccione una portada primero.",
         "alt_downloading": "Descargando...",
-        "status_saved": "Configuración guardada (tema: %s, repo: %s, portada: %s, screenshots: %d, región: %s).",
+        "status_saved": "Configuración guardada (tema: %s, repo: %s, portada: %s, screenshots: %d).",
         "canceled": "Operación cancelada por el usuario.",
         "unity_fallback": "XboxUnity sin portada usable; usando x360db como alternativa.",
         "unity_no_cover": "XboxUnity sin portadas para %s; usando x360db como alternativa.",
@@ -627,9 +612,7 @@ TEXT = {
         "no_games_notice": "Ningún juego necesita descarga.",
         "done_notice": "¡Hecho! En Xbox: inicie Aurora y pulse Y -> Refresh en el juego (o use Import).",
         "set_log": "Mostrar registro (cuadro de texto)",
-        "set_region": "Región (portada/descripción):",
-        "region_note": "Nota: las fuentes actuales (x360db y XboxUnity) solo ofrecen portadas/descripciones en inglés; la región se guarda y se usará cuando haya soporte.",
-        "cover_missing_both": "  portada no encontrada en x360db ni XboxUnity (región: %s).",
+        "cover_missing_both": "  portada no encontrada en x360db ni XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "m_rename": "Renombrar juego...",
@@ -791,7 +774,7 @@ TEXT = {
         "alt_failed": "Échec de l'installation de la jaquette.",
         "alt_select_first": "Sélectionnez une jaquette d'abord.",
         "alt_downloading": "Téléchargement...",
-        "status_saved": "Paramètres enregistrés (thème: %s, dépôt: %s, jaquette: %s, captures: %d, région: %s).",
+        "status_saved": "Paramètres enregistrés (thème: %s, dépôt: %s, jaquette: %s, captures: %d).",
         "canceled": "Opération annulée par l'utilisateur.",
         "unity_fallback": "XboxUnity sans jaquette utilisable; utilisation de x360db comme alternative.",
         "unity_no_cover": "XboxUnity sans jaquettes pour %s; utilisation de x360db comme alternative.",
@@ -799,9 +782,7 @@ TEXT = {
         "no_games_notice": "Aucun jeu ne nécessite de téléchargement.",
         "done_notice": "Terminé! Sur Xbox: démarrez Aurora et appuyez Y -> Refresh sur le jeu (ou utilisez Import).",
         "set_log": "Afficher le journal (zone de texte)",
-        "set_region": "Région (jaquette/description):",
-        "region_note": "Note: les sources actuelles (x360db et XboxUnity) n'offrent que des jaquettes/descriptions en anglais; la région est sauvegardée et sera utilisée quand supportée.",
-        "cover_missing_both": "  jaquette non trouvée sur x360db ni XboxUnity (région: %s).",
+        "cover_missing_both": "  jaquette non trouvée sur x360db ni XboxUnity.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "m_rename": "Renommer le jeu...",
@@ -963,7 +944,7 @@ TEXT = {
         "alt_failed": "カバーのインストールに失敗しました。",
         "alt_select_first": "まずカバーを選択してください。",
         "alt_downloading": "ダウンロード中...",
-        "status_saved": "設定を保存しました (テーマ: %s, リポジトリ: %s, カバー: %s, スクリーンショット: %d, 地域: %s)。",
+        "status_saved": "設定を保存しました (テーマ: %s, リポジトリ: %s, カバー: %s, スクリーンショット: %d)。",
         "canceled": "ユーザーによって操作がキャンセルされました。",
         "unity_fallback": "XboxUnityに使用可能なカバーなし; x360dbを代替として使用。",
         "unity_no_cover": "XboxUnityに%sのカバーなし; x360dbを代替として使用。",
@@ -971,9 +952,7 @@ TEXT = {
         "no_games_notice": "ダウンロードが必要なゲームはありません。",
         "done_notice": "完了! Xboxで: Auroraを起動し Y -> Refreshを押す (またはImportを使用)。",
         "set_log": "ログを表示 (テキストボックス)",
-        "set_region": "地域 (カバー/説明):",
-        "region_note": "注意: 現在のソース(x360dbとXboxUnity)は英語のカバー/説明のみ提供; 地域は保存され、サポート時に使用されます。",
-        "cover_missing_both": "  x360dbおよびXboxUnityでカバーが見つかりません (地域: %s)。",
+        "cover_missing_both": "  x360dbおよびXboxUnityでカバーが見つかりません。",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "m_rename": "ゲーム名を変更...",
@@ -1135,7 +1114,7 @@ TEXT = {
         "alt_failed": "Ошибка установки обложки.",
         "alt_select_first": "Сначала выберите обложку.",
         "alt_downloading": "Загрузка...",
-        "status_saved": "Настройки сохранены (тема: %s, репозиторий: %s, обложка: %s, скриншоты: %d, регион: %s).",
+        "status_saved": "Настройки сохранены (тема: %s, репозиторий: %s, обложка: %s, скриншоты: %d).",
         "canceled": "Операция отменена пользователем.",
         "unity_fallback": "На XboxUnity нет подходящей обложки; используется x360db как запасной.",
         "unity_no_cover": "На XboxUnity нет обложек для %s; используется x360db как запасной.",
@@ -1143,9 +1122,7 @@ TEXT = {
         "no_games_notice": "Нет игр, требующих загрузки.",
         "done_notice": "Готово! На Xbox: запустите Aurora и нажмите Y -> Refresh в игре (или используйте Import).",
         "set_log": "Показать лог (текстовое поле)",
-        "set_region": "Регион (обложка/описание):",
-        "region_note": "Примечание: текущие источники (x360db и XboxUnity) предоставляют обложки/описания только на английском; регион сохраняется и будет использован при поддержке.",
-        "cover_missing_both": "  обложка не найдена ни в x360db, ни в XboxUnity (регион: %s).",
+        "cover_missing_both": "  обложка не найдена ни в x360db, ни в XboxUnity.",
         "sort_asc": "А-Я",
         "sort_desc": "Я-А",
         "m_rename": "Переименовать игру...",
@@ -1881,19 +1858,18 @@ def selftest():
 
     cfg = {
         "theme": "escuro",
-        "repo": "x360db",
-        "cover_format": "paisagem",
-        "screenshots": 6,
-        "lang": "pt",
-        "show_status": True,
-        "show_log": True,
-        "region": "global",
-        "ftp_host": "",
-        "ftp_port": 21,
-        "ftp_user": "xbox",
-        "ftp_pass": "xbox",
-        "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
-    }
+"repo": "x360db",
+    "cover_format": "paisagem",
+    "screenshots": SS_MAX_DEFAULT,
+    "lang": "pt",
+    "show_status": True,
+    "show_log": True,
+    "ftp_host": "",
+    "ftp_port": 21,
+    "ftp_user": "xbox",
+    "ftp_pass": "xbox",
+    "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
+}
     assert dict(DEFAULT_CONFIG) == cfg
     _old_lang = globals()["CURRENT_LANG"]
     globals()["CURRENT_LANG"] = "pt"
@@ -1938,7 +1914,6 @@ class App:
         CURRENT_LANG = "pt"
         self.show_status = True
         self.show_log = True
-        self.region = "global"
         self.ftp_host = ""
         self.ftp_port = 21
         self.ftp_user = "xbox"
@@ -2172,7 +2147,6 @@ class App:
             CURRENT_LANG = self.lang if self.lang in TEXT else "pt"
             self.show_status = bool(cfg.get("show_status", True))
             self.show_log = bool(cfg.get("show_log", True))
-            self.region = cfg.get("region", "global")
             self.ftp_host = str(cfg.get("ftp_host", ""))
             self.ftp_port = int(cfg.get("ftp_port", 21))
             self.ftp_user = str(cfg.get("ftp_user", "xbox"))
@@ -2417,6 +2391,8 @@ class App:
         clean = re.sub(r"\s+", " ", clean).strip()
         if not clean:
             return
+        if clean == current:
+            return
         if g["folder"]:
             parent = os.path.dirname(g["folder"])
             new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
@@ -2427,6 +2403,7 @@ class App:
                 return
             g["folder"] = new_folder
             g["folder_name"] = os.path.basename(new_folder)
+            self.log("Renamed folder: %s -> %s" % (g["folder_name"], os.path.basename(new_folder)))
         g["dname"] = clean
         self.log(tr("renamed", self.db.title_name(g["tid"]), clean))
         self.refresh_tree()
@@ -2647,7 +2624,7 @@ class App:
                 b = self.db.download_artwork(tid, "boxart")
                 if b:
                     return b
-                self.log(tr("cover_missing_both", self.region_label()))
+                self.log(tr("cover_missing_both"))
                 return None
             b = self.db.download_artwork(tid, "boxart")
             if b:
@@ -2655,7 +2632,7 @@ class App:
             b = self._unity_cover(tid)
             if b:
                 return b
-            self.log(tr("cover_missing_both", self.region_label()))
+            self.log(tr("cover_missing_both"))
             return None
         except Exception as exc:
             self.log("  erro ao buscar capa: %s" % exc)
@@ -2679,9 +2656,6 @@ class App:
                 return b
         self.log(tr("unity_fallback") + " (%s)" % tid)
         return None
-
-    def region_label(self):
-        return REGIONS.get(self.region, self.region or "global")
 
     def download_kind(self, path, g, kind):
         tid = g["tid"]
@@ -2991,25 +2965,6 @@ class App:
         spin.pack(anchor="w")
         add_row(tr("set_screenshots"), sf)
 
-        # Region
-        add_section(tr("set_region"))
-
-        region_names = list(REGIONS.values())
-        region_codes = list(REGIONS.keys())
-        region_var = tk.StringVar(
-            value=REGIONS.get(self.region, REGIONS.get("global"))
-        )
-        region_box = ttk.Combobox(
-            outer, values=region_names, state="readonly", width=24,
-            textvariable=region_var,
-        )
-        region_box.set(REGIONS.get(self.region, REGIONS.get("global")))
-        add_row(tr("set_region"), region_box)
-
-        note_lbl = ttk.Label(outer, text=tr("region_note"), wraplength=460)
-        note_lbl.grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(0, 8))
-        row_idx += 1
-
         # FTP
         add_section(tr("set_ftp"))
 
@@ -3034,7 +2989,7 @@ class App:
         add_row(tr("ftp_base_lbl"), ftp_base_ent)
 
         # Credits
-        ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(12, 4))
+        ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pay=(12, 4))
         row_idx += 1
         tk.Label(
             outer,
@@ -3058,12 +3013,6 @@ class App:
                 new_lang = lang_var.get()
                 new_show = bool(show_status_var.get())
                 new_log = bool(show_log_var.get())
-                sel_region = region_box.get()
-                new_region = (
-                    region_codes[region_names.index(sel_region)]
-                    if sel_region in region_names
-                    else "global"
-                )
                 try:
                     self.ss_max = max(0, min(20, int(spin.get().strip() or self.ss_max)))
                 except ValueError:
@@ -3072,7 +3021,6 @@ class App:
                 changed_lang = new_lang != CURRENT_LANG
                 self.show_status = new_show
                 self.show_log = new_log
-                self.region = new_region
                 self.ftp_host = ftp_host_ent.get().strip()
                 try:
                     self.ftp_port = max(1, int(ftp_port_ent.get().strip() or 21))
@@ -3089,7 +3037,6 @@ class App:
                     lang=new_lang,
                     show_status=self.show_status,
                     show_log=self.show_log,
-                    region=self.region,
                     ftp_host=self.ftp_host,
                     ftp_port=self.ftp_port,
                     ftp_user=self.ftp_user,
@@ -3108,7 +3055,6 @@ class App:
                         self.repo,
                         self.cover_format,
                         self.ss_max,
-                        self.region_label(),
                     )
                 )
                 dlg.destroy()
