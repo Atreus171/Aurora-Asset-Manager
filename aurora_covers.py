@@ -1926,24 +1926,24 @@ class App:
     def __init__(self, root):
         self.root = root
         self.queue = queue.Queue()
-        self.db = X360DB()
-        self.unity = XboxUnity()
-        self.cfg = load_config()
-        self.theme = self.cfg.get("theme", "escuro")
-        self.repo = self.cfg.get("repo", "x360db")
-        self.cover_format = self.cfg.get("cover_format", "paisagem")
-        self.ss_max = int(self.cfg.get("screenshots", SS_MAX_DEFAULT))
-        self.lang = self.cfg.get("lang", "pt")
+        self._db = None
+        self._unity = None
+        self.cfg = {}
+        self.theme = "escuro"
+        self.repo = "x360db"
+        self.cover_format = "paisagem"
+        self.ss_max = SS_MAX_DEFAULT
+        self.lang = "pt"
         global CURRENT_LANG
-        CURRENT_LANG = self.lang if self.lang in TEXT else "pt"
-        self.show_status = bool(self.cfg.get("show_status", True))
-        self.show_log = bool(self.cfg.get("show_log", True))
-        self.region = self.cfg.get("region", "global")
-        self.ftp_host = str(self.cfg.get("ftp_host", ""))
-        self.ftp_port = int(self.cfg.get("ftp_port", 21))
-        self.ftp_user = str(self.cfg.get("ftp_user", "xbox"))
-        self.ftp_pass = str(self.cfg.get("ftp_pass", "xbox"))
-        self.ftp_base = str(self.cfg.get("ftp_base", "Hdd:\\Aurora\\Data\\GameData"))
+        CURRENT_LANG = "pt"
+        self.show_status = True
+        self.show_log = True
+        self.region = "global"
+        self.ftp_host = ""
+        self.ftp_port = 21
+        self.ftp_user = "xbox"
+        self.ftp_pass = "xbox"
+        self.ftp_base = "Hdd:\\Aurora\\Data\\GameData"
         self.sort_asc = True
         self.cancel_event = threading.Event()
         self.unity_status = "checking"
@@ -1994,10 +1994,31 @@ class App:
         if screen_h <= 720:
             root.state("zoomed")
         root.minsize(860, 560)
-        root.update_idletasks()
 
         frm = ttk.Frame(root, padding=8)
         frm.pack(fill=tk.BOTH, expand=True)
+
+        self._build_ui(frm)
+        self._load_config_async()
+        self.root.after(100, self.poll_queue)
+        threading.Thread(target=self.load_db, daemon=True).start()
+        threading.Thread(target=self.status_loop, daemon=True).start()
+        threading.Thread(target=self.theme_loop, daemon=True).start()
+        self.root.after(0, self.apply_theme)
+
+    @property
+    def db(self):
+        if self._db is None:
+            self._db = X360DB()
+        return self._db
+
+    @property
+    def unity(self):
+        if self._unity is None:
+            self._unity = XboxUnity()
+        return self._unity
+
+    def _build_ui(self, frm):
 
         self.status_row = ttk.Frame(frm)
         ttk.Label(self.status_row, text=tr("unity_status")).pack(side=tk.LEFT)
@@ -2137,6 +2158,35 @@ class App:
         threading.Thread(target=self.load_db, daemon=True).start()
         threading.Thread(target=self.status_loop, daemon=True).start()
         threading.Thread(target=self.theme_loop, daemon=True).start()
+
+    def _load_config_async(self):
+        def _run():
+            cfg = load_config()
+            self.cfg = cfg
+            self.theme = cfg.get("theme", "escuro")
+            self.repo = cfg.get("repo", "x360db")
+            self.cover_format = cfg.get("cover_format", "paisagem")
+            self.ss_max = int(cfg.get("screenshots", SS_MAX_DEFAULT))
+            self.lang = cfg.get("lang", "pt")
+            global CURRENT_LANG
+            CURRENT_LANG = self.lang if self.lang in TEXT else "pt"
+            self.show_status = bool(cfg.get("show_status", True))
+            self.show_log = bool(cfg.get("show_log", True))
+            self.region = cfg.get("region", "global")
+            self.ftp_host = str(cfg.get("ftp_host", ""))
+            self.ftp_port = int(cfg.get("ftp_port", 21))
+            self.ftp_user = str(cfg.get("ftp_user", "xbox"))
+            self.ftp_pass = str(cfg.get("ftp_pass", "xbox"))
+            self.ftp_base = str(cfg.get("ftp_base", "Hdd:\\Aurora\\Data\\GameData"))
+            self.queue.put("__config_loaded__")
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _on_config_loaded(self):
+        self.apply_theme()
+        self.apply_show_status()
+        self.apply_show_log()
+        self._paint_status()
+        self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
         self.root.after(0, self.apply_theme)
 
     def log(self, message):
@@ -2155,7 +2205,9 @@ class App:
         try:
             while True:
                 msg = self.queue.get_nowait()
-                if msg == "__refresh_tree__":
+                if msg == "__config_loaded__":
+                    self._on_config_loaded()
+                elif msg == "__refresh_tree__":
                     self.refresh_tree()
                 elif msg == "__done__":
                     self.set_busy(False)
