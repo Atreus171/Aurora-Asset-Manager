@@ -1809,16 +1809,16 @@ def scan_aurora_db(root, logger=None):
         tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
         _log(f"  [DB] Tabelas encontradas: {tables}")
         
-        # Tenta várias tabelas possíveis
+        # Tenta várias tabelas possíveis (ordem de prioridade baseada no debug)
         content_table = None
-        for t in ["Content", "Games", "GameList", "Titles", "ContentItems", "ContentList"]:
+        for t in ["ContentItems", "Content", "Games", "GameList", "Titles", "ContentList"]:
             if t in tables:
                 content_table = t
                 _log(f"  [DB] Usando tabela: {content_table}")
                 break
         
         if not content_table:
-            log(f"  [DB] Nenhuma tabela conhecida encontrada")
+            _log(f"  [DB] Nenhuma tabela conhecida encontrada")
             conn.close()
             return games
         
@@ -1826,36 +1826,55 @@ def scan_aurora_db(root, logger=None):
         cols = [row[1] for row in conn.execute(f"PRAGMA table_info({content_table})")]
         _log(f"  [DB] Colunas em {content_table}: {cols}")
         
-        # Mapeia colunas esperadas
-        col_tid = next((c for c in cols if c.lower() in ("titleid", "tid", "title_id")), "TitleID")
-        col_title = next((c for c in cols if c.lower() in ("title", "name", "gamename", "displayname")), "Title")
-        col_dbid = next((c for c in cols if c.lower() in ("databaseid", "dbid", "db_id")), "DatabaseID")
-        col_mediaid = next((c for c in cols if c.lower() in ("mediaid", "media_id")), "MediaID")
-        col_path = next((c for c in cols if c.lower() in ("path", "gamepath", "location", "directory", "dir")), "Path")
-        col_type = next((c for c in cols if c.lower() in ("titletype", "type", "gametype", "title_type")), "TitleType")
-        
-        _log(f"  [DB] Mapeamento: tid={col_tid}, title={col_title}, type={col_type}")
-        
-        # Tenta query sem filtro de tipo primeiro (mais robusto)
-        query = f"""
-            SELECT {col_tid}, {col_title}, {col_dbid}, {col_mediaid}, {col_path}, {col_type}
-            FROM {content_table}
-            ORDER BY {col_title}
-        """
+        # Para ContentItems, usa colunas específicas conhecidas
+        if content_table == "ContentItems":
+            query = """
+                SELECT TitleId, TitleName, Directory, MediaId, ContentType, FileType
+                FROM ContentItems
+                WHERE TitleId IS NOT NULL AND TitleId != 0
+                ORDER BY TitleName
+            """
+        else:
+            # Mapeia colunas esperadas
+            col_tid = next((c for c in cols if c.lower() in ("titleid", "tid", "title_id")), "TitleID")
+            col_title = next((c for c in cols if c.lower() in ("title", "name", "gamename", "displayname", "titlename")), "Title")
+            col_dbid = next((c for c in cols if c.lower() in ("databaseid", "dbid", "db_id")), "DatabaseID")
+            col_mediaid = next((c for c in cols if c.lower() in ("mediaid", "media_id")), "MediaID")
+            col_path = next((c for c in cols if c.lower() in ("path", "gamepath", "location", "directory", "dir")), "Path")
+            col_type = next((c for c in cols if c.lower() in ("titletype", "type", "gametype", "title_type", "contenttype", "filetype")), "TitleType")
+            
+            _log(f"  [DB] Mapeamento: tid={col_tid}, title={col_title}, type={col_type}")
+            
+            # Tenta query sem filtro de tipo primeiro (mais robusto)
+            query = f"""
+                SELECT {col_tid}, {col_title}, {col_dbid}, {col_mediaid}, {col_path}, {col_type}
+                FROM {content_table}
+                ORDER BY {col_title}
+            """
         
         _log(f"  [DB] Query: {query}")
         cur = conn.execute(query)
         count = 0
         for row in cur:
             count += 1
-            tid = (row[col_tid] or "").upper()
-            if not tid or tid == "00000000":
-                continue
-            title = (row[col_title] or "").strip()
+            # Para ContentItems, TitleId é integer
+            if content_table == "ContentItems":
+                tid_int = row["TitleId"]
+                if tid_int is None or tid_int == 0:
+                    continue
+                tid = f"{tid_int:08X}"
+                title = (row["TitleName"] or "").strip()
+                path = row["Directory"]
+            else:
+                tid = (row[col_tid] or "").upper()
+                if not tid or tid == "00000000":
+                    continue
+                title = (row[col_title] or "").strip()
+                path = row[col_path]
+            
             if not title:
                 continue
             dname = title
-            path = row[col_path]
             folder = None
             if path and os.path.isdir(os.path.join(root, path.lstrip("\\/"))):
                 folder = os.path.join(root, path.lstrip("\\/"))
