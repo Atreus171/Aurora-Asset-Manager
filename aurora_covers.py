@@ -1792,6 +1792,30 @@ def installed_path():
     return os.path.join(docs, "aurora_covers_installed.json")
 
 
+def custom_names_path():
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_names.json")
+
+
+def load_custom_names():
+    try:
+        with open(custom_names_path(), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_custom_names(data):
+    try:
+        tmp = custom_names_path() + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, custom_names_path())
+    except Exception:
+        pass
+
+
 def mark_installed(tid, kind):
     try:
         data = {}
@@ -1941,10 +1965,15 @@ def scan_aurora_db(root, logger=None):
 
 
 def scan_aurora(root):
+    # Carrega nomes customizados salvos
+    custom_names = load_custom_names()
+    log(f"  [SCAN] Nomes customizados carregados: {len(custom_names)}")
+
     # Primeiro tenta ler do SQLite do Aurora (nomes reais)
     games = scan_aurora_db(root, logger=lambda m: log(m))
     if not games:
         log("  [DB] Falhou ou vazio, tentando fallback por pastas...")
+    
     # Fallback: escaneia pastas GameData
     gamedata = os.path.join(root, "Data", "GameData")
     if os.path.isdir(gamedata):
@@ -1958,6 +1987,9 @@ def scan_aurora(root):
             if tid == "00000000":
                 continue
             dname = m.group(2).strip()
+            # Aplica nome customizado se existir
+            if tid in custom_names:
+                dname = custom_names[tid]
             folder = os.path.join(gamedata, name)
             if not os.path.isdir(folder):
                 continue
@@ -1985,45 +2017,46 @@ def scan_aurora(root):
         for g in folder_games:
             if g["tid"] not in existing_tids:
                 games.append(g)
-    return games
-    # Fallback: escaneia pastas GameData
-    games = []
-    gamedata = os.path.join(root, "Data", "GameData")
-    if not os.path.isdir(gamedata):
-        return games
-    pattern = re.compile(r"^([0-9A-Fa-f]{8})_(.+)")
-    for name in sorted(os.listdir(gamedata)):
-        m = pattern.match(name)
-        if not m:
-            continue
-        tid = m.group(1).upper()
-        if tid == "00000000":
-            continue
-        dname = m.group(2).strip()
-        folder = os.path.join(gamedata, name)
-        if not os.path.isdir(folder):
-            continue
-        has_cover = False
-        for file_name in os.listdir(folder):
-            full = os.path.join(folder, file_name)
-            if not os.path.isfile(full):
+
+    # Também escaneia pasta Import para homebrews sem GameData
+    import_dir = os.path.join(root, "User", "Import")
+    if os.path.isdir(import_dir):
+        for tid_dir in os.listdir(import_dir):
+            if not re.match(r"^[0-9A-Fa-f]{8}$", tid_dir):
                 continue
-            try:
-                size = os.path.getsize(full)
-            except OSError:
-                size = 0
-            if file_name.upper().startswith("GC") and size >= MIN_ASSET_SIZE:
-                has_cover = True
-                break
-        games.append(
-            {
-                "folder": folder,
+            tid = tid_dir.upper()
+            if tid == "00000000":
+                continue
+            # Verifica se já temos esse jogo
+            if any(g["tid"] == tid for g in games):
+                continue
+            # Tenta pegar nome customizado
+            dname = custom_names.get(tid, tid)
+            import_path = os.path.join(import_dir, tid_dir)
+            has_cover = False
+            if os.path.isdir(import_path):
+                for fn in os.listdir(import_path):
+                    if fn.upper().startswith("GC") and fn.lower().endswith(".png"):
+                        try:
+                            if os.path.getsize(os.path.join(import_path, fn)) >= MIN_ASSET_SIZE:
+                                has_cover = True
+                                break
+                        except OSError:
+                            pass
+            games.append({
+                "folder": None,
                 "tid": tid,
-                "folder_name": name,
+                "folder_name": tid,
                 "dname": dname,
                 "has_cover": has_cover,
-            }
-        )
+            })
+
+    # Aplica nomes customizados aos jogos do DB que não têm dname
+    for g in games:
+        if g["tid"] in custom_names and not g.get("dname"):
+            g["dname"] = custom_names[g["tid"]]
+
+    # Deduplicação
     seen = {}
     deduped = []
     for g in games:
@@ -2035,6 +2068,7 @@ def scan_aurora(root):
             i = deduped.index(seen[key])
             deduped[i] = g
             seen[key] = g
+    log(f"  [SCAN] Total de jogos encontrados: {len(deduped)}")
     return deduped
 
 
@@ -2796,8 +2830,11 @@ class App:
             g["folder"] = new_folder
             g["folder_name"] = os.path.basename(new_folder)
             self.log("Renamed folder: %s -> %s" % (g["folder_name"], os.path.basename(new_folder)))
-        # Atualiza dname (nome exibido) mesmo se não tiver pasta
         g["dname"] = clean
+        # Salva nome customizado permanentemente
+        custom_names = load_custom_names()
+        custom_names[g["tid"]] = clean
+        save_custom_names(custom_names)
         self.log(tr("renamed", self.db.title_name(g["tid"]), clean))
         self.refresh_tree()
         try:
