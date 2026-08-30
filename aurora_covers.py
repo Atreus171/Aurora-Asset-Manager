@@ -1905,8 +1905,49 @@ def scan_aurora_db(root, logger=None):
 def scan_aurora(root):
     # Primeiro tenta ler do SQLite do Aurora (nomes reais)
     games = scan_aurora_db(root, logger=lambda m: log(m))
-    if games:
-        return games
+    if not games:
+        log("  [DB] Falhou ou vazio, tentando fallback por pastas...")
+    # Fallback: escaneia pastas GameData
+    gamedata = os.path.join(root, "Data", "GameData")
+    if os.path.isdir(gamedata):
+        folder_games = []
+        pattern = re.compile(r"^([0-9A-Fa-f]{8})_(.+)")
+        for name in sorted(os.listdir(gamedata)):
+            m = pattern.match(name)
+            if not m:
+                continue
+            tid = m.group(1).upper()
+            if tid == "00000000":
+                continue
+            dname = m.group(2).strip()
+            folder = os.path.join(gamedata, name)
+            if not os.path.isdir(folder):
+                continue
+            has_cover = False
+            for file_name in os.listdir(folder):
+                full = os.path.join(folder, file_name)
+                if not os.path.isfile(full):
+                    continue
+                try:
+                    size = os.path.getsize(full)
+                except OSError:
+                    size = 0
+                if file_name.upper().startswith("GC") and size >= MIN_ASSET_SIZE:
+                    has_cover = True
+                    break
+            folder_games.append({
+                "folder": folder,
+                "tid": tid,
+                "folder_name": name,
+                "dname": dname,
+                "has_cover": has_cover,
+            })
+        # Merge: jogos do DB têm prioridade, pastas preenchem faltantes
+        existing_tids = {g["tid"] for g in games}
+        for g in folder_games:
+            if g["tid"] not in existing_tids:
+                games.append(g)
+    return games
     # Fallback: escaneia pastas GameData
     games = []
     gamedata = os.path.join(root, "Data", "GameData")
@@ -2430,6 +2471,21 @@ class App:
             self.log(tr("index_fail"))
         self.queue.put("__refresh_tree__")
 
+    def _fetch_unity_names(self, games):
+        """Busca nomes no XboxUnity para jogos sem nome no x360db."""
+        updated = False
+        for g in games:
+            if self.cancel_event.is_set():
+                break
+            tid = g["tid"]
+            name = self.unity.get_best_title(tid)
+            if name:
+                g["dname"] = name
+                updated = True
+        if updated:
+            self.queue.put("__refresh_tree__")
+            self.log("Nomes atualizados via XboxUnity.")
+
     def _paint_status(self):
         th = THEMES.get(detect_system_theme() if self.theme == "sistema" else self.theme, THEMES["escuro"])
         for status, dot, lbl in (
@@ -2532,6 +2588,11 @@ class App:
                             }
                         )
             self.log("Total de jogos: %d" % len(self.games))
+            # Busca nomes faltando no XboxUnity em background
+            missing = [g for g in self.games if self.game_title(g) == g["tid"]]
+            if missing:
+                self.log("Buscando %d nomes no XboxUnity..." % len(missing))
+                threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
             self.queue.put("__refresh_tree__")
         except Exception as exc:
             self.queue.put("Erro no scan: %s" % exc)
