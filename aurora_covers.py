@@ -284,6 +284,7 @@ TEXT = {
         "m_search": "Pesquisar título...",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
+        "m_open_folder": "Abrir pasta do jogo",
         "set_ftp": "Enviar por FTP (console):",
         "ftp_host_lbl": "IP do console:",
         "ftp_port_lbl": "Porta:",
@@ -299,6 +300,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Desenvolvido por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "Lançamento",
+        "developer": "Desenvolvedora",
+        "genres": "Gêneros",
     },
     "en": {
         "title": "Aurora Asset Manager",
@@ -458,6 +462,7 @@ TEXT = {
         "m_search": "Search title...",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
+        "m_open_folder": "Open game folder",
         "set_ftp": "Send via FTP (console):",
         "ftp_host_lbl": "Console IP:",
         "ftp_port_lbl": "Port:",
@@ -473,6 +478,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Developed by Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "Release",
+        "developer": "Developer",
+        "genres": "Genres",
     },
     "es": {
         "title": "Aurora Asset Manager",
@@ -632,6 +640,7 @@ TEXT = {
         "m_search": "Buscar título...",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
+        "m_open_folder": "Abrir carpeta del juego",
         "set_ftp": "Enviar por FTP (consola):",
         "ftp_host_lbl": "IP de la consola:",
         "ftp_port_lbl": "Puerto:",
@@ -647,6 +656,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Desarrollado por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "Lanzamiento",
+        "developer": "Desarrolladora",
+        "genres": "Géneros",
     },
     "fr": {
         "title": "Aurora Asset Manager",
@@ -806,6 +818,7 @@ TEXT = {
         "m_search": "Rechercher titre...",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
+        "m_open_folder": "Ouvrir le dossier du jeu",
         "set_ftp": "Envoyer par FTP (console):",
         "ftp_host_lbl": "IP de la console:",
         "ftp_port_lbl": "Port:",
@@ -821,6 +834,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Développé par Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "Sortie",
+        "developer": "Développeur",
+        "genres": "Genres",
     },
     "ja": {
         "title": "Aurora Asset Manager",
@@ -980,6 +996,7 @@ TEXT = {
         "m_search": "タイトルを検索...",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
+        "m_open_folder": "ゲームフォルダを開く",
         "set_ftp": "FTPで送信 (コンソール):",
         "ftp_host_lbl": "コンソールIP:",
         "ftp_port_lbl": "ポート:",
@@ -995,6 +1012,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Atreus171によって開発\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "発売日",
+        "developer": "開発元",
+        "genres": "ジャンル",
     },
     "ru": {
         "title": "Aurora Asset Manager",
@@ -1154,6 +1174,7 @@ TEXT = {
         "m_search": "Поиск названия...",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
+        "m_open_folder": "Открыть папку игры",
         "set_ftp": "Отправить по FTP (консоль):",
         "ftp_host_lbl": "IP консоли:",
         "ftp_port_lbl": "Порт:",
@@ -1169,6 +1190,9 @@ TEXT = {
         "ss_prev": "◀",
         "ss_next": "▶",
         "credits": "Разработано Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
+        "release_date": "Релиз",
+        "developer": "Разработчик",
+        "genres": "Жанры",
     },
 }
 
@@ -2302,7 +2326,7 @@ class App:
         self.btn_debug_db = ttk.Button(
             btn_row, text=tr("debug_db"), command=self.debug_database, state=tk.DISABLED
         )
-        self.btn_debug_db.pack(side=tk.LEFT, padx=(8, 0))
+        # Initially hidden (show_debug_button defaults to False)
         self.btn_cancel = ttk.Button(btn_row, text=tr("cancel"), command=self.cancel_worker, state=tk.DISABLED)
         self.btn_cancel.pack(side=tk.LEFT, padx=(8, 0))
         tk.Label(
@@ -2401,9 +2425,9 @@ class App:
         self._paint_status()
         self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
         if self.cfg.get("show_debug_button", False):
-            self.btn_debug_db.configure(state=tk.NORMAL)
+            self.btn_debug_db.pack(side=tk.LEFT, padx=(8, 0))
         else:
-            self.btn_debug_db.configure(state=tk.DISABLED)
+            self.btn_debug_db.pack_forget()
         self.root.after(0, self.apply_theme)
 
     def log(self, message):
@@ -2547,10 +2571,24 @@ class App:
                     self.queue.put("__theme_check__")
 
     def browse(self):
+        # Permite selecionar unidade (drive) ou pasta
         path = filedialog.askdirectory(title=tr("aurora_folder"))
-        if path:
-            self.aurora_path.set(path)
-            self.root.after(100, self.start_scan)
+        if not path:
+            return
+        # Se for uma unidade (ex: X:\), tenta detectar estrutura Aurora automaticamente
+        if os.path.splitdrive(path)[1] in ("\\", "/"):
+            # É uma raiz de unidade, tenta encontrar estrutura Aurora
+            aurora_paths = [
+                os.path.join(path, "Aurora"),
+                os.path.join(path, "Aurora", "Data", "GameData"),
+                os.path.join(path, "Data", "GameData"),
+            ]
+            for p in aurora_paths:
+                if os.path.isdir(p):
+                    path = p
+                    break
+        self.aurora_path.set(path)
+        self.root.after(100, self.start_scan)
 
     def set_busy(self, busy):
         self.busy = busy
@@ -2746,7 +2784,8 @@ class App:
             return
         if clean == current:
             return
-        if g["folder"]:
+        # Se tem pasta GameData, renomeia a pasta
+        if g.get("folder"):
             parent = os.path.dirname(g["folder"])
             new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
             try:
@@ -2757,6 +2796,7 @@ class App:
             g["folder"] = new_folder
             g["folder_name"] = os.path.basename(new_folder)
             self.log("Renamed folder: %s -> %s" % (g["folder_name"], os.path.basename(new_folder)))
+        # Atualiza dname (nome exibido) mesmo se não tiver pasta
         g["dname"] = clean
         self.log(tr("renamed", self.db.title_name(g["tid"]), clean))
         self.refresh_tree()
@@ -2766,6 +2806,14 @@ class App:
             )
         except tk.TclError:
             pass
+
+    def open_game_folder(self, g):
+        if not g.get("folder"):
+            return
+        try:
+            os.startfile(g["folder"])
+        except Exception as e:
+            self.log("Erro ao abrir pasta: %s" % e)
 
     def selected_game(self):
         sel = self.tree.selection()
@@ -2850,11 +2898,26 @@ class App:
             desc = desc[:177] + "..."
         parts = []
         if info.get("release_date"):
-            parts.append("Lançamento: " + str(info["release_date"]))
+            rd = info["release_date"]
+            if CURRENT_LANG in ("pt", "es"):
+                # Formato dia/mês/ano para PT e ES
+                try:
+                    # Tenta parsear vários formatos comuns
+                    for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%d-%m-%Y"):
+                        try:
+                            from datetime import datetime
+                            dt = datetime.strptime(str(rd), fmt)
+                            rd = dt.strftime("%d/%m/%Y")
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+            parts.append(tr("release_date") + ": " + str(rd))
         if dev:
-            parts.append("Desenvolvedora: " + dev)
+            parts.append(tr("developer") + ": " + dev)
         if genres:
-            parts.append("Gêneros: " + genres)
+            parts.append(tr("genres") + ": " + genres)
         if desc:
             parts.append(desc)
         return "\n".join(parts)
@@ -3184,6 +3247,8 @@ class App:
         menu.add_command(label=tr("m_custom"), command=lambda: self.install_custom(g))
         menu.add_separator()
         menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
+        if g.get("folder"):
+            menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
