@@ -1,4 +1,4 @@
-# Aurora Covers X360DB
+# Aurora Asset Editor
 
 Aplicativo Windows (Tkinter) para escanear jogos do Aurora (Xbox 360), baixar capas/assets do x360db/XboxUnity e instalar no Aurora.
 
@@ -17,23 +17,25 @@ Aplicativo Windows (Tkinter) para escanear jogos do Aurora (Xbox 360), baixar ca
 - **Temas** claro/escuro
 - **Log** visível em monitores 720p (geometria adaptativa)
 
-## Ícone
-
-Coloque seu arquivo `icon.ico` em `assets/icon.ico` (ou `.png` 256x256). O build usará automaticamente.
-
 ## Build
 
 ```bash
 python -m py_compile aurora_covers.py
 python aurora_covers.py --selftest
-python -m PyInstaller --noconfirm --onefile --windowed --name "AuroraAssetEditor" --clean aurora_covers.py
+python -m PyInstaller --noconfirm --onefile --windowed --name "AuroraAssetEditor" --clean --icon "assets/icon.ico" aurora_covers.py
 ```
 
 Exe gerado em `dist\AuroraAssetEditor.exe`.
 
 ## Configuração
 
-Arquivo `aurora_covers_config.json` (ao lado do exe/script):
+Arquivos de configuração salvos em `%USERPROFILE%\Documents\Aurora Asset Editor\`:
+
+- `aurora_covers_config.json` — configurações do app
+- `aurora_covers_games.json` — cache do índice x360db (12h)
+- `aurora_covers_installed.json` — rastreador de assets instalados
+
+Exemplo de `aurora_covers_config.json`:
 
 ```json
 {

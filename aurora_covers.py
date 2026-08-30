@@ -502,10 +502,14 @@ ASSET_KINDS = [
 
 
 def config_path():
-    base = os.path.dirname(
-        os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__)
-    )
-    return os.path.join(base, "aurora_covers_config.json")
+    if getattr(sys, "frozen", False):
+        base = os.path.dirname(os.path.abspath(sys.executable))
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    # Use Documents\Aurora Asset Editor folder
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Editor")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_config.json")
 
 
 def load_config():
@@ -1017,10 +1021,9 @@ def _open_image(path):
 
 
 def installed_path():
-    base = os.path.dirname(
-        os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__)
-    )
-    return os.path.join(base, "aurora_covers_installed.json")
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Editor")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_installed.json")
 
 
 def mark_installed(tid, kind):
