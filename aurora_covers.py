@@ -1358,6 +1358,26 @@ class XboxUnity:
     def __init__(self):
         self.cache = {}
         self._down_until = 0.0
+        self._title_cache = {}
+        self._title_cache_file = os.path.join(os.path.dirname(config_path()), "aurora_covers_unity_titles.json")
+        self._load_title_cache()
+
+    def _load_title_cache(self):
+        try:
+            if os.path.isfile(self._title_cache_file):
+                with open(self._title_cache_file, "r", encoding="utf-8") as f:
+                    self._title_cache = json.load(f)
+        except Exception:
+            self._title_cache = {}
+
+    def _save_title_cache(self):
+        try:
+            tmp = self._title_cache_file + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(self._title_cache, f, ensure_ascii=False)
+            os.replace(tmp, self._title_cache_file)
+        except Exception:
+            pass
 
     def covers(self, tid, force=False):
         if not force and tid in self.cache:
@@ -1396,11 +1416,16 @@ class XboxUnity:
         return items
 
     def get_best_title(self, tid):
-        """Retorna o melhor nome disponível no XboxUnity para o TID."""
+        """Retorna o melhor nome disponível no XboxUnity para o TID (usa cache persistente)."""
+        tid = tid.upper()
+        if tid in self._title_cache:
+            return self._title_cache[tid]
         items = self.covers(tid, force=False)
         for it in items:
             name = it.get("name") or it.get("title")
             if name and name.strip():
+                self._title_cache[tid] = name.strip()
+                self._save_title_cache()
                 return name.strip()
         return None
 
