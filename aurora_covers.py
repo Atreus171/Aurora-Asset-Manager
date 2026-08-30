@@ -2866,6 +2866,7 @@ class App:
         dlg.title("Configurações")
         dlg.transient(self.root)
         dlg.resizable(False, False)
+        dlg.minsize(520, 0)
         th = THEMES.get(self.theme, THEMES["escuro"])
         dlg.configure(bg=th["bg"])
         outer = ttk.Frame(dlg, padding=12)
