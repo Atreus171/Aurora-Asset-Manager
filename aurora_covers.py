@@ -120,7 +120,7 @@ REGIONS = {
 
 TEXT = {
     "pt": {
-        "title": "Aurora Asset Editor",
+        "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
         "checking": "verificando...",
@@ -291,7 +291,7 @@ TEXT = {
         "credits": "Desenvolvido por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Editor",
     },
     "en": {
-        "title": "Aurora Asset Editor",
+        "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
         "checking": "checking...",
@@ -506,8 +506,8 @@ def config_path():
         base = os.path.dirname(os.path.abspath(sys.executable))
     else:
         base = os.path.dirname(os.path.abspath(__file__))
-    # Use Documents\Aurora Asset Editor folder
-    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Editor")
+    # Use Documents\Aurora Asset Manager folder
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
     os.makedirs(docs, exist_ok=True)
     return os.path.join(docs, "aurora_covers_config.json")
 
@@ -1021,7 +1021,7 @@ def _open_image(path):
 
 
 def installed_path():
-    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Editor")
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
     os.makedirs(docs, exist_ok=True)
     return os.path.join(docs, "aurora_covers_installed.json")
 
