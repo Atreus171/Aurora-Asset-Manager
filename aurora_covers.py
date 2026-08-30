@@ -1395,6 +1395,15 @@ class XboxUnity:
         self.cache[tid] = items
         return items
 
+    def get_best_title(self, tid):
+        """Retorna o melhor nome disponível no XboxUnity para o TID."""
+        items = self.covers(tid, force=False)
+        for it in items:
+            name = it.get("name") or it.get("title")
+            if name and name.strip():
+                return name.strip()
+        return None
+
     def cover_bytes(self, item, small=False):
         if small:
             order = ["thumbnail", "front", "url", "large"]
@@ -2378,10 +2387,14 @@ class App:
         self.show_no_preview()
 
     def game_title(self, g):
-        name = self.db.title_name(g["tid"])
-        if name != g["tid"]:
+        tid = g["tid"]
+        name = self.db.title_name(tid)
+        if name != tid:
             return name
-        return (g.get("dname") or "").strip() or name
+        unity_name = self.unity.get_best_title(tid)
+        if unity_name:
+            return unity_name
+        return (g.get("dname") or "").strip() or tid
 
     def toggle_sort(self):
         self.sort_asc = not self.sort_asc
