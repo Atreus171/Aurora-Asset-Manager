@@ -288,7 +288,7 @@ TEXT = {
         "ftp_err": "Erro no FTP: %s",
         "ss_prev": "◀",
         "ss_next": "▶",
-        "credits": "Desenvolvido por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Editor",
+        "credits": "Desenvolvido por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
     },
     "en": {
         "title": "Aurora Asset Manager",
@@ -460,7 +460,7 @@ TEXT = {
         "ftp_err": "FTP error: %s",
         "ss_prev": "◀",
         "ss_next": "▶",
-        "credits": "Developed by Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Editor",
+        "credits": "Developed by Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Manager",
     },
 }
 
@@ -2153,52 +2153,66 @@ class App:
         outer = ttk.Frame(dlg, padding=12)
         outer.pack(fill=tk.BOTH, expand=True)
 
-        tf = ttk.Frame(outer)
-        tf.pack(pady=(0, 8))
-        ttk.Label(tf, text=tr("set_theme")).pack(side=tk.LEFT)
+        def row(parent, label_text, widget, padx=0):
+            r = ttk.Frame(parent)
+            r.pack(fill=tk.X, pady=4)
+            ttk.Label(r, text=label_text).pack(anchor="w")
+            widget.pack(anchor="w", padx=padx)
+
         theme_var = tk.StringVar(value=self.theme)
-        ttk.Radiobutton(tf, text=tr("theme_dark"), variable=theme_var, value="escuro").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(tf, text=tr("theme_light"), variable=theme_var, value="claro").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(tf, text=tr("theme_system"), variable=theme_var, value="sistema").pack(side=tk.LEFT, padx=6)
+        tf = ttk.Frame(outer)
+        tf.pack(fill=tk.X, pady=4)
+        ttk.Label(tf, text=tr("set_theme")).pack(anchor="w")
+        r = ttk.Frame(tf)
+        r.pack(anchor="w", pady=(2, 0))
+        ttk.Radiobutton(r, text=tr("theme_dark"), variable=theme_var, value="escuro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(r, text=tr("theme_light"), variable=theme_var, value="claro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(r, text=tr("theme_system"), variable=theme_var, value="sistema").pack(side=tk.LEFT, padx=6)
 
-        lf = ttk.Frame(outer)
-        lf.pack(pady=(0, 8))
-        ttk.Label(lf, text=tr("set_lang")).pack(side=tk.LEFT)
         lang_var = tk.StringVar(value=CURRENT_LANG)
+        lf = ttk.Frame(outer)
+        lf.pack(fill=tk.X, pady=4)
+        ttk.Label(lf, text=tr("set_lang")).pack(anchor="w")
+        r = ttk.Frame(lf)
+        r.pack(anchor="w", pady=(2, 0))
         for code, name in LANGUAGES.items():
-            ttk.Radiobutton(lf, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
+            ttk.Radiobutton(r, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
 
-        sf2 = ttk.Frame(outer)
-        sf2.pack(pady=(0, 8))
         show_status_var = tk.BooleanVar(value=self.show_status)
-        ttk.Checkbutton(sf2, text=tr("set_show_status"), variable=show_status_var).pack(side=tk.LEFT)
         show_log_var = tk.BooleanVar(value=self.show_log)
-        ttk.Checkbutton(sf2, text=tr("set_log"), variable=show_log_var).pack(side=tk.LEFT, padx=(12, 0))
+        sf2 = ttk.Frame(outer)
+        sf2.pack(fill=tk.X, pady=4)
+        ttk.Checkbutton(sf2, text=tr("set_show_status"), variable=show_status_var).pack(anchor="w")
+        ttk.Checkbutton(sf2, text=tr("set_log"), variable=show_log_var).pack(anchor="w")
 
-        rf = ttk.Frame(outer)
-        rf.pack(pady=(0, 8))
-        ttk.Label(rf, text=tr("set_repo")).pack(side=tk.LEFT)
         repo_var = tk.StringVar(value=self.repo)
-        ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
+        rf = ttk.Frame(outer)
+        rf.pack(fill=tk.X, pady=4)
+        ttk.Label(rf, text=tr("set_repo")).pack(anchor="w")
+        r = ttk.Frame(rf)
+        r.pack(anchor="w", pady=(2, 0))
+        ttk.Radiobutton(r, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(r, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
 
-        cf = ttk.Frame(outer)
-        cf.pack(pady=(0, 8))
-        ttk.Label(cf, text=tr("set_format")).pack(side=tk.LEFT)
         f_var = tk.StringVar(value=self.cover_format)
-        ttk.Radiobutton(cf, text=tr("format_portrait"), variable=f_var, value="retrato").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(cf, text=tr("format_landscape"), variable=f_var, value="paisagem").pack(side=tk.LEFT, padx=6)
+        cf = ttk.Frame(outer)
+        cf.pack(fill=tk.X, pady=4)
+        ttk.Label(cf, text=tr("set_format")).pack(anchor="w")
+        r = ttk.Frame(cf)
+        r.pack(anchor="w", pady=(2, 0))
+        ttk.Radiobutton(r, text=tr("format_portrait"), variable=f_var, value="retrato").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(r, text=tr("format_landscape"), variable=f_var, value="paisagem").pack(side=tk.LEFT, padx=6)
 
         sf = ttk.Frame(outer)
-        sf.pack(pady=(0, 8))
-        ttk.Label(sf, text=tr("set_screenshots")).pack(side=tk.LEFT)
+        sf.pack(fill=tk.X, pady=4)
+        ttk.Label(sf, text=tr("set_screenshots")).pack(anchor="w")
         spin = ttk.Spinbox(sf, from_=0, to=20, width=4)
         spin.set(str(self.ss_max))
-        spin.pack(side=tk.LEFT, padx=6)
+        spin.pack(anchor="w", pady=(2, 0))
 
         regf = ttk.Frame(outer)
-        regf.pack(pady=(0, 8))
-        ttk.Label(regf, text=tr("set_region")).pack(side=tk.LEFT)
+        regf.pack(fill=tk.X, pady=4)
+        ttk.Label(regf, text=tr("set_region")).pack(anchor="w")
         region_names = list(REGIONS.values())
         region_codes = list(REGIONS.keys())
         region_var = tk.StringVar(
@@ -2208,38 +2222,36 @@ class App:
             regf, values=region_names, state="readonly", width=24,
         )
         region_box.set(REGIONS.get(self.region, REGIONS.get("global")))
-        region_box.pack(side=tk.LEFT, padx=6)
+        region_box.pack(anchor="w", pady=(2, 0))
         ttk.Label(
             outer, text=tr("region_note"), wraplength=430,
         ).pack(pady=(0, 8), fill=tk.X)
 
         ftf = ttk.Frame(outer)
-        ftf.pack(pady=(0, 8), fill=tk.X)
+        ftf.pack(fill=tk.X, pady=(0, 8))
         ttk.Label(ftf, text=tr("set_ftp")).pack(anchor="w")
         g1 = ttk.Frame(ftf)
         g1.pack(fill=tk.X, pady=(4, 0))
-        ttk.Label(g1, text=tr("ftp_host_lbl")).pack(side=tk.LEFT)
+        ttk.Label(g1, text=tr("ftp_host_lbl")).pack(anchor="w")
         ftp_host_ent = ttk.Entry(g1, width=16)
         ftp_host_ent.insert(0, self.ftp_host)
-        ftp_host_ent.pack(side=tk.LEFT, padx=(4, 10))
-        ttk.Label(g1, text=tr("ftp_port_lbl")).pack(side=tk.LEFT)
+        ftp_host_ent.pack(anchor="w", pady=(2, 0))
+        ttk.Label(g1, text=tr("ftp_port_lbl")).pack(anchor="w")
         ftp_port_ent = ttk.Entry(g1, width=6)
         ftp_port_ent.insert(0, str(self.ftp_port))
-        ftp_port_ent.pack(side=tk.LEFT, padx=4)
-        ttk.Label(g1, text=tr("ftp_user_lbl")).pack(side=tk.LEFT, padx=(10, 0))
+        ftp_port_ent.pack(anchor="w", pady=(2, 0))
+        ttk.Label(g1, text=tr("ftp_user_lbl")).pack(anchor="w")
         ftp_user_ent = ttk.Entry(g1, width=10)
         ftp_user_ent.insert(0, self.ftp_user)
-        ftp_user_ent.pack(side=tk.LEFT, padx=4)
-        ttk.Label(g1, text=tr("ftp_pass_lbl")).pack(side=tk.LEFT, padx=(10, 0))
+        ftp_user_ent.pack(anchor="w", pady=(2, 0))
+        ttk.Label(g1, text=tr("ftp_pass_lbl")).pack(anchor="w")
         ftp_pass_ent = ttk.Entry(g1, width=10, show="*")
         ftp_pass_ent.insert(0, self.ftp_pass)
-        ftp_pass_ent.pack(side=tk.LEFT, padx=4)
-        g2 = ttk.Frame(ftf)
-        g2.pack(fill=tk.X, pady=(4, 0))
-        ttk.Label(g2, text=tr("ftp_base_lbl")).pack(side=tk.LEFT)
-        ftp_base_ent = ttk.Entry(g2)
+        ftp_pass_ent.pack(anchor="w", pady=(2, 0))
+        ttk.Label(g1, text=tr("ftp_base_lbl")).pack(anchor="w")
+        ftp_base_ent = ttk.Entry(g1)
         ftp_base_ent.insert(0, self.ftp_base)
-        ftp_base_ent.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+        ftp_base_ent.pack(anchor="w", fill=tk.X, pady=(2, 0))
 
         # Credits section
         cred_f = ttk.Frame(outer)

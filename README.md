@@ -1,21 +1,18 @@
 # Aurora Asset Manager
 
-Aplicativo Windows (Tkinter) para escanear jogos do Aurora (Xbox 360), baixar capas/assets do x360db/XboxUnity e instalar no Aurora.
+Windows (Tkinter) application to scan Aurora games (Xbox 360), download covers/assets from x360db/XboxUnity, and install them into Aurora.
 
-## Funcionalidades
+## Features
 
-- **Escaneia** `Data\GameData` do Aurora e lista jogos (TID + nome)
-- **Baixa capas** do x360db (principal) e XboxUnity (fallback/alternativas)
-- **Instala** assets no formato Aurora: `Data\GameData\{TID}_{Nome}\{GC|BK|GL|SS}{TID}.asset`
-- **Fallback** em `User\Import\{TID}\*.png` se GameData não for gravável
-- **Preview** em tempo real (paisagem, sem corte)
-- **Ordenação**: sem-capa primeiro, alfabético, botão A-Z/Z-A
-- **Renomear jogo** via menu de contexto (renomeia pasta GameData)
-- **Envio FTP** para o console (estilo Aurora Asset Editor)
-- **Navegação** entre screenshots instaladas (◀/▶)
-- **Status "Instalado"** baseado em preview real (arquivo vazio/corrompido = Ausente)
-- **Temas** claro/escuro
-- **Log** visível em monitores 720p (geometria adaptativa)
+- **Scans** `Data\GameData` and lists games (TitleID + name)
+- **Downloads covers** from x360db (primary) and XboxUnity (fallback/alternatives)
+- **Installs** assets in Aurora format: `Data\GameData\{TID}_{Name}\{GC|BK|GL|SS}{TID}.asset`
+- **Fallback** to `User\Import\{TID}\*.png` if GameData is not writable
+- **Real-time preview** (landscape, no cropping)
+- **Sorting**: no-cover first, alphabetical, A-Z/Z-A toggle
+- **Rename game** via context menu (renames GameData folder)
+- **FTP upload** to console
+- **"Installed" status** based on actual preview (empty/corrupt file = Missing)
 
 ## Build
 
@@ -25,25 +22,25 @@ python aurora_covers.py --selftest
 python -m PyInstaller --noconfirm --onefile --windowed --name "AuroraAssetManager" --clean --icon "assets/icon.ico" aurora_covers.py
 ```
 
-Exe gerado em `dist\AuroraAssetManager.exe`.
+Exe generated at `dist\AuroraAssetManager.exe`.
 
-## Configuração
+## Configuration
 
-Arquivos de configuração salvos em `%USERPROFILE%\Documents\Aurora Asset Manager\`:
+Config files saved in `%USERPROFILE%\Documents\Aurora Asset Manager\`:
 
-- `aurora_covers_config.json` — configurações do app
-- `aurora_covers_games.json` — cache do índice x360db (12h)
-- `aurora_covers_installed.json` — rastreador de assets instalados
+- `aurora_covers_config.json` — app settings
+- `aurora_covers_games.json` — x360db index cache (12h TTL)
+- `aurora_covers_installed.json` — installed assets tracker
 
-Exemplo de `aurora_covers_config.json`:
+Example `aurora_covers_config.json`:
 
 ```json
 {
   "theme": "dark",
   "repo": "x360db",
-  "cover_format": "paisagem",
+  "cover_format": "landscape",
   "screenshots": true,
-  "lang": "pt",
+  "lang": "en",
   "show_status": true,
   "show_log": true,
   "region": "all",
@@ -55,16 +52,16 @@ Exemplo de `aurora_covers_config.json`:
 }
 ```
 
-## Fontes de dados
+## Data Sources
 
-- **x360db** (padrão): índice de jogos + artwork (boxart, background, icon, banner, screenshots)
-- **XboxUnity**: capas alternativas + thumbnails
+- **x360db** (default): game index + artwork (boxart, background, icon, banner, screenshots)
+- **XboxUnity**: alternative covers + thumbnails
 
-## Requisitos
+## Requirements
 
 - Python 3.10+
 - `pip install pillow requests`
 
-## Licença
+## License
 
 MIT
