@@ -1,0 +1,15 @@
+{
+  "theme": "dark",
+  "repo": "x360db",
+  "cover_format": "paisagem",
+  "screenshots": true,
+  "lang": "pt",
+  "show_status": true,
+  "show_log": true,
+  "region": "all",
+  "ftp_host": "",
+  "ftp_port": 21,
+  "ftp_user": "xbox",
+  "ftp_pass": "xbox",
+  "ftp_base": "Hdd:\\Aurora\\Data\\GameData"
+}

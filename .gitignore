@@ -1,0 +1,25 @@
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Cache e dados locais
+*.json
+!aurora_covers_config.json.example
+__pycache__/
+*.pyc
+
+# Configuração local (não commit)
+aurora_covers_config.json
+aurora_covers_games.json
+aurora_covers_installed.json
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

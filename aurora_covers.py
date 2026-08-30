@@ -1,0 +1,2967 @@
+import io
+import json
+import os
+import re
+import struct
+import sys
+import threading
+import queue
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import ftplib
+
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox, simpledialog
+
+from PIL import Image, ImageDraw, ImageOps, ImageTk
+
+X360DB_RAW = "https://raw.githubusercontent.com/xenia-manager/x360db/main/"
+GAMES_INDEX_URL = X360DB_RAW + "games.json"
+GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
+USER_AGENT = {"User-Agent": "Mozilla/5.0 (aurora-covers-x360db)"}
+
+MIN_ASSET_SIZE = 24 * 1024
+BOXART_W, BOXART_H = 900, 600
+COVER_W, COVER_H = 900, 1233
+BG_W, BG_H = 1920, 1080
+ICON_W, ICON_H = 64, 64
+BANNER_W, BANNER_H = 420, 95
+SS_W, SS_H = 1280, 720
+SS_MAX_DEFAULT = 6
+
+XBOXUNITY_CVERS = "https://www.xboxunity.net/api/Covers/%s"
+XBOXUNITY_LIB = "https://www.xboxunity.net/Resources/Lib"
+XBOXUNITY_ROOT = "https://www.xboxunity.net/"
+X360DB_PING_URL = GAMES_INDEX_URL
+PING_INTERVAL = 20
+UNITY_OK = "#3fb950"
+UNITY_DOWN = "#f85149"
+UNITY_WAIT = "#9a9a9a"
+
+ASSET_TYPE_ICON = 0
+ASSET_TYPE_BANNER = 1
+ASSET_TYPE_BOXART = 2
+ASSET_TYPE_BACKGROUND = 4
+ASSET_TYPE_SCREENSHOT = 5
+
+ART_SIZE = {
+    ASSET_TYPE_BOXART: (BOXART_W, BOXART_H),
+    ASSET_TYPE_BACKGROUND: (BG_W, BG_H),
+    ASSET_TYPE_ICON: (ICON_W, ICON_H),
+    ASSET_TYPE_BANNER: (BANNER_W, BANNER_H),
+}
+
+THUMB_W, THUMB_H = 150, 200
+PREVIEW_W, PREVIEW_H = 320, 213
+
+THEMES = {
+    "claro": {
+        "bg": "#f0f0f0",
+        "bg2": "#e2e2e2",
+        "fg": "#1c1c1c",
+        "muted": "#555555",
+        "field": "#ffffff",
+        "button": "#d9d9d9",
+        "active": "#bfbfbf",
+        "sel": "#0078d7",
+        "sels_fg": "#ffffff",
+        "accent": "#0078d7",
+        "preview_bg": "#e8e8e8",
+    },
+    "escuro": {
+        "bg": "#1e1e1e",
+        "bg2": "#2b2b2b",
+        "fg": "#e6e6e6",
+        "muted": "#9a9a9a",
+        "field": "#252526",
+        "button": "#333333",
+        "active": "#3f3f46",
+        "sel": "#04395e",
+        "sels_fg": "#ffffff",
+        "accent": "#1f6feb",
+        "preview_bg": "#0d0d0d",
+    },
+}
+
+DEFAULT_CONFIG = {
+    "theme": "escuro",
+    "repo": "x360db",
+    "cover_format": "paisagem",
+    "screenshots": SS_MAX_DEFAULT,
+    "lang": "pt",
+    "show_status": True,
+    "show_log": True,
+    "region": "global",
+    "ftp_host": "",
+    "ftp_port": 21,
+    "ftp_user": "xbox",
+    "ftp_pass": "xbox",
+    "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
+}
+
+CURRENT_LANG = "pt"
+
+LANGUAGES = {
+    "pt": "Português",
+    "en": "English",
+}
+
+REGIONS = {
+    "global": "Global",
+    "br": "Brasil (Português)",
+    "us": "EUA (Inglês)",
+    "uk": "Reino Unido (Inglês)",
+    "de": "Alemanha (Alemão)",
+    "fr": "França (Francês)",
+    "es": "Espanha (Espanhol)",
+}
+
+TEXT = {
+    "pt": {
+        "title": "Aurora Asset Editor",
+        "unity_status": "XboxUnity:",
+        "x360db_status": "x360db:",
+        "checking": "verificando...",
+        "connected": "conectado",
+        "disconnected": "desconectado",
+        "aurora_folder": "Pasta do Aurora:",
+        "browse": "Procurar...",
+        "opt_boxart": "Baixar capa (boxart)",
+        "opt_background": "Baixar background",
+        "opt_force": "Forçar re-download",
+        "opt_backup": "Backup antes de sobrescrever",
+        "opt_icon": "Baixar ícone (64x64)",
+        "opt_banner": "Baixar banner",
+        "opt_screenshots": "Baixar screenshots (até %d)",
+        "info_note": "Informações (título/descrição) vêm do x360db e são usadas no painel.",
+        "scan": "Escanear jogos",
+        "download": "Baixar e instalar assets",
+        "custom_cover": "Capa personalizada...",
+        "settings": "Configurações...",
+        "tip_right_click": "Dica: clique com o botão direito num jogo para ver/alterar assets.",
+        "cancel": "Cancelar",
+        "col_tid": "TitleID",
+        "col_game": "Jogo",
+        "col_status": "Estado",
+        "preview_title": "Pré-visualização da capa",
+        "no_selection": "Sem seleção",
+        "no_cover": "Sem capa",
+        "no_cover_installed": "Sem capa instalada",
+        "cover_installed": "Capa instalada",
+        "loading_info": "Carregando informações...",
+        "loading_index": "Aguarde, carregando índice do x360db...",
+        "index_loaded": "Índice do x360db carregado: %d jogos.",
+        "index_fail": "Não foi possível baixar o índice (modo offline: usará o TitleID direto).",
+        "warn": "Aviso",
+        "scan_first": "Digitalize os jogos primeiro.",
+        "pick_art": "Marque pelo menos um tipo de arte (capa, background, ícone, banner ou screenshots).",
+        "pick_aurora": "Escolha a pasta raiz do Aurora primeiro.",
+        "pick_game": "Selecione um jogo na lista primeiro.",
+        "img_open_fail": "Não foi possível abrir a imagem:\n%s",
+        "img_write_fail": "Não foi possível gravar:\n%s",
+        "save_fail": "Não foi possível salvar:\n%s",
+        "warn": "Aviso",
+        "error": "Erro",
+        "pick_game": "Selecione um jogo na lista primeiro.",
+        "custom_cover": "Capa personalizada",
+        "m_assets": "Ver/alterar assets deste jogo...",
+        "m_alt": "Capas alternativas online...",
+        "m_custom": "Capa personalizada...",
+        "set_theme": "Tema:",
+        "theme_dark": "Escuro",
+        "theme_light": "Claro",
+        "theme_system": "Seguir o sistema",
+        "dest": "Destino",
+        "set_lang": "Idioma:",
+        "set_show_status": "Mostrar bolinhas de status da Internet no topo",
+        "set_repo": "Repositório de capas:",
+        "set_format": "Formato da capa:",
+        "format_portrait": "Retrato (900x1233)",
+        "format_landscape": "Paisagem (900x600)",
+        "set_screenshots": "Screenshots por jogo:",
+        "status_saved": "Configurações salvas (tema: %s, repositório: %s, capa: %s, screenshots: %d, região: %s).",
+        "save": "Salvar",
+        "cancel2": "Cancelar",
+        "restart_title": "Reiniciar app",
+        "restart_lang": "O idioma muda ao reiniciar o app (feche e abra de novo).",
+        "assets": "Assets",
+        "assets_of": "Assets de",
+        "col_kind": "Tipo",
+        "col_status": "Estado",
+        "dl_online": "Baixar online",
+        "change_pc": "Alterar... (PC)",
+        "close": "Fechar",
+        "assets_hint": "Selecione um tipo e use os botões.",
+        "assets_installed": "Instalado",
+        "assets_missing": "Ausente",
+        "assets_pick": "Selecione um tipo na lista primeiro.",
+        "assets_dl_kind": "Baixando %s...",
+        "no_preview": "Sem preview",
+        "pick_kind": "Escolher %s para %s",
+        "kind_boxart": "capa (boxart)",
+        "kind_background": "fundo (background)",
+        "kind_icon": "ícone",
+        "kind_banner": "banner",
+        "kind_screenshots": "screenshot",
+        "asset_changed": "Asset '%s' alterado para %s (%s).",
+        "m_assets": "Ver/alterar assets deste jogo...",
+        "m_alt": "Capas alternativas online...",
+        "m_custom": "Capa personalizada...",
+        "set_title": "Configurações",
+        "set_theme": "Tema:",
+        "theme_dark": "Escuro",
+        "theme_light": "Claro",
+        "theme_system": "Seguir o tema do sistema",
+        "set_repo": "Repositório de capas:",
+        "set_format": "Formato da capa:",
+        "format_portrait": "Retrato (900x1233)",
+        "format_landscape": "Paisagem (900x600)",
+        "set_screenshots": "Screenshots por jogo:",
+        "set_lang": "Idioma:",
+        "set_show_status": "Mostrar bolinhas de status de conexão",
+        "save": "Salvar",
+        "cancel2": "Cancelar",
+        "restart_title": "Idioma",
+        "restart_lang": "Reinicie o aplicativo para aplicar o idioma.",
+        "assets_title": "Assets - %s (%s)",
+        "assets_header": "Assets de %s (%s)",
+        "assets_kind": "Tipo",
+        "assets_status": "Estado",
+        "assets_pick": "Selecione um tipo e use os botões.",
+        "assets_ok": "Instalado",
+        "assets_missing": "Ausente",
+        "assets_online": "Baixar online",
+        "assets_pc": "Alterar... (PC)",
+        "assets_close": "Fechar",
+        "assets_dl_kind": "Baixar %s...",
+        "assets_pick_kind": "Selecione um tipo na lista primeiro.",
+        "alt_title": "Capas alternativas - %s (%s)",
+        "alt_label": "Capas disponíveis no XboxUnity (escolha uma):",
+        "alt_searching": "Buscando capas no XboxUnity...",
+        "alt_none": "Nenhuma capa encontrada no XboxUnity para este jogo.",
+        "alt_count": "%d capa(s) encontrada(s).",
+        "alt_loading": "Carregando visual...",
+        "alt_none_found": "Nenhuma capa encontrada no XboxUnity para este jogo.",
+        "alt_no_img": "Sem imagem",
+        "alt_no_preview": "Sem preview para esta capa.",
+        "alt_loaded": "Preview carregado.",
+        "alt_noimg": "Sem imagem",
+        "alt_preview_ok": "Preview carregado.",
+        "alt_preview_none": "Sem preview para esta capa.",
+        "alt_sem_preview": "Sem preview",
+        "alt_install": "Baixar e instalar esta capa",
+        "alt_official": "Capa oficial (x360db)",
+        "alt_unity_empty": "Buscado: XboxUnity não tem capa para este jogo; mostrando a capa oficial (x360db).",
+        "alt_installed": "Capa instalada com sucesso.",
+        "alt_failed": "Falha ao instalar a capa.",
+        "alt_select_first": "Selecione uma capa primeiro.",
+        "alt_downloading": "Baixando...",
+        "status_saved": "Configurações salvas (tema: %s, repositório: %s, capa: %s, screenshots: %d, região: %s).",
+        "canceled": "Operação cancelada pelo usuário.",
+        "unity_fallback": "XboxUnity sem capa utilizável; usando x360db como alternativa.",
+        "unity_no_cover": "XboxUnity sem capas para %s; usando x360db como alternativa.",
+        "unity_offline": "XboxUnity fora do ar; usando x360db.",
+        "no_games_notice": "Nenhum jogo precisa de download.",
+        "done_notice": "Concluído! No Xbox: boot Aurora e aperte Y -> Refresh no jogo (ou use Import).",
+        "set_log": "Mostrar log (caixa de texto)",
+        "set_region": "Região (capa/descrição):",
+        "region_note": "Nota: as fontes atuais (x360db e XboxUnity) só oferecem capas/descrições em inglês; a região fica salva e será usada quando houver suporte.",
+        "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity (região: %s).",
+        "sort_asc": "A-Z",
+        "sort_desc": "Z-A",
+        "m_rename": "Renomear jogo...",
+        "rename_prompt": "Novo nome para %s (%s):",
+        "renamed": "Jogo %s renomeado para: %s",
+        "set_ftp": "Enviar por FTP (console):",
+        "ftp_host_lbl": "IP do console:",
+        "ftp_port_lbl": "Porta:",
+        "ftp_user_lbl": "Usuário:",
+        "ftp_pass_lbl": "Senha:",
+        "ftp_base_lbl": "Pasta remota (GameData):",
+        "ftp_send": "Enviar por FTP",
+        "ftp_sending": "Enviando para o console via FTP...",
+        "ftp_sent": "Enviados %d arquivo(s) para %s.",
+        "ftp_no_host": "Configure o IP do console em Configurações -> FTP primeiro.",
+        "ftp_no_folder": "Este jogo não tem pasta local em Data\\GameData para enviar.",
+        "ftp_err": "Erro no FTP: %s",
+        "ss_prev": "◀",
+        "ss_next": "▶",
+        "credits": "Desenvolvido por Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Editor",
+    },
+    "en": {
+        "title": "Aurora Asset Editor",
+        "unity_status": "XboxUnity:",
+        "x360db_status": "x360db:",
+        "checking": "checking...",
+        "connected": "connected",
+        "disconnected": "disconnected",
+        "aurora_folder": "Aurora folder:",
+        "browse": "Browse...",
+        "opt_boxart": "Download cover (boxart)",
+        "opt_background": "Download background",
+        "opt_force": "Force re-download",
+        "opt_backup": "Backup before overwriting",
+        "opt_icon": "Download icon (64x64)",
+        "opt_banner": "Download banner",
+        "opt_screenshots": "Download screenshots (up to %d)",
+        "info_note": "Info (title/description) comes from x360db and is used in the panel.",
+        "scan": "Scan games",
+        "download": "Download and install assets",
+        "custom_cover": "Custom cover...",
+        "settings": "Settings...",
+        "tip_right_click": "Tip: right-click a game to view/change assets.",
+        "cancel": "Cancel",
+        "col_tid": "TitleID",
+        "col_game": "Game",
+        "col_status": "Status",
+        "preview_title": "Cover preview",
+        "no_selection": "No selection",
+        "no_cover": "No cover",
+        "no_cover_installed": "No cover installed",
+        "cover_installed": "Cover installed",
+        "loading_info": "Loading info...",
+        "loading_index": "Loading x360db index, please wait...",
+        "index_loaded": "x360db index loaded: %d games.",
+        "index_fail": "Could not download the index (offline mode: will use TitleID directly).",
+        "warn": "Warning",
+        "scan_first": "Scan the games first.",
+        "pick_art": "Check at least one art type (cover, background, icon, banner or screenshots).",
+        "pick_aurora": "Choose the Aurora root folder first.",
+        "pick_game": "Select a game in the list first.",
+        "img_open_fail": "Could not open the image:\n%s",
+        "img_write_fail": "Could not write:\n%s",
+        "save_fail": "Could not save:\n%s",
+        "warn": "Warning",
+        "error": "Error",
+        "pick_game": "Select a game in the list first.",
+        "custom_cover": "Custom cover",
+        "m_assets": "View/change this game's assets...",
+        "m_alt": "Alternative covers online...",
+        "m_custom": "Custom cover...",
+        "set_theme": "Theme:",
+        "theme_dark": "Dark",
+        "theme_light": "Light",
+        "theme_system": "Follow system",
+        "dest": "Destination",
+        "set_lang": "Language:",
+        "set_show_status": "Show internet status dots at the top",
+        "set_repo": "Cover repository:",
+        "set_format": "Cover format:",
+        "format_portrait": "Portrait (900x1233)",
+        "format_landscape": "Landscape (900x600)",
+        "set_screenshots": "Screenshots per game:",
+        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d, region: %s).",
+        "save": "Save",
+        "cancel2": "Cancel",
+        "restart_title": "Restart app",
+        "restart_lang": "The language changes when you restart the app (close and reopen).",
+        "assets": "Assets",
+        "assets_of": "Assets of",
+        "col_kind": "Type",
+        "col_status": "Status",
+        "dl_online": "Download online",
+        "change_pc": "Change... (PC)",
+        "close": "Close",
+        "assets_hint": "Select a type and use the buttons.",
+        "assets_installed": "Installed",
+        "assets_missing": "Missing",
+        "assets_pick": "Select a type in the list first.",
+        "assets_dl_kind": "Downloading %s...",
+        "no_preview": "No preview",
+        "pick_kind": "Choose %s for %s",
+        "kind_boxart": "cover (boxart)",
+        "kind_background": "background",
+        "kind_icon": "icon",
+        "kind_banner": "banner",
+        "kind_screenshots": "screenshot",
+        "asset_changed": "Asset '%s' changed for %s (%s).",
+        "m_assets": "View/change assets of this game...",
+        "m_alt": "Alternative covers online...",
+        "m_custom": "Custom cover...",
+        "set_title": "Settings",
+        "set_theme": "Theme:",
+        "theme_dark": "Dark",
+        "theme_light": "Light",
+        "theme_system": "Follow system theme",
+        "set_repo": "Cover repository:",
+        "set_format": "Cover format:",
+        "format_portrait": "Portrait (900x1233)",
+        "format_landscape": "Landscape (900x600)",
+        "set_screenshots": "Screenshots per game:",
+        "set_lang": "Language:",
+        "set_show_status": "Show connection status dots",
+        "save": "Save",
+        "cancel2": "Cancel",
+        "restart_title": "Language",
+        "restart_lang": "Restart the app to apply the language.",
+        "assets_title": "Assets - %s (%s)",
+        "assets_header": "Assets of %s (%s)",
+        "assets_kind": "Type",
+        "assets_status": "Status",
+        "assets_pick": "Select a type and use the buttons.",
+        "assets_ok": "Installed",
+        "assets_missing": "Missing",
+        "assets_online": "Download online",
+        "assets_pc": "Change... (PC)",
+        "assets_close": "Close",
+        "assets_dl_kind": "Downloading %s...",
+        "no_preview": "No preview",
+        "assets_pick_kind": "Select a type in the list first.",
+        "alt_title": "Alternative covers - %s (%s)",
+        "alt_label": "Covers available on XboxUnity (pick one):",
+        "alt_searching": "Searching covers on XboxUnity...",
+        "alt_none": "No covers found on XboxUnity for this game.",
+        "alt_count": "%d cover(s) found.",
+        "alt_loading": "Loading preview...",
+        "alt_none_found": "No covers found on XboxUnity for this game.",
+        "alt_no_img": "No image",
+        "alt_no_preview": "No preview for this cover.",
+        "alt_loaded": "Preview loaded.",
+        "alt_noimg": "No image",
+        "alt_preview_ok": "Preview loaded.",
+        "alt_preview_none": "No preview for this cover.",
+        "alt_sem_preview": "No preview",
+        "alt_install": "Download and install this cover",
+        "alt_official": "Official cover (x360db)",
+        "alt_unity_empty": "Searched: XboxUnity has no cover for this game; showing the official cover (x360db).",
+        "alt_installed": "Cover installed successfully.",
+        "alt_failed": "Failed to install the cover.",
+        "alt_select_first": "Select a cover first.",
+        "alt_downloading": "Downloading...",
+        "status_saved": "Settings saved (theme: %s, repo: %s, cover: %s, screenshots: %d, region: %s).",
+        "canceled": "Operation cancelled by the user.",
+        "unity_fallback": "XboxUnity has no usable cover; using x360db as fallback.",
+        "unity_no_cover": "XboxUnity has no covers for %s; using x360db as fallback.",
+        "unity_offline": "XboxUnity is offline; using x360db.",
+        "no_games_notice": "No games need a download.",
+        "done_notice": "Done! On the Xbox: boot Aurora and press Y -> Refresh on the game (or use Import).",
+        "set_log": "Show log (text box)",
+        "set_region": "Region (cover/description):",
+        "region_note": "Note: the current sources (x360db and XboxUnity) only offer covers/descriptions in English; the region is saved and will be used when supported.",
+        "cover_missing_both": "  cover not found on x360db or XboxUnity (region: %s).",
+        "sort_asc": "A-Z",
+        "sort_desc": "Z-A",
+        "m_rename": "Rename game...",
+        "rename_prompt": "New name for %s (%s):",
+        "renamed": "Game %s renamed to: %s",
+        "set_ftp": "Send via FTP (console):",
+        "ftp_host_lbl": "Console IP:",
+        "ftp_port_lbl": "Port:",
+        "ftp_user_lbl": "User:",
+        "ftp_pass_lbl": "Password:",
+        "ftp_base_lbl": "Remote folder (GameData):",
+        "ftp_send": "Send via FTP",
+        "ftp_sending": "Sending to the console via FTP...",
+        "ftp_sent": "Sent %d file(s) to %s.",
+        "ftp_no_host": "Set the console IP in Settings -> FTP first.",
+        "ftp_no_folder": "This game has no local Data\\GameData folder to send.",
+        "ftp_err": "FTP error: %s",
+        "ss_prev": "◀",
+        "ss_next": "▶",
+        "credits": "Developed by Atreus171\nhttps://github.com/Atreus171/Aurora-Asset-Editor",
+    },
+}
+
+
+def tr(key, *args):
+    s = TEXT.get(CURRENT_LANG, TEXT["pt"]).get(key)
+    if s is None:
+        s = TEXT["pt"].get(key, key)
+    if args:
+        try:
+            return s % args
+        except Exception:
+            return s
+    return s
+
+
+def detect_system_theme():
+    if sys.platform == "win32":
+        try:
+            import winreg
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+            )
+            val, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            winreg.CloseKey(key)
+            return "claro" if val else "escuro"
+        except Exception:
+            pass
+    return "escuro"
+
+ASSET_KINDS = [
+    ("boxart", "Capa (Boxart)", "GC", ASSET_TYPE_BOXART, "cover.png"),
+    ("background", "Fundo (Background)", "BK", ASSET_TYPE_BACKGROUND, "background.png"),
+    ("icon", "Ícone (64x64)", "GL", ASSET_TYPE_ICON, "icon.png"),
+    ("banner", "Banner (420x95)", "GL", ASSET_TYPE_BANNER, "banner.png"),
+    ("screenshots", "Screenshots", "SS", ASSET_TYPE_SCREENSHOT, "screenshot1.png"),
+]
+
+
+def config_path():
+    base = os.path.dirname(
+        os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__)
+    )
+    return os.path.join(base, "aurora_covers_config.json")
+
+
+def load_config():
+    cfg = dict(DEFAULT_CONFIG)
+    try:
+        with open(config_path(), "r", encoding="utf-8") as f:
+            cfg.update(json.load(f))
+    except Exception:
+        pass
+    return cfg
+
+
+def save_config(cfg):
+    try:
+        with open(config_path(), "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def log(*args):
+    print(*args)
+
+
+def fetch_bytes(url, timeout=40, attempts=2):
+    for _ in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers=USER_AGENT)
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = resp.read()
+                if resp.status == 200 and len(data) > 0:
+                    return data
+        except Exception:
+            time.sleep(1.0)
+    return None
+
+
+def download_json(url, timeout=40):
+    data = fetch_bytes(url, timeout=timeout)
+    if data is None:
+        return None
+    try:
+        return json.loads(data.decode("utf-8"))
+    except Exception:
+        return None
+
+
+def display_path(path):
+    try:
+        return os.path.relpath(path)
+    except ValueError:
+        return os.path.abspath(path)
+
+
+def poke_url(url, timeout=8, method="GET"):
+    try:
+        req = urllib.request.Request(url, headers=USER_AGENT, method=method)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            resp.read(1024)
+            return True
+    except Exception:
+        return False
+
+
+class X360DB:
+    def __init__(self):
+        self.titles = {}
+        self.alt_ids = {}
+        self.info_cache = {}
+        self.ready = threading.Event()
+        self.index_file = os.path.join(os.path.dirname(config_path()), "aurora_covers_games.json")
+
+    def _read_cache(self):
+        try:
+            if os.path.isfile(self.index_file):
+                if time.time() - os.path.getmtime(self.index_file) < 12 * 3600:
+                    with open(self.index_file, "r", encoding="utf-8") as f:
+                        return json.load(f)
+        except Exception:
+            pass
+        return None
+
+    def _write_cache(self, raw):
+        try:
+            tmp = self.index_file + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(raw, f, ensure_ascii=False)
+            os.replace(tmp, self.index_file)
+        except Exception:
+            pass
+
+    def load_index(self):
+        raw = self._read_cache()
+        if not raw:
+            raw = download_json(GAMES_INDEX_URL)
+            if not raw:
+                raw = download_json(GAMES_INDEX_MIRROR)
+            if not raw:
+                try:
+                    with open(self.index_file, "r", encoding="utf-8") as f:
+                        raw = json.load(f)
+                except Exception:
+                    raw = None
+            elif raw:
+                self._write_cache(raw)
+        if not isinstance(raw, list) or not raw:
+            return False
+        for entry in raw:
+            if not isinstance(entry, dict):
+                continue
+            tid = (entry.get("id") or "").upper()
+            if not tid:
+                continue
+            self.titles[tid] = {
+                "title": entry.get("title") or tid,
+                "boxart_url": entry.get("boxart"),
+            }
+            for alt in entry.get("alternative_id") or []:
+                self.alt_ids[alt.upper()] = tid
+        self.ready.set()
+        return True
+
+    def canonical(self, tid):
+        return self.alt_ids.get(tid.upper(), tid.upper())
+
+    def title_name(self, tid):
+        info = self.titles.get(tid.upper())
+        if info:
+            return info["title"]
+        return tid.upper()
+
+    def artwork_url(self, tid, kind):
+        return X360DB_RAW + "titles/" + self.canonical(tid) + "/artwork/" + kind + ".jpg"
+
+    def info(self, tid):
+        tid = self.canonical(tid)
+        if tid in self.info_cache:
+            return self.info_cache[tid]
+        info = download_json(X360DB_RAW + "titles/" + tid + "/info.json")
+        self.info_cache[tid] = info or {}
+        return self.info_cache[tid]
+
+    def download_artwork(self, tid, kind):
+        data = fetch_bytes(self.artwork_url(tid, kind))
+        if data is not None:
+            return data
+        info = self.info(tid)
+        if info:
+            fallback = (info.get("artwork") or {}).get(kind)
+            if fallback:
+                data = fetch_bytes(fallback)
+                if data is not None:
+                    return data
+        return None
+
+    def gallery_urls(self, tid):
+        info = self.info(tid)
+        if not info:
+            return []
+        return [u for u in (info.get("artwork") or {}).get("gallery") or [] if u]
+
+
+class XboxUnity:
+    def __init__(self):
+        self.cache = {}
+        self._down_until = 0.0
+
+    def covers(self, tid, force=False):
+        if not force and tid in self.cache:
+            return self.cache[tid]
+        if not force and time.time() < self._down_until:
+            self.cache[tid] = []
+            return []
+        items = []
+        got = False
+        b = fetch_bytes(XBOXUNITY_CVERS % tid, timeout=12, attempts=1)
+        if b:
+            got = True
+            try:
+                data = json.loads(b.decode("utf-8"))
+            except Exception:
+                data = None
+            if isinstance(data, list):
+                items = [it for it in data if isinstance(it, dict)]
+        if not items:
+            b2 = fetch_bytes(
+                XBOXUNITY_LIB + "/CoverInfo.php?titleid=" + tid, timeout=12, attempts=1
+            )
+            if b2:
+                got = True
+                try:
+                    data2 = json.loads(b2.decode("utf-8"))
+                except Exception:
+                    data2 = None
+                if isinstance(data2, dict) and isinstance(data2.get("covers"), list):
+                    items = [it for it in data2["covers"] if isinstance(it, dict)]
+        if got:
+            self._down_until = 0.0
+        elif time.time() >= self._down_until:
+            self._down_until = time.time() + 30
+        self.cache[tid] = items
+        return items
+
+    def cover_bytes(self, item, small=False):
+        if small:
+            order = ["thumbnail", "front", "url", "large"]
+        else:
+            order = ["url", "large", "thumbnail", "front"]
+        for key in order:
+            if key == "large":
+                cid = item.get("cover_id") or item.get("cid")
+                if cid:
+                    b = fetch_bytes(XBOXUNITY_LIB + "/Cover.php?size=large&cid=" + str(cid), timeout=12, attempts=1)
+                    if b:
+                        return b
+                continue
+            u = item.get(key)
+            if u:
+                b = fetch_bytes(u, timeout=12, attempts=1)
+                if b:
+                    return b
+        return None
+
+    def label(self, item):
+        name = item.get("name") or item.get("title") or ""
+        rating = item.get("rating")
+        official = bool(item.get("official"))
+        tag = "Oficial" if official else "Comunidade"
+        s = (name or tag) + "  [%s]" % tag
+        if rating:
+            s += "  (nota %s)" % rating
+        w = item.get("width")
+        h = item.get("height")
+        if w and h:
+            s += "  %sx%s" % (w, h)
+        return s
+
+
+def unity_rating(item):
+    try:
+        return int(item.get("rating") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def cover_fill(image, target_w, target_h):
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGBA")
+    scale = max(target_w / image.width, target_h / image.height)
+    nw = max(target_w, round(image.width * scale))
+    nh = max(target_h, round(image.height * scale))
+    image = image.resize((nw, nh), Image.LANCZOS)
+    left = (nw - target_w) // 2
+    top = (nh - target_h) // 2
+    return image.crop((left, top, left + target_w, top + target_h))
+
+
+def cover_fit(image, target_w, target_h):
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGBA")
+    image.thumbnail((target_w, target_h), Image.LANCZOS)
+    return image
+
+
+def cover_fit_canvas(image, target_w, target_h):
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGBA")
+    image.thumbnail((target_w, target_h), Image.LANCZOS)
+    canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 255))
+    ox = (target_w - image.width) // 2
+    oy = (target_h - image.height) // 2
+    canvas.paste(image, (ox, oy), image)
+    return canvas
+
+
+def box_render(image, cover_format):
+    if cover_format == "retrato":
+        return cover_fit_canvas(image, COVER_W, COVER_H)
+    return cover_fit_canvas(image, BOXART_W, BOXART_H)
+
+
+def encode_texture(image):
+    img = image.convert("RGBA")
+    w, h = img.size
+    pw = ((w + 31) // 32) * 32
+    ph = ((h + 31) // 32) * 32
+    canvas = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    canvas.paste(img, (0, 0))
+    data = bytearray(canvas.tobytes())
+
+    for i in range(0, len(data) - 1, 2):
+        data[i], data[i + 1] = data[i + 1], data[i]
+
+    pitch = (w + 31) // 32
+    c0 = (pitch << 22) | 2
+    c1 = (1 << 6) | 6
+    c2 = ((h - 1) << 13) | (w - 1)
+    c3 = (3 << 10) | (2 << 7) | (1 << 4)
+    c4 = 0
+    c5 = (1 << 11) | (1 << 9)
+    return bytes(data), (c0, c1, c2, c3, c4, c5)
+
+
+def make_multi_asset_bytes(textures):
+    payload = bytearray()
+    entries = bytearray(25 * 64)
+    flags = 0
+    ss_count = 0
+    for slot, image in textures:
+        data, c = encode_texture(image)
+        entry = struct.pack(
+            ">III7I6I",
+            len(payload),
+            len(data),
+            0,
+            3,
+            1,
+            0,
+            0,
+            0,
+            0xFFFF0000,
+            0xFFFF0000,
+            c[0],
+            c[1],
+            c[2],
+            c[3],
+            c[4],
+            c[5],
+        )
+        entries[slot * 64 : slot * 64 + 64] = entry
+        payload.extend(data)
+        flags |= 1 << slot
+        if slot >= ASSET_TYPE_SCREENSHOT:
+            ss_count += 1
+
+    header = struct.pack(">IIII", 0x52584541, 1, len(payload), flags)
+    header += struct.pack(">I", ss_count)
+    header += bytes(entries)
+    padding = 2048 - len(header)
+    header += b"\x00" * padding
+    return header + bytes(payload)
+
+
+def make_asset_bytes(image, asset_type):
+    return make_multi_asset_bytes([(asset_type, image)])
+
+
+def color565(value):
+    r = (value >> 11) & 0x1F
+    g = (value >> 5) & 0x3F
+    b = value & 0x1F
+    return (r * 255 // 31, g * 255 // 63, b * 255 // 31, 255)
+
+
+def decompress_bc3(data, w, h):
+    out = bytearray(w * h * 4)
+    blocks_x = (w + 3) // 4
+    blocks_y = (h + 3) // 4
+    for by in range(blocks_y):
+        for bx in range(blocks_x):
+            block = by * blocks_x + bx
+            off = block * 16
+            a0 = data[off]
+            a1 = data[off + 1]
+            atab = [0] * 8
+            atab[0] = a0
+            atab[1] = a1
+            if a0 > a1:
+                for i in range(6):
+                    atab[i + 2] = ((6 - i) * a0 + (i + 1) * a1 + 3) // 7
+            else:
+                for i in range(4):
+                    atab[i + 2] = ((4 - i) * a0 + (i + 1) * a1 + 2) // 5
+                atab[6] = 0
+                atab[7] = 255
+            bits_alpha = int.from_bytes(data[off + 2 : off + 8], "little")
+            c0 = int.from_bytes(data[off + 8 : off + 10], "little")
+            c1 = int.from_bytes(data[off + 10 : off + 12], "little")
+            bits_color = int.from_bytes(data[off + 12 : off + 16], "little")
+            p0 = color565(c0)
+            p1 = color565(c1)
+            if c0 > c1:
+                table = [
+                    p0,
+                    p1,
+                    ((2 * p0[0] + p1[0]) // 3, (2 * p0[1] + p1[1]) // 3, (2 * p0[2] + p1[2]) // 3, 255),
+                    ((p0[0] + 2 * p1[0]) // 3, (p0[1] + 2 * p1[1]) // 3, (p0[2] + 2 * p1[2]) // 3, 255),
+                ]
+            else:
+                table = [
+                    p0,
+                    p1,
+                    ((p0[0] + p1[0]) // 2, (p0[1] + p1[1]) // 2, (p0[2] + p1[2]) // 2, 255),
+                    (0, 0, 0, 0),
+                ]
+            for py in range(4):
+                for px in range(4):
+                    ix = bx * 4 + px
+                    iy = by * 4 + py
+                    if ix >= w or iy >= h:
+                        continue
+                    pos = py * 4 + px
+                    ai = (bits_alpha >> (3 * pos)) & 7
+                    ci = (bits_color >> (2 * pos)) & 3
+                    r, g, b, a = table[ci]
+                    a = atab[ai]
+                    o = (iy * w + ix) * 4
+                    out[o] = r
+                    out[o + 1] = g
+                    out[o + 2] = b
+                    out[o + 3] = a
+    return bytes(out)
+
+
+def decode_texture(data, fmt, endian, swizzle, padded_w, padded_h):
+    if endian == 1:
+        for i in range(0, len(data) - 1, 2):
+            data[i], data[i + 1] = data[i + 1], data[i]
+    elif endian == 2:
+        for i in range(0, len(data) - 3, 4):
+            data[i], data[i + 3] = data[i + 3], data[i]
+            data[i + 1], data[i + 2] = data[i + 2], data[i + 1]
+    elif endian == 3:
+        for i in range(0, len(data) - 3, 4):
+            data[i], data[i + 2] = data[i + 2], data[i]
+            data[i + 1], data[i + 3] = data[i + 3], data[i + 1]
+    if fmt == 6:
+        rgba = bytes(data)
+    elif fmt == 20:
+        rgba = decompress_bc3(data, padded_w, padded_h)
+    else:
+        return None
+    buf = bytearray(rgba)
+    sx, sy, sz, sw = swizzle
+    if sx != 0 or sy != 1 or sz != 2 or sw != 3:
+        for i in range(0, len(buf) - 3, 4):
+            x = buf[i + sx]
+            y = buf[i + sy]
+            z = buf[i + sz]
+            w = buf[i + sw]
+            buf[i] = x
+            buf[i + 1] = y
+            buf[i + 2] = z
+            buf[i + 3] = w
+    return bytes(buf)
+
+
+def decode_asset(blob, asset_type):
+    if not blob or len(blob) < 2048:
+        return None
+    try:
+        magic, ver, datalen, flags, sshots = struct.unpack(">IIIII", blob[:20])
+    except Exception:
+        return None
+    if flags & (1 << asset_type) == 0:
+        return None
+    base = 0x14 + asset_type * 0x40
+    idx, size, ext = struct.unpack(">III", blob[base : base + 12])
+    th = struct.unpack(">13I", blob[base + 12 : base + 64])
+    c = th[7:13]
+    tiled = (c[0] & 0x80000000) >> 31
+    dimension = (c[5] & 0x600) >> 9
+    if tiled or dimension != 1:
+        return None
+    pitch = (c[0] & 0x7FC00000) >> 22
+    fmt = c[1] & 0x3F
+    endian = (c[1] & 0xC0) >> 6
+    real_w = (c[2] & 0x1FFF) + 1
+    real_h = ((c[2] & 0x03FFE000) >> 13) + 1
+    swx = (c[3] & 0x0C) >> 2
+    swy = (c[3] & 0x70) >> 4
+    swz = (c[3] & 0x380) >> 7
+    sww = (c[3] & 0x1C00) >> 10
+    if pitch == 0 or size == 0 or idx + size > len(blob) - 2048:
+        return None
+    padded_w = pitch * 32
+    bpp = 4 if fmt == 6 else 1
+    padded_h = size // (padded_w * bpp)
+    if padded_h <= 0:
+        return None
+    data = bytearray(blob[2048 + idx : 2048 + idx + size])
+    rgba = decode_texture(data, fmt, endian, (swx, swy, swz, sww), padded_w, padded_h)
+    if rgba is None:
+        return None
+    img = Image.frombytes("RGBA", (padded_w, padded_h), rgba)
+    return img.crop((0, 0, real_w, real_h))
+
+
+def _read_file(path):
+    try:
+        with open(path, "rb") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def _decode_asset_safe(blob, asset_type):
+    try:
+        return decode_asset(blob, asset_type)
+    except Exception:
+        return None
+
+
+def _open_image(path):
+    try:
+        return Image.open(path)
+    except Exception:
+        return None
+
+
+def installed_path():
+    base = os.path.dirname(
+        os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__)
+    )
+    return os.path.join(base, "aurora_covers_installed.json")
+
+
+def mark_installed(tid, kind):
+    try:
+        data = {}
+        p = installed_path()
+        if os.path.isfile(p):
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        data.setdefault(tid, {})[kind] = True
+        tmp = p + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, p)
+    except Exception:
+        pass
+
+
+def is_installed(tid, kind):
+    try:
+        with open(installed_path(), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return bool((data.get(tid) or {}).get(kind))
+    except Exception:
+        return False
+
+
+def scan_aurora(root):
+    games = []
+    gamedata = os.path.join(root, "Data", "GameData")
+    if not os.path.isdir(gamedata):
+        return games
+    pattern = re.compile(r"^([0-9A-Fa-f]{8})_(.+)")
+    for name in sorted(os.listdir(gamedata)):
+        m = pattern.match(name)
+        if not m:
+            continue
+        tid = m.group(1).upper()
+        if tid == "00000000":
+            continue
+        dname = m.group(2).strip()
+        folder = os.path.join(gamedata, name)
+        if not os.path.isdir(folder):
+            continue
+        has_cover = False
+        for file_name in os.listdir(folder):
+            full = os.path.join(folder, file_name)
+            if not os.path.isfile(full):
+                continue
+            try:
+                size = os.path.getsize(full)
+            except OSError:
+                size = 0
+            if file_name.upper().startswith("GC") and size >= MIN_ASSET_SIZE:
+                has_cover = True
+                break
+        games.append(
+            {
+                "folder": folder,
+                "tid": tid,
+                "folder_name": name,
+                "dname": dname,
+                "has_cover": has_cover,
+            }
+        )
+    seen = {}
+    deduped = []
+    for g in games:
+        key = g["tid"]
+        if key not in seen:
+            seen[key] = g
+            deduped.append(g)
+        elif not seen[key]["has_cover"] and g["has_cover"]:
+            i = deduped.index(seen[key])
+            deduped[i] = g
+            seen[key] = g
+    return deduped
+
+
+def scan_hdd_content(root):
+    tids = []
+    pattern = re.compile(r"^[0-9A-Fa-f]{8}$")
+    for drive_entry in os.listdir(root):
+        content = os.path.join(root, drive_entry, "Content", "0000000000000000")
+        if os.path.isdir(content):
+            ids = [d for d in os.listdir(content) if pattern.match(d)]
+            ids.sort()
+            tids.extend(ids)
+    root_content = os.path.join(root, "Content", "0000000000000000")
+    if os.path.isdir(root_content):
+        for d in os.listdir(root_content):
+            if pattern.match(d) and d not in tids:
+                tids.append(d)
+    return [t for t in tids if t != "00000000"]
+
+
+def find_cover_file(folder):
+    if not folder or not os.path.isdir(folder):
+        return None
+    for name in sorted(os.listdir(folder)):
+        if name.upper().startswith("GC") and name.lower().endswith(".asset"):
+            return os.path.join(folder, name)
+    return None
+
+
+def selftest():
+    img = Image.new("RGBA", (900, 600), (200, 30, 30, 255))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((100, 100, 500, 300), fill=(0, 200, 0, 255))
+    blob = make_asset_bytes(img, ASSET_TYPE_BOXART)
+    assert blob[:4] == b"RXEA", blob[:4].hex()
+    assert len(blob) >= 2048
+    header_len = struct.unpack(">I", blob[8:12])[0]
+    assert header_len == len(blob) - 2048
+    flags = struct.unpack(">I", blob[12:16])[0]
+    assert flags & (1 << ASSET_TYPE_BOXART)
+    back = decode_asset(blob, ASSET_TYPE_BOXART)
+    assert back is not None
+    assert back.size == (900, 600)
+    assert back.getpixel((200, 200)) == (0, 200, 0, 255)
+    assert back.getpixel((700, 100)) == (200, 30, 30, 255)
+    print("selftest OK: %d bytes, decode round-trip OK" % len(blob))
+
+    icon = Image.new("RGBA", (ICON_W, ICON_H), (10, 20, 30, 255))
+    banner = Image.new("RGBA", (BANNER_W, BANNER_H), (40, 50, 60, 255))
+    gl = make_multi_asset_bytes([(ASSET_TYPE_ICON, icon), (ASSET_TYPE_BANNER, banner)])
+    gl_flags = struct.unpack(">I", gl[12:16])[0]
+    assert gl_flags == (1 << ASSET_TYPE_ICON) | (1 << ASSET_TYPE_BANNER)
+    assert decode_asset(gl, ASSET_TYPE_ICON).getpixel((10, 10)) == (10, 20, 30, 255)
+    assert decode_asset(gl, ASSET_TYPE_BANNER).getpixel((10, 10)) == (40, 50, 60, 255)
+
+    ss1 = Image.new("RGBA", (SS_W, SS_H), (100, 110, 120, 255))
+    ss2 = Image.new("RGBA", (SS_W, SS_H), (200, 210, 220, 255))
+    ss = make_multi_asset_bytes(
+        [(ASSET_TYPE_SCREENSHOT, ss1), (ASSET_TYPE_SCREENSHOT + 1, ss2)]
+    )
+    ss_flags = struct.unpack(">I", ss[12:16])[0]
+    ss_count = struct.unpack(">I", ss[16:20])[0]
+    assert ss_flags == (1 << ASSET_TYPE_SCREENSHOT) | (1 << (ASSET_TYPE_SCREENSHOT + 1))
+    assert ss_count == 2
+    assert decode_asset(ss, ASSET_TYPE_SCREENSHOT).getpixel((10, 10)) == (100, 110, 120, 255)
+    assert decode_asset(ss, ASSET_TYPE_SCREENSHOT + 1).getpixel((10, 10)) == (200, 210, 220, 255)
+    print("selftest OK: GL (ícone+banner) e SS (screenshots) OK")
+
+    retrato = box_render(Image.new("RGBA", (300, 400), (9, 9, 9, 255)), "retrato")
+    paisagem = box_render(Image.new("RGBA", (300, 400), (8, 8, 8, 255)), "paisagem")
+    assert retrato.size == (COVER_W, COVER_H)
+    assert paisagem.size == (BOXART_W, BOXART_H)
+    print("selftest OK: box_render (retrato 900x1233 e paisagem 900x600) OK")
+
+    cfg = {
+        "theme": "escuro",
+        "repo": "x360db",
+        "cover_format": "paisagem",
+        "screenshots": 6,
+        "lang": "pt",
+        "show_status": True,
+        "show_log": True,
+        "region": "global",
+        "ftp_host": "",
+        "ftp_port": 21,
+        "ftp_user": "xbox",
+        "ftp_pass": "xbox",
+        "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
+    }
+    assert dict(DEFAULT_CONFIG) == cfg
+    assert tr("warn") == "Aviso"
+    _old_lang = globals()["CURRENT_LANG"]
+    globals()["CURRENT_LANG"] = "en"
+    assert tr("warn") == "Warning"
+    assert tr("alt_count", 3) == "3 cover(s) found."
+    globals()["CURRENT_LANG"] = "pt"
+    assert tr("warn") == "Aviso"
+    globals()["CURRENT_LANG"] = _old_lang
+    assert tr("alt_count", 3) == "3 capa(s) encontrada(s)."
+    assert [k for k, *_ in ASSET_KINDS] == ["boxart", "background", "icon", "banner", "screenshots"]
+    assert THEMES["escuro"]["fg"] == "#e6e6e6"
+    print("selftest OK: configurações e temas OK")
+
+
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.queue = queue.Queue()
+        self.db = X360DB()
+        self.unity = XboxUnity()
+        self.cfg = load_config()
+        self.theme = self.cfg.get("theme", "escuro")
+        self.repo = self.cfg.get("repo", "x360db")
+        self.cover_format = self.cfg.get("cover_format", "paisagem")
+        self.ss_max = int(self.cfg.get("screenshots", SS_MAX_DEFAULT))
+        self.lang = self.cfg.get("lang", "pt")
+        global CURRENT_LANG
+        CURRENT_LANG = self.lang if self.lang in TEXT else "pt"
+        self.show_status = bool(self.cfg.get("show_status", True))
+        self.show_log = bool(self.cfg.get("show_log", True))
+        self.region = self.cfg.get("region", "global")
+        self.ftp_host = str(self.cfg.get("ftp_host", ""))
+        self.ftp_port = int(self.cfg.get("ftp_port", 21))
+        self.ftp_user = str(self.cfg.get("ftp_user", "xbox"))
+        self.ftp_pass = str(self.cfg.get("ftp_pass", "xbox"))
+        self.ftp_base = str(self.cfg.get("ftp_base", "Hdd:\\Aurora\\Data\\GameData"))
+        self.sort_asc = True
+        self.cancel_event = threading.Event()
+        self.unity_status = "checking"
+        self.x360db_status = "checking"
+        self._applied_theme = ""
+        self.aurora_path = tk.StringVar()
+        self.opt_boxart = tk.BooleanVar(value=True)
+        self.opt_background = tk.BooleanVar(value=True)
+        self.opt_force = tk.BooleanVar(value=False)
+        self.opt_backup = tk.BooleanVar(value=True)
+        self.opt_icon = tk.BooleanVar(value=True)
+        self.opt_banner = tk.BooleanVar(value=True)
+        self.opt_screenshots = tk.BooleanVar(value=True)
+        self.games = []
+        self.worker = None
+        self.busy = False
+        self.item_to_game = {}
+        self._photo = None
+        self.preview_cache = {}
+        self._assets_dlg = None
+        self._assets_tree = None
+        self._assets_kinds = {}
+        self._assets_g = None
+        self._assets_path = ""
+        self._assets_msg = None
+        self._assets_ss_index = 0
+        self._assets_prev = None
+        self._assets_next = None
+        self._alt_dlg = None
+        self._alt_lb = None
+        self._alt_msg = None
+        self._alt_preview = None
+        self._alt_items = []
+        self._alt_photo = None
+        self._alt_preview_item = (0, None)
+        self.unity_status = "checking"
+
+        root.title(tr("title"))
+        try:
+            screen_h = root.winfo_screenheight()
+            screen_w = root.winfo_screenwidth()
+        except tk.TclError:
+            screen_h, screen_w = 768, 1366
+        geo_h = max(620, min(760, screen_h - 90))
+        geo_w = max(900, min(1040, screen_w - 40))
+        self.txt_rows = 5 if screen_h <= 720 else 8
+        root.geometry("%dx%d" % (geo_w, geo_h))
+        if screen_h <= 720:
+            root.state("zoomed")
+        root.minsize(860, 560)
+        root.update_idletasks()
+
+        frm = ttk.Frame(root, padding=8)
+        frm.pack(fill=tk.BOTH, expand=True)
+
+        self.status_row = ttk.Frame(frm)
+        ttk.Label(self.status_row, text=tr("unity_status")).pack(side=tk.LEFT)
+        self.unity_dot = tk.Label(self.status_row, text="●", width=1, fg=UNITY_WAIT)
+        self.unity_dot.pack(side=tk.LEFT, padx=(4, 2))
+        self.unity_lbl = ttk.Label(self.status_row, text=tr("checking"))
+        self.unity_lbl.pack(side=tk.LEFT)
+        ttk.Label(self.status_row, text=tr("x360db_status")).pack(side=tk.LEFT, padx=(16, 0))
+        self.x360db_dot = tk.Label(self.status_row, text="●", width=1, fg=UNITY_WAIT)
+        self.x360db_dot.pack(side=tk.LEFT, padx=(4, 2))
+        self.x360db_lbl = ttk.Label(self.status_row, text=tr("checking"))
+        self.x360db_lbl.pack(side=tk.LEFT)
+
+        self.path_row = ttk.Frame(frm)
+        self.path_row.pack(fill=tk.X)
+        ttk.Label(self.path_row, text=tr("aurora_folder")).pack(side=tk.LEFT)
+        self.entry_path = ttk.Entry(self.path_row, textvariable=self.aurora_path)
+        self.entry_path.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=6)
+        ttk.Button(self.path_row, text=tr("browse"), command=self.browse).pack(side=tk.LEFT)
+
+        opts = ttk.Frame(frm)
+        opts.pack(fill=tk.X, pady=(8, 0))
+        ttk.Checkbutton(opts, text=tr("opt_boxart"), variable=self.opt_boxart).pack(
+            side=tk.LEFT, padx=(0, 12)
+        )
+        ttk.Checkbutton(opts, text=tr("opt_background"), variable=self.opt_background).pack(
+            side=tk.LEFT, padx=(0, 12)
+        )
+        ttk.Checkbutton(opts, text=tr("opt_force"), variable=self.opt_force).pack(
+            side=tk.LEFT, padx=(0, 12)
+        )
+        ttk.Checkbutton(opts, text=tr("opt_backup"), variable=self.opt_backup).pack(
+            side=tk.LEFT
+        )
+
+        opts2 = ttk.Frame(frm)
+        opts2.pack(fill=tk.X, pady=(4, 0))
+        ttk.Checkbutton(opts2, text=tr("opt_icon"), variable=self.opt_icon).pack(
+            side=tk.LEFT, padx=(0, 12)
+        )
+        ttk.Checkbutton(opts2, text=tr("opt_banner"), variable=self.opt_banner).pack(
+            side=tk.LEFT, padx=(0, 12)
+        )
+        self.chk_screenshots = ttk.Checkbutton(
+            opts2, text=tr("opt_screenshots", self.ss_max), variable=self.opt_screenshots
+        )
+        self.chk_screenshots.pack(side=tk.LEFT, padx=(0, 12))
+        tk.Label(
+            opts2, text=tr("info_note"), fg=UNITY_WAIT,
+        ).pack(side=tk.LEFT)
+
+        btn_row = ttk.Frame(frm)
+        btn_row.pack(fill=tk.X, pady=(8, 0))
+        self.btn_scan = ttk.Button(btn_row, text=tr("scan"), command=self.start_scan)
+        self.btn_scan.pack(side=tk.LEFT)
+        self.btn_dl = ttk.Button(
+            btn_row, text=tr("download"), command=self.start_download, state=tk.DISABLED
+        )
+        self.btn_dl.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_custom = ttk.Button(
+            btn_row, text=tr("custom_cover"), command=self.install_custom, state=tk.DISABLED
+        )
+        self.btn_custom.pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(btn_row, text=tr("settings"), command=self.open_settings).pack(
+            side=tk.LEFT, padx=(8, 0)
+        )
+        self.btn_sort = ttk.Button(
+            btn_row, text=tr("sort_asc"), command=self.toggle_sort
+        )
+        self.btn_sort.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_cancel = ttk.Button(btn_row, text=tr("cancel"), command=self.cancel_worker, state=tk.DISABLED)
+        self.btn_cancel.pack(side=tk.LEFT, padx=(8, 0))
+        tk.Label(
+            btn_row, text=tr("tip_right_click"), fg=UNITY_WAIT,
+        ).pack(side=tk.LEFT, padx=(10, 0))
+
+        body = ttk.Frame(frm)
+        body.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
+        body.columnconfigure(0, weight=1)
+        body.rowconfigure(0, weight=1)
+
+        tree_frame = ttk.Frame(body)
+        tree_frame.grid(row=0, column=0, sticky="nsew")
+        cols = ("tid", "title", "status")
+        self.tree = ttk.Treeview(tree_frame, columns=cols, show="headings", selectmode="browse")
+        self.tree.heading("tid", text=tr("col_tid"))
+        self.tree.heading("title", text=tr("col_game"))
+        self.tree.heading("status", text=tr("col_status"))
+        self.tree.column("tid", width=90, stretch=False)
+        self.tree.column("status", width=110, stretch=False)
+        sb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=sb.set)
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+        self.tree.bind("<Button-3>", self.on_tree_menu)
+        self.tree.bind("<Control-Button-1>", self.on_tree_menu)
+
+        preview_panel = ttk.Frame(body, width=340)
+        preview_panel.grid(row=0, column=1, sticky="ns", padx=(12, 0))
+        preview_panel.grid_propagate(False)
+        ttk.Label(preview_panel, text=tr("preview_title")).pack(pady=(0, 4))
+        self._preview_frame = tk.Frame(
+            preview_panel, width=PREVIEW_W + 8, height=PREVIEW_H + 8, bd=1,
+            relief=tk.SUNKEN, bg="#222",
+        )
+        self._preview_frame.pack_propagate(False)
+        self._preview_frame.pack()
+        self.preview_lbl = tk.Label(
+            self._preview_frame, text=tr("no_selection"), bg="#222", fg="#9a9a9a"
+        )
+        self.preview_lbl.pack(fill=tk.BOTH, expand=True)
+        self.preview_title = ttk.Label(preview_panel, text="", wraplength=320)
+        self.preview_title.pack(pady=(6, 0))
+        self.preview_info = ttk.Label(
+            preview_panel, text="", wraplength=320, justify=tk.LEFT, foreground=UNITY_WAIT
+        )
+        self.preview_info.pack(pady=(4, 0), fill=tk.X)
+        self.preview_status = ttk.Label(preview_panel, text="")
+        self.preview_status.pack()
+
+        self.progress = ttk.Progressbar(frm, mode="determinate")
+        self.progress.pack(fill=tk.X, pady=(8, 0))
+
+        log_frame = self.log_frame = ttk.Frame(frm)
+        self.txt = tk.Text(log_frame, height=self.txt_rows, state=tk.DISABLED, wrap="word")
+        log_sb = ttk.Scrollbar(log_frame, command=self.txt.yview)
+        self.txt.configure(yscrollcommand=log_sb.set)
+        log_sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.txt.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.apply_show_status()
+        self.apply_show_log()
+        self._paint_status()
+        self.post(tr("loading_index"))
+        self.root.after(100, self.poll_queue)
+        threading.Thread(target=self.load_db, daemon=True).start()
+        threading.Thread(target=self.status_loop, daemon=True).start()
+        threading.Thread(target=self.theme_loop, daemon=True).start()
+        self.root.after(0, self.apply_theme)
+
+    def log(self, message):
+        self.queue.put(message)
+
+    def post(self, message):
+        try:
+            self.txt.configure(state=tk.NORMAL)
+            self.txt.insert(tk.END, message + "\n")
+            self.txt.see(tk.END)
+            self.txt.configure(state=tk.DISABLED)
+        except tk.TclError:
+            pass
+
+    def poll_queue(self):
+        try:
+            while True:
+                msg = self.queue.get_nowait()
+                if msg == "__refresh_tree__":
+                    self.refresh_tree()
+                elif msg == "__done__":
+                    self.set_busy(False)
+                elif msg == "__theme_check__":
+                    self.apply_theme()
+                elif isinstance(msg, str) and msg.startswith("__unity_status__:"):
+                    self.unity_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+                    self._paint_status()
+                elif isinstance(msg, str) and msg.startswith("__x360db_status__:"):
+                    self.x360db_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+                    self._paint_status()
+                elif isinstance(msg, str) and msg.startswith("__preview_info__:"):
+                    self._preview_info_show(msg.split(":", 1)[1])
+                elif msg == "__alt_preview__":
+                    self._alt_preview_show()
+                elif msg == "__assets_refresh__":
+                    self.refresh_assets_dlg()
+                elif isinstance(msg, str) and msg.startswith("__assets_msg__:"):
+                    self._assets_msg_show(msg.split(":", 1)[1])
+                elif msg == "__preview_refresh__":
+                    g = self.selected_game()
+                    if g is not None:
+                        self.show_preview(g)
+                elif msg == "__alt_populate__":
+                    self._alt_populate()
+                elif isinstance(msg, str) and msg.startswith("__alt_installed__:") :
+                    ok = msg.split(":")[1] == "t"
+                    if self._alt_dlg is not None and self._alt_dlg.winfo_exists():
+                        self._alt_msg.configure(text=tr("alt_installed") if ok else tr("alt_failed"))
+                    self.set_busy(False)
+                    self.queue.put("__refresh_tree__")
+                    self.queue.put("__preview_refresh__")
+                elif isinstance(msg, str) and msg.startswith("__progress__:"):
+                    parts = msg.split(":")
+                    self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
+                else:
+                    self.post(msg)
+        except queue.Empty:
+            pass
+        self.root.after(100, self.poll_queue)
+
+    def load_db(self):
+        try:
+            ok = self.db.load_index()
+        except Exception:
+            ok = False
+        if ok:
+            self.log(tr("index_loaded", len(self.db.titles)))
+        else:
+            self.log(tr("index_fail"))
+        self.queue.put("__refresh_tree__")
+
+    def _paint_status(self):
+        th = THEMES.get(detect_system_theme() if self.theme == "sistema" else self.theme, THEMES["escuro"])
+        for status, dot, lbl in (
+            (self.unity_status, self.unity_dot, self.unity_lbl),
+            (self.x360db_status, self.x360db_dot, self.x360db_lbl),
+        ):
+            color = {"ok": UNITY_OK, "down": UNITY_DOWN}.get(status, UNITY_WAIT)
+            text = tr("connected") if status == "ok" else (
+                tr("disconnected") if status == "down" else tr("checking")
+            )
+            dot.configure(bg=th["bg"], fg=color)
+            lbl.configure(text=text)
+
+    def apply_show_status(self):
+        if self.show_status:
+            self.status_row.pack(fill=tk.X, pady=(0, 4), before=self.path_row)
+        else:
+            self.status_row.pack_forget()
+
+    def apply_show_log(self):
+        if self.show_log:
+            self.log_frame.pack(fill=tk.BOTH, pady=(8, 0))
+        else:
+            self.log_frame.pack_forget()
+
+    def status_loop(self):
+        while True:
+            if self.show_status:
+                self.queue.put("__unity_status__:" + ("ok" if poke_url(XBOXUNITY_ROOT) else "down"))
+                self.queue.put("__x360db_status__:" + ("ok" if poke_url(X360DB_PING_URL, method="HEAD") else "down"))
+            time.sleep(PING_INTERVAL)
+
+    def theme_loop(self):
+        while True:
+            time.sleep(15)
+            if self.theme == "sistema":
+                eff = detect_system_theme()
+                if eff != self._applied_theme:
+                    self.queue.put("__theme_check__")
+
+    def browse(self):
+        path = filedialog.askdirectory(title=tr("aurora_folder"))
+        if path:
+            self.aurora_path.set(path)
+
+    def set_busy(self, busy):
+        self.busy = busy
+        state = tk.DISABLED if busy else tk.NORMAL
+        self.btn_scan.configure(state=state)
+        self.btn_dl.configure(state=state if self.games else tk.DISABLED)
+        self.btn_cancel.configure(state=tk.NORMAL if busy else tk.DISABLED)
+
+    def cancel_worker(self):
+        self.cancel_event.set()
+        self.log(tr("canceled"))
+
+    def start_scan(self):
+        if self.busy:
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        if not path or not os.path.isdir(path):
+            messagebox.showerror(tr("warn"), tr("pick_aurora"))
+            return
+        self.cancel_event.clear()
+        self.set_busy(True)
+        threading.Thread(target=self.scan_worker, args=(path,), daemon=True).start()
+
+    def scan_worker(self, path):
+        try:
+            self.log("Escaneando: %s" % path)
+            if not self.db.ready.wait(timeout=30):
+                self.log("Aviso: índice do x360db não carregou; sem filtro de DLC/updates.")
+            if self.cancel_event.is_set():
+                self.log(tr("canceled"))
+                return
+            self.games = scan_aurora(path)
+            hdd_ids = scan_hdd_content(path)
+            known_tids = {g["tid"] for g in self.games}
+            extra = [t for t in hdd_ids if t not in known_tids]
+            if extra and not self.cancel_event.is_set():
+                known_games = set(self.db.titles) | set(self.db.alt_ids)
+                dlc_ids, game_ids = [], []
+                for t in sorted(extra):
+                    (game_ids if (t in known_games or not known_games) else dlc_ids).append(t)
+                if dlc_ids:
+                    self.log("Ignorados %d TitleIDs de DLC/update (não constam no índice de jogos)." % len(dlc_ids))
+                if game_ids:
+                    self.log(
+                        "Jogos GOD/XDLC no HD sem pasta GameData: %d (serão tratados via Import)"
+                        % len(game_ids)
+                    )
+                    for t in game_ids:
+                        self.games.append(
+                            {
+                                "folder": None,
+                                "tid": t,
+                                "folder_name": t,
+                                "has_cover": False,
+                            }
+                        )
+            self.log("Total de jogos: %d" % len(self.games))
+            self.queue.put("__refresh_tree__")
+        except Exception as exc:
+            self.queue.put("Erro no scan: %s" % exc)
+        finally:
+            self.queue.put("__done__")
+
+    def refresh_tree(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.item_to_game.clear()
+        order = sorted(
+            self.games,
+            key=lambda g: (
+                g.get("has_cover") is True,
+                (self.game_title(g) or "").lower(),
+            ),
+        )
+        if not self.sort_asc:
+            order.reverse()
+        for g in order:
+            title = self.game_title(g)
+            status = "Capa OK" if g["has_cover"] else "Sem capa"
+            item = self.tree.insert("", tk.END, values=(g["tid"], title, status))
+            self.item_to_game[item] = g
+        self.preview_cache.clear()
+        self.show_no_preview()
+
+    def game_title(self, g):
+        name = self.db.title_name(g["tid"])
+        if name != g["tid"]:
+            return name
+        return (g.get("dname") or "").strip() or name
+
+    def toggle_sort(self):
+        self.sort_asc = not self.sort_asc
+        try:
+            self.btn_sort.configure(text=tr("sort_asc") if self.sort_asc else tr("sort_desc"))
+        except tk.TclError:
+            pass
+        self.refresh_tree()
+
+    def rename_game(self, g):
+        current = self.game_title(g)
+        name = simpledialog.askstring(
+            tr("m_rename"),
+            tr("rename_prompt", current, g["tid"]),
+            initialvalue=current,
+            parent=self.root,
+        )
+        if not name:
+            return
+        clean = re.sub(r'[\\/:*?"<>|]+', "_", name.strip())
+        clean = re.sub(r"\s+", " ", clean).strip()
+        if not clean:
+            return
+        if g["folder"]:
+            parent = os.path.dirname(g["folder"])
+            new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
+            try:
+                os.rename(g["folder"], new_folder)
+            except OSError as exc:
+                messagebox.showerror(tr("error"), str(exc))
+                return
+            g["folder"] = new_folder
+            g["folder_name"] = os.path.basename(new_folder)
+        g["dname"] = clean
+        self.log(tr("renamed", self.db.title_name(g["tid"]), clean))
+        self.refresh_tree()
+        try:
+            self.tree.selection_set(
+                next((i for i, gg in self.item_to_game.items() if gg is g), "")
+            )
+        except tk.TclError:
+            pass
+
+    def selected_game(self):
+        sel = self.tree.selection()
+        if not sel:
+            return None
+        return self.item_to_game.get(sel[0])
+
+    def on_select(self, _event=None):
+        g = self.selected_game()
+        if g is None:
+            self.btn_custom.configure(state=tk.DISABLED)
+            self.show_no_preview()
+            return
+        self.btn_custom.configure(state=tk.NORMAL)
+        self.show_preview(g)
+
+    def load_cover(self, g):
+        key = g["tid"] + "|" + (g["folder"] or "import")
+        if key in self.preview_cache:
+            return self.preview_cache[key]
+        img = None
+        cover_file = find_cover_file(g["folder"])
+        if cover_file:
+            try:
+                with open(cover_file, "rb") as f:
+                    blob = f.read()
+                img = decode_asset(blob, ASSET_TYPE_BOXART)
+            except Exception:
+                img = None
+        if img is None:
+            png = os.path.join(
+                self.aurora_path.get().strip().strip('"'), "User", "Import", g["tid"], "cover.png"
+            )
+            if os.path.isfile(png):
+                try:
+                    img = Image.open(png).convert("RGBA")
+                except Exception:
+                    img = None
+        self.preview_cache[key] = img
+        return img
+
+    def show_preview(self, g):
+        img = self.load_cover(g)
+        title = self.game_title(g)
+        self.preview_title.configure(text="%s (%s)" % (title, g["tid"]))
+        self.preview_info.configure(text=tr("loading_info"))
+        tid = g["tid"]
+        threading.Thread(target=self._preview_info_thread, args=(tid,), daemon=True).start()
+        if img is None:
+            self.preview_lbl.configure(image="", text=tr("no_cover"))
+            self.preview_status.configure(text=tr("no_cover_installed"))
+            self._photo = None
+            return
+        thumb = cover_fit(img, PREVIEW_W, PREVIEW_H)
+        self._photo = ImageTk.PhotoImage(thumb)
+        self.preview_lbl.configure(image=self._photo, text="")
+        self.preview_status.configure(text=tr("cover_installed"))
+
+    def _preview_info_thread(self, tid):
+        try:
+            self.db.info(tid)
+        except Exception:
+            pass
+        self.queue.put("__preview_info__:" + tid)
+
+    def _preview_info_show(self, tid):
+        g = self.selected_game()
+        if g is None or g["tid"] != tid:
+            return
+        parts = self._format_info(self.db.info(tid) or {})
+        self.preview_info.configure(text=parts)
+
+    def _format_info(self, info):
+        genres = ", ".join(info.get("genre") or [])[:60]
+        dev = info.get("developer") or ""
+        desc = (info.get("description") or {}).get("short") or ""
+        if len(desc) > 180:
+            desc = desc[:177] + "..."
+        parts = []
+        if info.get("release_date"):
+            parts.append("Lançamento: " + str(info["release_date"]))
+        if dev:
+            parts.append("Desenvolvedora: " + dev)
+        if genres:
+            parts.append("Gêneros: " + genres)
+        if desc:
+            parts.append(desc)
+        return "\n".join(parts)
+
+    def show_no_preview(self):
+        self.preview_lbl.configure(image="", text=tr("no_selection"))
+        self.preview_title.configure(text="")
+        self.preview_info.configure(text="")
+        self.preview_status.configure(text="")
+        self._photo = None
+
+    def update_tree_row(self, g):
+        status = "Capa OK" if g["has_cover"] else "Sem capa"
+        for item, game in self.item_to_game.items():
+            if game is g:
+                self.tree.item(
+                    item,
+                    values=(g["tid"], self.game_title(g), status),
+                )
+                return
+
+    def start_download(self):
+        if self.busy:
+            return
+        if not self.games:
+            messagebox.showwarning(tr("warn"), tr("scan_first"))
+            return
+        if not (
+            self.opt_boxart.get()
+            or self.opt_background.get()
+            or self.opt_icon.get()
+            or self.opt_banner.get()
+            or self.opt_screenshots.get()
+        ):
+            messagebox.showwarning(tr("warn"), tr("pick_art"))
+            return
+        self.cancel_event.clear()
+        self.set_busy(True)
+        threading.Thread(target=self.download_worker, daemon=True).start()
+
+    def download_worker(self):
+        try:
+            path = self.aurora_path.get().strip().strip('"')
+            targets = [g for g in self.games if self.needs_download(g, path)]
+            total = len(targets)
+            if total == 0:
+                self.log(tr("no_games_notice"))
+            done = 0
+            for g in targets:
+                if self.cancel_event.is_set():
+                    self.log(tr("canceled"))
+                    break
+                done += 1
+                self.queue.put("__progress__:%d:%d" % (done, total))
+                self.log(
+                    "[%d/%d] %s (%s)" % (done, total, self.db.title_name(g["tid"]), g["tid"])
+                )
+                try:
+                    self.download_one(path, g)
+                except Exception as exc:
+                    self.log("  erro neste jogo: %s" % exc)
+                time.sleep(0.4)
+            self.log(tr("done_notice"))
+            self.queue.put("__refresh_tree__")
+        except Exception as exc:
+            self.queue.put("Erro: %s" % exc)
+        finally:
+            self.queue.put("__done__")
+
+    def needs_download(self, g, path):
+        if self.opt_force.get():
+            return True
+        folder = g["folder"]
+        base = folder if folder else os.path.join(path, "User", "Import", g["tid"])
+        checks = []
+        if self.opt_boxart.get():
+            checks.append(
+                os.path.join(base, "GC%s.asset" % g["tid"])
+                if folder
+                else os.path.join(base, "cover.png")
+            )
+        if self.opt_background.get():
+            checks.append(
+                os.path.join(base, "BK%s.asset" % g["tid"])
+                if folder
+                else os.path.join(base, "background.png")
+            )
+        if self.opt_icon.get() or self.opt_banner.get():
+            checks.append(
+                os.path.join(base, "GL%s.asset" % g["tid"])
+                if folder
+                else os.path.join(base, "icon.png")
+            )
+        if self.opt_screenshots.get():
+            checks.append(
+                os.path.join(base, "SS%s.asset" % g["tid"])
+                if folder
+                else os.path.join(base, "screenshot1.png")
+            )
+        return any(not os.path.exists(ck) for ck in checks)
+
+    def download_one(self, path, g):
+        tid = g["tid"]
+        got = False
+        if self.opt_boxart.get():
+            got = self.download_kind(path, g, "boxart") or got
+        if self.opt_background.get():
+            self.download_kind(path, g, "background")
+        if self.opt_icon.get():
+            self.download_kind(path, g, "icon")
+        if self.opt_banner.get():
+            self.download_kind(path, g, "banner")
+        if self.opt_screenshots.get():
+            self.download_kind(path, g, "screenshots")
+        if got:
+            g["has_cover"] = True
+
+    def get_cover_blob(self, tid):
+        try:
+            if self.repo == "xboxunity":
+                b = self._unity_cover(tid)
+                if b:
+                    return b
+                b = self.db.download_artwork(tid, "boxart")
+                if b:
+                    return b
+                self.log(tr("cover_missing_both", self.region_label()))
+                return None
+            b = self.db.download_artwork(tid, "boxart")
+            if b:
+                return b
+            b = self._unity_cover(tid)
+            if b:
+                return b
+            self.log(tr("cover_missing_both", self.region_label()))
+            return None
+        except Exception as exc:
+            self.log("  erro ao buscar capa: %s" % exc)
+            return None
+
+    def _unity_cover(self, tid):
+        items = self.unity.covers(tid)
+        if not items:
+            if self.unity._down_until > time.time():
+                self.log(tr("unity_offline") + " (%s)" % tid)
+            else:
+                self.log(tr("unity_no_cover", tid))
+            return None
+        ordered = sorted(
+            items,
+            key=lambda i: (0 if i.get("official") else 1, -unity_rating(i)),
+        )
+        for item in ordered[:6]:
+            b = self.unity.cover_bytes(item)
+            if b:
+                return b
+        self.log(tr("unity_fallback") + " (%s)" % tid)
+        return None
+
+    def region_label(self):
+        return REGIONS.get(self.region, self.region or "global")
+
+    def download_kind(self, path, g, kind):
+        tid = g["tid"]
+        try:
+            if kind == "boxart":
+                blob = self.get_cover_blob(tid)
+                if blob:
+                    img = box_render(Image.open(io.BytesIO(blob)), self.cover_format)
+                    if g["folder"]:
+                        self.write_asset(g["folder"], tid, "GC", img, ASSET_TYPE_BOXART)
+                    self.write_import(path, tid, "cover.png", img)
+                    mark_installed(tid, "boxart")
+                    return True
+                self.log("  capa não encontrada no repositório.")
+                return False
+            if kind == "background":
+                blob = self.db.download_artwork(tid, "background")
+                if blob:
+                    img = cover_fill(Image.open(io.BytesIO(blob)), BG_W, BG_H)
+                    if g["folder"]:
+                        self.write_asset(g["folder"], tid, "BK", img, ASSET_TYPE_BACKGROUND)
+                    self.write_import(path, tid, "background.png", img)
+                    mark_installed(tid, "background")
+                    return True
+                self.log("  background não encontrado no x360db.")
+                return False
+            if kind in ("icon", "banner"):
+                slot = ASSET_TYPE_ICON if kind == "icon" else ASSET_TYPE_BANNER
+                size = (ICON_W, ICON_H) if kind == "icon" else (BANNER_W, BANNER_H)
+                name = "icon" if kind == "icon" else "banner"
+                blob = self.db.download_artwork(tid, kind)
+                if not blob:
+                    self.log("  %s não encontrado no x360db." % name)
+                    return False
+                new_img = cover_fill(Image.open(io.BytesIO(blob)), *size)
+                ok = self.apply_gl_slot(path, g, slot, new_img, name + ".png")
+                if ok:
+                    mark_installed(tid, kind)
+                return ok
+            if kind == "screenshots":
+                grabs = []
+                for url in self.db.gallery_urls(tid)[: self.ss_max]:
+                    data = fetch_bytes(url)
+                    if not data:
+                        continue
+                    try:
+                        grabs.append(cover_fill(Image.open(io.BytesIO(data)), SS_W, SS_H))
+                    except Exception:
+                        continue
+                if not grabs:
+                    self.log("  sem screenshots disponíveis no x360db.")
+                    return False
+                textures = [(ASSET_TYPE_SCREENSHOT + i, s) for i, s in enumerate(grabs[: self.ss_max])]
+                if g["folder"]:
+                    self.write_multi_asset(g["folder"], tid, "SS", textures)
+                for i, s in enumerate(textures):
+                    self.write_import(path, tid, "screenshot%d.png" % (i + 1), s[1])
+                mark_installed(tid, "screenshots")
+                self.log("  %d screenshots instaladas." % len(textures))
+                return True
+        except Exception as exc:
+            self.log("  erro ao baixar %s: %s" % (kind, exc))
+            return False
+
+    def apply_gl_slot(self, path, g, slot, new_img, import_name):
+        tid = g["tid"]
+        parts = {ASSET_TYPE_ICON: None, ASSET_TYPE_BANNER: None}
+        if g["folder"]:
+            gl_file = os.path.join(g["folder"], "GL%s.asset" % tid)
+            if os.path.isfile(gl_file):
+                try:
+                    with open(gl_file, "rb") as f:
+                        blob = f.read()
+                    for s in parts:
+                        parts[s] = decode_asset(blob, s)
+                except Exception:
+                    pass
+        parts[slot] = new_img
+        textures = [(s, im) for s, im in parts.items() if im is not None]
+        if g["folder"]:
+            self.write_multi_asset(g["folder"], tid, "GL", textures)
+        self.write_import(path, tid, import_name, new_img)
+        return True
+
+    def write_asset(self, folder, tid, prefix, img, asset_type):
+        self.write_multi_asset(folder, tid, prefix, [(asset_type, img)])
+
+    def write_multi_asset(self, folder, tid, prefix, textures):
+        target = os.path.join(folder, "%s%s.asset" % (prefix, tid))
+        if os.path.exists(target) and self.opt_backup.get():
+            backup = target + ".bak"
+            try:
+                if not os.path.exists(backup):
+                    os.replace(target, backup)
+            except OSError:
+                pass
+        blob = make_multi_asset_bytes(textures)
+        with open(target, "wb") as f:
+            f.write(blob)
+        self.log("  gravado %s" % display_path(target))
+
+    def write_import(self, root, tid, name, img):
+        import_dir = os.path.join(root, "User", "Import", tid)
+        try:
+            os.makedirs(import_dir, exist_ok=True)
+        except OSError:
+            return
+        target = os.path.join(import_dir, name)
+        try:
+            img.save(target, "PNG")
+        except OSError:
+            return
+        self.log("  import alternativo em %s" % display_path(target))
+
+    def install_custom(self, g=None):
+        if self.busy:
+            return
+        if g is None:
+            g = self.selected_game()
+        if g is None:
+            messagebox.showwarning(tr("warn"), tr("pick_game"))
+            return
+        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp"), ("Todos", "*.*")]
+        file_name = filedialog.askopenfilename(
+            title=tr("custom_cover") + " (%s)" % self.db.title_name(g["tid"]),
+            filetypes=filetypes,
+        )
+        if not file_name:
+            return
+        try:
+            img = box_render(Image.open(file_name), self.cover_format)
+        except Exception as exc:
+            messagebox.showerror(tr("warn"), tr("img_open_fail", exc))
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        try:
+            self.install_cover_img(path, g, img)
+        except Exception as exc:
+            messagebox.showerror(tr("warn"), tr("img_write_fail", exc))
+            return
+        self.log("Capa personalizada instalada para %s (%s)" % (self.db.title_name(g["tid"]), g["tid"]))
+        self.show_preview(g)
+        self.update_tree_row(g)
+
+    def install_cover_img(self, path, g, img):
+        if g["folder"]:
+            self.write_asset(g["folder"], g["tid"], "GC", img, ASSET_TYPE_BOXART)
+        self.write_import(path, g["tid"], "cover.png", img)
+        mark_installed(g["tid"], "boxart")
+        g["has_cover"] = True
+        self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
+
+    def on_tree_menu(self, event):
+        if self.busy:
+            return
+        if not self.games:
+            return
+        row = self.tree.identify_row(event.y)
+        if not row:
+            return
+        self.tree.selection_set(row)
+        self.tree.focus(row)
+        g = self.item_to_game.get(row)
+        if g is None:
+            return
+        menu = tk.Menu(self.root, tearoff=0)
+        menu.add_command(label=tr("m_assets"), command=lambda: self.open_assets(g))
+        menu.add_command(label=tr("m_alt"), command=lambda: self.alt_covers(g))
+        menu.add_command(label=tr("m_custom"), command=lambda: self.install_custom(g))
+        menu.add_separator()
+        menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def apply_theme(self):
+        eff = detect_system_theme() if self.theme == "sistema" else self.theme
+        self._applied_theme = eff
+        th = THEMES.get(eff, THEMES["escuro"])
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure(".", background=th["bg"], foreground=th["fg"], fieldbackground=th["field"])
+        style.configure("TFrame", background=th["bg"])
+        style.configure("TLabel", background=th["bg"], foreground=th["fg"])
+        style.configure("TEntry", fieldbackground=th["field"], foreground=th["fg"], insertcolor=th["fg"])
+        style.configure("TSpinbox", fieldbackground=th["field"], foreground=th["fg"], buttonbackground=th["button"])
+        style.configure("TButton", background=th["button"], foreground=th["fg"], bordercolor=th["bg2"])
+        style.map("TButton", background=[("active", th["active"]), ("pressed", th["active"])], foreground=[("disabled", th["muted"])])
+        style.configure("TCheckbutton", background=th["bg"], foreground=th["fg"])
+        style.map("TCheckbutton", background=[("active", th["bg"])])
+        style.configure("TRadiobutton", background=th["bg"], foreground=th["fg"])
+        style.map("TRadiobutton", background=[("active", th["bg"])])
+        style.configure("Treeview", background=th["field"], fieldbackground=th["field"], foreground=th["fg"])
+        style.map("Treeview", background=[("selected", th["sel"])], foreground=[("selected", th["sels_fg"])])
+        style.configure("Treeview.Heading", background=th["button"], foreground=th["fg"])
+        style.configure("TProgressbar", background=th["accent"], troughcolor=th["bg2"])
+        style.configure("TScrollbar", background=th["button"], troughcolor=th["bg"])
+        self._recolor_all(self.root, th)
+        self._paint_status()
+
+    def _recolor_all(self, widget, th):
+        try:
+            cls = widget.winfo_class()
+        except tk.TclError:
+            return
+        if cls == "Label":
+            try:
+                widget.configure(bg=th["bg"], fg=th["fg"])
+            except tk.TclError:
+                pass
+        elif cls == "Frame":
+            try:
+                widget.configure(bg=th["bg"])
+            except tk.TclError:
+                pass
+        elif cls == "Text":
+            try:
+                widget.configure(bg=th["field"], fg=th["fg"], insertbackground=th["fg"])
+            except tk.TclError:
+                pass
+        elif cls == "Listbox":
+            try:
+                widget.configure(bg=th["field"], fg=th["fg"], selectbackground=th["sel"])
+            except tk.TclError:
+                pass
+        for child in widget.winfo_children():
+            self._recolor_all(child, th)
+
+    def open_settings(self):
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Configurações")
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        th = THEMES.get(self.theme, THEMES["escuro"])
+        dlg.configure(bg=th["bg"])
+        outer = ttk.Frame(dlg, padding=12)
+        outer.pack(fill=tk.BOTH, expand=True)
+
+        tf = ttk.Frame(outer)
+        tf.pack(pady=(0, 8))
+        ttk.Label(tf, text=tr("set_theme")).pack(side=tk.LEFT)
+        theme_var = tk.StringVar(value=self.theme)
+        ttk.Radiobutton(tf, text=tr("theme_dark"), variable=theme_var, value="escuro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(tf, text=tr("theme_light"), variable=theme_var, value="claro").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(tf, text=tr("theme_system"), variable=theme_var, value="sistema").pack(side=tk.LEFT, padx=6)
+
+        lf = ttk.Frame(outer)
+        lf.pack(pady=(0, 8))
+        ttk.Label(lf, text=tr("set_lang")).pack(side=tk.LEFT)
+        lang_var = tk.StringVar(value=CURRENT_LANG)
+        for code, name in LANGUAGES.items():
+            ttk.Radiobutton(lf, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
+
+        sf2 = ttk.Frame(outer)
+        sf2.pack(pady=(0, 8))
+        show_status_var = tk.BooleanVar(value=self.show_status)
+        ttk.Checkbutton(sf2, text=tr("set_show_status"), variable=show_status_var).pack(side=tk.LEFT)
+        show_log_var = tk.BooleanVar(value=self.show_log)
+        ttk.Checkbutton(sf2, text=tr("set_log"), variable=show_log_var).pack(side=tk.LEFT, padx=(12, 0))
+
+        rf = ttk.Frame(outer)
+        rf.pack(pady=(0, 8))
+        ttk.Label(rf, text=tr("set_repo")).pack(side=tk.LEFT)
+        repo_var = tk.StringVar(value=self.repo)
+        ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
+
+        cf = ttk.Frame(outer)
+        cf.pack(pady=(0, 8))
+        ttk.Label(cf, text=tr("set_format")).pack(side=tk.LEFT)
+        f_var = tk.StringVar(value=self.cover_format)
+        ttk.Radiobutton(cf, text=tr("format_portrait"), variable=f_var, value="retrato").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(cf, text=tr("format_landscape"), variable=f_var, value="paisagem").pack(side=tk.LEFT, padx=6)
+
+        sf = ttk.Frame(outer)
+        sf.pack(pady=(0, 8))
+        ttk.Label(sf, text=tr("set_screenshots")).pack(side=tk.LEFT)
+        spin = ttk.Spinbox(sf, from_=0, to=20, width=4)
+        spin.set(str(self.ss_max))
+        spin.pack(side=tk.LEFT, padx=6)
+
+        regf = ttk.Frame(outer)
+        regf.pack(pady=(0, 8))
+        ttk.Label(regf, text=tr("set_region")).pack(side=tk.LEFT)
+        region_names = list(REGIONS.values())
+        region_codes = list(REGIONS.keys())
+        region_var = tk.StringVar(
+            value=REGIONS.get(self.region, REGIONS.get("global"))
+        )
+        region_box = ttk.Combobox(
+            regf, values=region_names, state="readonly", width=24,
+        )
+        region_box.set(REGIONS.get(self.region, REGIONS.get("global")))
+        region_box.pack(side=tk.LEFT, padx=6)
+        ttk.Label(
+            outer, text=tr("region_note"), wraplength=430,
+        ).pack(pady=(0, 8), fill=tk.X)
+
+        ftf = ttk.Frame(outer)
+        ftf.pack(pady=(0, 8), fill=tk.X)
+        ttk.Label(ftf, text=tr("set_ftp")).pack(anchor="w")
+        g1 = ttk.Frame(ftf)
+        g1.pack(fill=tk.X, pady=(4, 0))
+        ttk.Label(g1, text=tr("ftp_host_lbl")).pack(side=tk.LEFT)
+        ftp_host_ent = ttk.Entry(g1, width=16)
+        ftp_host_ent.insert(0, self.ftp_host)
+        ftp_host_ent.pack(side=tk.LEFT, padx=(4, 10))
+        ttk.Label(g1, text=tr("ftp_port_lbl")).pack(side=tk.LEFT)
+        ftp_port_ent = ttk.Entry(g1, width=6)
+        ftp_port_ent.insert(0, str(self.ftp_port))
+        ftp_port_ent.pack(side=tk.LEFT, padx=4)
+        ttk.Label(g1, text=tr("ftp_user_lbl")).pack(side=tk.LEFT, padx=(10, 0))
+        ftp_user_ent = ttk.Entry(g1, width=10)
+        ftp_user_ent.insert(0, self.ftp_user)
+        ftp_user_ent.pack(side=tk.LEFT, padx=4)
+        ttk.Label(g1, text=tr("ftp_pass_lbl")).pack(side=tk.LEFT, padx=(10, 0))
+        ftp_pass_ent = ttk.Entry(g1, width=10, show="*")
+        ftp_pass_ent.insert(0, self.ftp_pass)
+        ftp_pass_ent.pack(side=tk.LEFT, padx=4)
+        g2 = ttk.Frame(ftf)
+        g2.pack(fill=tk.X, pady=(4, 0))
+        ttk.Label(g2, text=tr("ftp_base_lbl")).pack(side=tk.LEFT)
+        ftp_base_ent = ttk.Entry(g2)
+        ftp_base_ent.insert(0, self.ftp_base)
+        ftp_base_ent.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+
+        # Credits section
+        cred_f = ttk.Frame(outer)
+        cred_f.pack(pady=(12, 0), fill=tk.X)
+        ttk.Separator(cred_f, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(0, 8))
+        tk.Label(
+            cred_f,
+            text=tr("credits"),
+            justify=tk.CENTER,
+            fg=th.get("fg", "#ffffff"),
+            bg=th["bg"],
+            font=("Segoe UI", 8),
+        ).pack()
+
+        def _save():
+            try:
+                self.theme = theme_var.get()
+                self.repo = repo_var.get()
+                self.cover_format = f_var.get()
+                new_lang = lang_var.get()
+                new_show = bool(show_status_var.get())
+                new_log = bool(show_log_var.get())
+                sel_region = region_box.get()
+                new_region = (
+                    region_codes[region_names.index(sel_region)]
+                    if sel_region in region_names
+                    else "global"
+                )
+                try:
+                    self.ss_max = max(0, min(20, int(spin.get().strip() or self.ss_max)))
+                except ValueError:
+                    pass
+                changed_show = new_show != self.show_status
+                changed_lang = new_lang != CURRENT_LANG
+                self.show_status = new_show
+                self.show_log = new_log
+                self.region = new_region
+                self.ftp_host = ftp_host_ent.get().strip()
+                try:
+                    self.ftp_port = max(1, int(ftp_port_ent.get().strip() or 21))
+                except ValueError:
+                    self.ftp_port = 21
+                self.ftp_user = ftp_user_ent.get().strip() or "xbox"
+                self.ftp_pass = ftp_pass_ent.get()
+                self.ftp_base = ftp_base_ent.get().strip() or "Hdd:\\Aurora\\Data\\GameData"
+                self.cfg.update(
+                    theme=self.theme,
+                    repo=self.repo,
+                    cover_format=self.cover_format,
+                    screenshots=self.ss_max,
+                    lang=new_lang,
+                    show_status=self.show_status,
+                    show_log=self.show_log,
+                    region=self.region,
+                    ftp_host=self.ftp_host,
+                    ftp_port=self.ftp_port,
+                    ftp_user=self.ftp_user,
+                    ftp_pass=self.ftp_pass,
+                    ftp_base=self.ftp_base,
+                )
+                save_config(self.cfg)
+                self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
+                self.apply_show_status()
+                self.apply_show_log()
+                self.apply_theme()
+                self.log(
+                    tr(
+                        "status_saved",
+                        self.theme,
+                        self.repo,
+                        self.cover_format,
+                        self.ss_max,
+                        self.region_label(),
+                    )
+                )
+                dlg.destroy()
+                if changed_lang:
+                    messagebox.showinfo(tr("restart_title"), tr("restart_lang"))
+            except Exception as exc:
+                messagebox.showerror(tr("warn"), tr("save_fail", exc))
+
+        bf = ttk.Frame(outer)
+        bf.pack(pady=(8, 0))
+        ttk.Button(bf, text=tr("save"), command=_save).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("cancel2"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
+        dlg.grab_set()
+
+    def asset_present(self, g, kind, path):
+        targets = {
+            "boxart": ("GC%s.asset", "cover.png"),
+            "background": ("BK%s.asset", "background.png"),
+            "icon": ("GL%s.asset", "icon.png"),
+            "banner": ("GL%s.asset", "banner.png"),
+            "screenshots": ("SS%s.asset", "screenshot1.png"),
+        }
+        a, b = targets[kind]
+        cands = []
+        if g["folder"]:
+            cands.append(os.path.join(g["folder"], a % g["tid"]))
+        cands.append(os.path.join(path, "User", "Import", g["tid"], b))
+        return any(os.path.isfile(c) for c in cands)
+
+    def open_assets(self, g):
+        if self.busy:
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        dlg = tk.Toplevel(self.root)
+        dlg.title("%s - %s (%s)" % (tr("assets"), self.game_title(g), g["tid"]))
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        th = THEMES.get(self._applied_theme, THEMES["escuro"])
+        dlg.configure(bg=th["bg"])
+        ttk.Label(
+            dlg, text="%s %s (%s)" % (tr("assets_of"), self.game_title(g), g["tid"])
+        ).pack(pady=(10, 4))
+        body = ttk.Frame(dlg)
+        body.pack(fill=tk.BOTH, expand=True, padx=10)
+        tree = ttk.Treeview(body, columns=("item", "kind", "status"), show="headings", height=5)
+        tree.heading("item", text="")
+        tree.heading("kind", text=tr("col_kind"))
+        tree.heading("status", text=tr("col_status"))
+        tree.column("item", width=24, stretch=False)
+        tree.column("kind", width=170)
+        tree.column("status", width=90)
+        tree.pack(side=tk.LEFT, fill=tk.Y)
+        kinds = {}
+        for i, (kind, label, _p, _s, _imp) in enumerate(ASSET_KINDS):
+            item = tree.insert("", tk.END, values=(i + 1, label, "?"))
+            kinds[item] = kind
+        right = ttk.Frame(body, width=160)
+        right.pack(side=tk.RIGHT, fill=tk.Y, padx=(10, 0))
+        self._assets_kindlbl = ttk.Label(right, text="")
+        self._assets_kindlbl.pack(pady=(0, 4))
+        pframe = tk.Frame(
+            right, width=160, height=200, bd=1, relief=tk.SUNKEN, bg=th["field"]
+        )
+        pframe.pack_propagate(False)
+        pframe.pack(fill=tk.BOTH)
+        self._assets_preview = tk.Label(
+            pframe, text=tr("no_preview"), bg=th["field"], fg=th["muted"]
+        )
+        self._assets_preview.pack(fill=tk.BOTH, expand=True)
+        nav = ttk.Frame(right)
+        nav.pack(pady=(4, 0))
+        self._assets_prev = ttk.Button(
+            nav, text=tr("ss_prev"), width=4, command=self._assets_ss_prev, state=tk.DISABLED
+        )
+        self._assets_prev.pack(side=tk.LEFT, padx=(0, 4))
+        self._assets_next = ttk.Button(
+            nav, text=tr("ss_next"), width=4, command=self._assets_ss_next, state=tk.DISABLED
+        )
+        self._assets_next.pack(side=tk.LEFT)
+        bf = ttk.Frame(dlg)
+        bf.pack(pady=(4, 0))
+        ttk.Button(bf, text=tr("dl_online"), command=self.download_selected_kind).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("change_pc"), command=self.pick_selected_kind).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("ftp_send"), command=self.ftp_send_assets).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("close"), command=self._close_assets_dlg).pack(side=tk.LEFT, padx=4)
+        msg = tk.Label(dlg, text=tr("assets_hint"), bg=th["bg"], fg=th["muted"])
+        msg.pack(pady=(6, 8))
+        tree.bind("<<TreeviewSelect>>", self._assets_on_select)
+        self._assets_tree = tree
+        self._assets_kinds = kinds
+        self._assets_g = g
+        self._assets_path = path
+        self._assets_msg = msg
+        self._assets_dlg = dlg
+        self._assets_photo = None
+        self._assets_ss_index = 0
+        dlg.protocol("WM_DELETE_WINDOW", self._close_assets_dlg)
+        self.refresh_assets_dlg()
+        if kinds:
+            first = list(kinds)[0]
+            tree.selection_set(first)
+            tree.focus(first)
+        dlg.grab_set()
+
+    def _close_assets_dlg(self):
+        if self._assets_dlg is not None:
+            try:
+                self._assets_dlg.destroy()
+            except tk.TclError:
+                pass
+        self._assets_dlg = None
+        self._assets_tree = None
+        self._assets_kinds = {}
+        self._assets_msg = None
+        self._assets_preview = None
+        self._assets_kindlbl = None
+        self._assets_photo = None
+        self._assets_ss_index = 0
+        self._assets_prev = None
+        self._assets_next = None
+
+    def refresh_assets_dlg(self):
+        dlg = self._assets_dlg
+        if dlg is None or not dlg.winfo_exists():
+            return
+        for item, kind in self._assets_kinds.items():
+            img = self.load_kind_image(self._assets_g, kind, self._assets_path)
+            st = (
+                tr("assets_installed")
+                if img is not None
+                else tr("assets_missing")
+            )
+            self._assets_tree.set(item, "status", st)
+        self._assets_on_select()
+
+    def _assets_on_select(self, _event=None):
+        if self._assets_dlg is None or not self._assets_dlg.winfo_exists():
+            return
+        kind = self._selected_kind()
+        if kind is None:
+            if self._assets_preview is not None:
+                self._assets_preview.configure(image="", text=tr("no_preview"))
+            return
+        label = dict((k, l) for k, l, *_ in ASSET_KINDS).get(kind, kind)
+        imgs = self.load_kind_images(self._assets_g, kind, self._assets_path)
+        ss_kind = kind == "screenshots"
+        for b in (self._assets_prev, self._assets_next):
+            if b is not None:
+                try:
+                    b.configure(state=tk.NORMAL if (ss_kind and len(imgs) > 1) else tk.DISABLED)
+                except tk.TclError:
+                    pass
+        if ss_kind:
+            if imgs:
+                self._assets_ss_index = max(0, min(self._assets_ss_index, len(imgs) - 1))
+                label = "%s (%d/%d)" % (
+                    label,
+                    self._assets_ss_index + 1,
+                    len(imgs),
+                )
+            else:
+                self._assets_ss_index = 0
+        else:
+            self._assets_ss_index = 0
+        if self._assets_kindlbl is not None:
+            self._assets_kindlbl.configure(text=label)
+        if not imgs:
+            if self._assets_preview is not None:
+                self._assets_preview.configure(image="", text=tr("no_preview"))
+            return
+        img = imgs[min(self._assets_ss_index, len(imgs) - 1)]
+        thumb = cover_fit(img, 150, 190)
+        try:
+            self._assets_photo = ImageTk.PhotoImage(thumb)
+            self._assets_preview.configure(image=self._assets_photo, text="")
+        except Exception:
+            self._assets_preview.configure(image="", text=tr("no_preview"))
+
+    def _assets_ss_prev(self):
+        if self._assets_ss_index > 0:
+            self._assets_ss_index -= 1
+        self._assets_on_select()
+
+    def _assets_ss_next(self):
+        self._assets_ss_index += 1
+        self._assets_on_select()
+
+    def load_kind_images(self, g, kind, path):
+        imgs = []
+        tid = g["tid"]
+        folder = g["folder"]
+        import_path = os.path.join(path, "User", "Import", tid)
+        if kind == "screenshots":
+            if folder:
+                asset = os.path.join(folder, "SS%s.asset" % tid)
+                if os.path.isfile(asset):
+                    raw = _read_file(asset)
+                    if raw:
+                        try:
+                            count = max(1, struct.unpack(">I", raw[16:20])[0])
+                        except Exception:
+                            count = 1
+                        for i in range(count):
+                            im = _decode_asset_safe(raw, ASSET_TYPE_SCREENSHOT + i)
+                            if im is None:
+                                break
+                            imgs.append(im)
+            i = 1
+            while True:
+                im = _open_image(os.path.join(import_path, "screenshot%d.png" % i))
+                if im is None:
+                    break
+                imgs.append(im)
+                i += 1
+            return imgs
+        im = self.load_kind_image(g, kind, path)
+        if im is not None:
+            imgs.append(im)
+        return imgs
+
+    def load_kind_image(self, g, kind, path):
+        tid = g["tid"]
+        folder = g["folder"]
+        raw = None
+        import_path = os.path.join(path, "User", "Import", tid)
+        if kind == "boxart":
+            if folder:
+                asset = os.path.join(folder, "GC%s.asset" % tid)
+                if os.path.isfile(asset):
+                    raw = _read_file(asset)
+                    if raw:
+                        im = _decode_asset_safe(raw, ASSET_TYPE_BOXART)
+                        if im:
+                            return im
+            return _open_image(os.path.join(import_path, "cover.png"))
+        if kind == "background":
+            if folder:
+                asset = os.path.join(folder, "BK%s.asset" % tid)
+                if os.path.isfile(asset):
+                    raw = _read_file(asset)
+                    if raw:
+                        im = _decode_asset_safe(raw, ASSET_TYPE_BACKGROUND)
+                        if im:
+                            return im
+            return _open_image(os.path.join(import_path, "background.png"))
+        if kind == "icon" or kind == "banner":
+            at = ASSET_TYPE_ICON if kind == "icon" else ASSET_TYPE_BANNER
+            name = "icon.png" if kind == "icon" else "banner.png"
+            if folder:
+                asset = os.path.join(folder, "GL%s.asset" % tid)
+                if os.path.isfile(asset):
+                    raw = _read_file(asset)
+                    if raw:
+                        im = _decode_asset_safe(raw, at)
+                        if im:
+                            return im
+            return _open_image(os.path.join(import_path, name))
+        if kind == "screenshots":
+            if folder:
+                asset = os.path.join(folder, "SS%s.asset" % tid)
+                if os.path.isfile(asset):
+                    raw = _read_file(asset)
+                    if raw:
+                        im = _decode_asset_safe(raw, ASSET_TYPE_SCREENSHOT)
+                        if im:
+                            return im
+            return _open_image(os.path.join(import_path, "screenshot1.png"))
+        return None
+
+    def _selected_kind(self):
+        if self._assets_tree is None:
+            return None
+        sel = self._assets_tree.selection()
+        if not sel:
+            return None
+        return self._assets_kinds.get(sel[0])
+
+    def download_selected_kind(self):
+        kind = self._selected_kind()
+        if kind is None:
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("assets_pick"))
+            return
+        if self._assets_msg is not None:
+            self._assets_msg.configure(text=tr("assets_dl_kind", kind))
+        self.thread_download_kind(self._assets_path, self._assets_g, kind)
+
+    def ftp_send_assets(self):
+        if self.busy:
+            return
+        if not self.ftp_host.strip():
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("ftp_no_host"))
+            return
+        g = self._assets_g
+        if g is None or not g.get("folder"):
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("ftp_no_folder"))
+            return
+        self.set_busy(True)
+        if self._assets_msg is not None:
+            self._assets_msg.configure(text=tr("ftp_sending"))
+        threading.Thread(target=self._ftp_run, args=(g,), daemon=True).start()
+
+    def _ftp_run(self, g):
+        try:
+            files = [
+                os.path.join(g["folder"], name)
+                for name in sorted(os.listdir(g["folder"]))
+                if os.path.isfile(os.path.join(g["folder"], name))
+            ]
+        except OSError:
+            files = []
+        if not files:
+            self.queue.put("__assets_msg__:0::")
+            return
+        ftp = None
+        try:
+            ftp = ftplib.FTP()
+            ftp.connect(self.ftp_host, int(self.ftp_port), timeout=30)
+            ftp.login(self.ftp_user, self.ftp_pass)
+            remote = self._ftp_ensure_dir(ftp, self.ftp_base)
+            target = remote + "\\" + g["folder_name"]
+            try:
+                ftp.mkd(target)
+            except ftplib.error_perm:
+                pass
+            ftp.cwd(target)
+            n = 0
+            for full in files:
+                with open(full, "rb") as f:
+                    ftp.storbinary("STOR " + os.path.basename(full), f)
+                n += 1
+            ftp.quit()
+            self.queue.put("__assets_msg__:%d::%s" % (n, target))
+            self.log("FTP: %d arquivo(s) enviado(s) para %s." % (n, target))
+        except Exception as exc:
+            try:
+                if ftp is not None:
+                    ftp.close()
+            except Exception:
+                pass
+            self.log("  erro FTP: %s" % exc)
+            self.queue.put("__assets_msg__:e:%s" % exc)
+        finally:
+            self.queue.put("__done__")
+
+    def _ftp_ensure_dir(self, ftp, base):
+        parts = [p.strip() for p in re.split(r"[\\/]+", base) if p.strip()]
+        if not parts:
+            parts = ["Hdd:", "Aurora", "Data", "GameData"]
+        current = []
+        for p in parts:
+            current.append(p)
+            path = "\\".join(current)
+            try:
+                ftp.mkd(path)
+            except ftplib.error_perm:
+                pass
+            try:
+                ftp.cwd(path)
+            except ftplib.error_perm as exc:
+                raise OSError("FTP: impossível acessar %s (%s)" % (path, exc))
+        return "\\".join(current)
+
+    def _assets_msg_show(self, payload):
+        if self._assets_msg is None or not self._assets_dlg.winfo_exists():
+            return
+        if payload.startswith("e:"):
+            self._assets_msg.configure(text=tr("ftp_err", payload[2:]))
+        elif payload.endswith("::"):
+            self._assets_msg.configure(text=tr("ftp_sent", 0, self.ftp_base))
+        else:
+            n, _, target = payload.partition("::")
+            try:
+                self._assets_msg.configure(text=tr("ftp_sent", int(n), target))
+            except ValueError:
+                self._assets_msg.configure(text=payload)
+
+    def pick_selected_kind(self):
+        kind = self._selected_kind()
+        if kind is None:
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("assets_pick"))
+            return
+        self.pick_kind_file(self._assets_g, kind)
+
+    def thread_download_kind(self, path, g, kind):
+        if self.busy:
+            return
+        self.set_busy(True)
+        self.log("Baixando %s para %s (%s)..." % (kind, self.db.title_name(g["tid"]), g["tid"]))
+
+        def _run():
+            try:
+                ok = self.download_kind(path, g, kind)
+                self.log("  %s: %s" % (kind, "OK" if ok else "sem sucesso"))
+            except Exception as exc:
+                self.log("  erro: %s" % exc)
+            finally:
+                self.queue.put("__assets_refresh__")
+                self.queue.put("__preview_refresh__")
+                self.queue.put("__refresh_tree__")
+                self.queue.put("__done__")
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def pick_kind_file(self, g, kind):
+        if self.busy:
+            return
+        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp"), ("Todos", "*.*")]
+        titles = {
+            "boxart": tr("kind_boxart"),
+            "background": tr("kind_background"),
+            "icon": tr("kind_icon"),
+            "banner": tr("kind_banner"),
+            "screenshots": tr("kind_screenshots"),
+        }
+        file_name = filedialog.askopenfilename(
+            title=tr("pick_kind", titles.get(kind, kind), self.db.title_name(g["tid"])),
+            filetypes=filetypes,
+        )
+        if not file_name:
+            return
+        try:
+            img = Image.open(file_name)
+        except Exception as exc:
+            messagebox.showerror(tr("error"), tr("img_open_fail", exc))
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        try:
+            tid = g["tid"]
+            if kind == "boxart":
+                self.install_cover_img(path, g, box_render(img, self.cover_format))
+            elif kind == "background":
+                b = cover_fill(img, BG_W, BG_H)
+                if g["folder"]:
+                    self.write_asset(g["folder"], tid, "BK", b, ASSET_TYPE_BACKGROUND)
+                self.write_import(path, tid, "background.png", b)
+            elif kind == "icon":
+                self.apply_gl_slot(path, g, ASSET_TYPE_ICON, cover_fill(img, ICON_W, ICON_H), "icon.png")
+            elif kind == "banner":
+                self.apply_gl_slot(path, g, ASSET_TYPE_BANNER, cover_fill(img, BANNER_W, BANNER_H), "banner.png")
+            elif kind == "screenshots":
+                s = cover_fill(img, SS_W, SS_H)
+                if g["folder"]:
+                    self.write_multi_asset(g["folder"], tid, "SS", [(ASSET_TYPE_SCREENSHOT, s)])
+                self.write_import(path, tid, "screenshot1.png", s)
+        except Exception as exc:
+            messagebox.showerror(tr("error"), tr("img_write_fail", exc))
+            return
+        mark_installed(tid, kind)
+        self.log(tr("asset_changed", kind, self.db.title_name(tid), tid))
+        self.refresh_assets_dlg()
+        self.update_tree_row(g)
+        g2 = self.selected_game()
+        if g2 is g:
+            self.show_preview(g)
+
+    def alt_covers(self, g):
+        if self.busy:
+            return
+        tid = g["tid"]
+        dlg = tk.Toplevel(self.root)
+        dlg.title("%s (%s)" % (tr("alt_title"), self.db.title_name(tid)))
+        dlg.transient(self.root)
+        dlg.geometry("640x620")
+        th = THEMES.get(self._applied_theme, THEMES["escuro"])
+        dlg.configure(bg=th["bg"])
+        ttk.Label(dlg, text=tr("alt_label")).pack(pady=(10, 4))
+        lb = tk.Listbox(
+            dlg, bg=th["field"], fg=th["fg"], selectbackground=th["sel"]
+        )
+        lb.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 4))
+        lb.bind("<<ListboxSelect>>", self._alt_select)
+        dest_row = ttk.Frame(dlg)
+        dest_row.pack(fill=tk.X, padx=10, pady=(0, 4))
+        ttk.Label(dest_row, text=tr("dest") + ":").pack(side=tk.LEFT)
+        ttk.Entry(dest_row, textvariable=self.aurora_path).pack(
+            side=tk.LEFT, fill=tk.X, expand=True, padx=6
+        )
+        ttk.Button(dest_row, text=tr("browse"), command=self.browse).pack(side=tk.LEFT)
+        msg = tk.Label(dlg, text=tr("alt_searching"), bg=th["bg"], fg=th["muted"])
+        msg.pack(pady=2, fill=tk.X)
+        bf = ttk.Frame(dlg)
+        bf.pack(pady=(0, 4))
+        ttk.Button(bf, text=tr("alt_install"), command=self._alt_install_sel).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("close"), command=self._close_alt_dlg).pack(side=tk.LEFT, padx=4)
+        preview_frame = tk.Frame(
+            dlg, width=200, height=260, bd=1, relief=tk.SUNKEN, bg=th["field"]
+        )
+        preview_frame.pack_propagate(False)
+        preview_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 6))
+        self._alt_preview = tk.Label(
+            preview_frame, text=tr("alt_none"), bg=th["field"], fg=th["muted"], image=None,
+        )
+        self._alt_preview.pack(fill=tk.BOTH, expand=True)
+        self._alt_dlg = dlg
+        self._alt_lb = lb
+        self._alt_msg = msg
+        dlg.protocol("WM_DELETE_WINDOW", self._close_alt_dlg)
+        threading.Thread(target=self._alt_fetch, args=(tid,), daemon=True).start()
+
+    def _close_alt_dlg(self):
+        if self._alt_dlg is not None:
+            try:
+                self._alt_dlg.destroy()
+            except tk.TclError:
+                pass
+        self._alt_dlg = None
+        self._alt_lb = None
+        self._alt_msg = None
+        self._alt_preview = None
+        self._alt_photo = None
+
+    def _alt_fetch(self, tid):
+        try:
+            items = self.unity.covers(tid, force=True) or []
+        except Exception:
+            items = []
+        if not items:
+            items = [
+                {
+                    "name": tr("alt_official"),
+                    "official": True,
+                    "rating": "0",
+                    "source": "x360db",
+                }
+            ]
+        self._alt_items = items
+        self.queue.put("__alt_populate__")
+
+    def _alt_populate(self):
+        if self._alt_dlg is None or not self._alt_dlg.winfo_exists():
+            return
+        self._alt_lb.delete(0, tk.END)
+        if not self._alt_items:
+            self._alt_msg.configure(text=tr("alt_none_found"))
+            return
+        for it in self._alt_items:
+            self._alt_lb.insert(tk.END, self.unity.label(it))
+        scored = [
+            (0 if it.get("official") else 1, -unity_rating(it), i)
+            for i, it in enumerate(self._alt_items)
+        ]
+        best = min(scored)[2]
+        self._alt_lb.selection_set(best)
+        self._alt_lb.activate(best)
+        self._alt_lb.see(best)
+        real = [it for it in self._alt_items if it.get("source") != "x360db"]
+        if real:
+            self._alt_msg.configure(text=tr("alt_count", len(self._alt_items)))
+        else:
+            self._alt_msg.configure(text=tr("alt_unity_empty"))
+        self._alt_select()
+
+    def _alt_select(self, _event=None):
+        if self._alt_lb is None:
+            return
+        sel = self._alt_lb.curselection()
+        if not sel:
+            return
+        idx = sel[0]
+        item = self._alt_items[idx]
+        if self._alt_msg is not None:
+            self._alt_msg.configure(text=tr("alt_loading"))
+        if self._alt_preview is not None:
+            self._alt_preview.configure(image="", text=tr("alt_loading"))
+        threading.Thread(target=self._alt_preview_fetch, args=(item, idx), daemon=True).start()
+
+    def _alt_preview_fetch(self, item, idx):
+        try:
+            b = self.unity.cover_bytes(item, small=True)
+        except Exception:
+            b = None
+        self._alt_preview_item = (idx, b)
+        self.queue.put("__alt_preview__")
+
+    def _alt_preview_show(self):
+        d = self._alt_dlg
+        if d is None or not d.winfo_exists() or self._alt_lb is None or self._alt_preview is None:
+            return
+        idx, b = self._alt_preview_item
+        cur = self._alt_lb.curselection()
+        if not cur or cur[0] != idx:
+            return
+        if not b:
+            self._alt_preview.configure(image="", text=tr("alt_no_img"))
+            if self._alt_msg is not None:
+                self._alt_msg.configure(text=tr("alt_no_preview"))
+            return
+        try:
+            img = Image.open(io.BytesIO(b)).convert("RGBA")
+            img = cover_fit(img, 200, 260)
+            ph = ImageTk.PhotoImage(img)
+            self._alt_photo = ph
+            self._alt_preview.configure(image=ph, text="")
+            if self._alt_msg is not None:
+                self._alt_msg.configure(text=tr("alt_loaded"))
+        except Exception:
+            self._alt_preview.configure(image="", text="Sem preview")
+
+    def _alt_install_sel(self):
+        if self.busy or self._alt_lb is None:
+            return
+        sel = self._alt_lb.curselection()
+        if not sel:
+            if self._alt_msg is not None:
+                self._alt_msg.configure(text="Selecione uma capa primeiro.")
+            return
+        item = self._alt_items[sel[0]]
+        g = self.item_to_game.get(self.tree.selection()[0]) if self.tree.selection() else None
+        if g is None:
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        if self._alt_msg is not None:
+            self._alt_msg.configure(text="Baixando...")
+        self.set_busy(True)
+
+        def _run():
+            try:
+                if item.get("source") == "x360db":
+                    b = self.db.download_artwork(g["tid"], "boxart")
+                else:
+                    b = self.unity.cover_bytes(item)
+                if not b:
+                    self.log("  falha ao baixar a capa do XboxUnity.")
+                    self.queue.put("__alt_installed__:f")
+                    return
+                img = box_render(Image.open(io.BytesIO(b)), self.cover_format)
+                self.install_cover_img(path, g, img)
+                self.log(
+                    "Capa alternativa instalada para %s (%s)."
+                    % (self.db.title_name(g["tid"]), g["tid"])
+                )
+                self.queue.put("__alt_installed__:t")
+            except Exception as exc:
+                self.log("  erro: %s" % exc)
+                self.queue.put("__alt_installed__:f")
+
+        threading.Thread(target=_run, daemon=True).start()
+
+
+def main():
+    if "--selftest" in sys.argv:
+        selftest()
+        return 0
+    root = tk.Tk()
+    App(root)
+    root.mainloop()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
