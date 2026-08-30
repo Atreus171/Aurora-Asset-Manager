@@ -2416,9 +2416,6 @@ class App:
         name = self.db.title_name(tid)
         if name != tid:
             return name
-        unity_name = self.unity.get_best_title(tid)
-        if unity_name:
-            return unity_name
         return (g.get("dname") or "").strip() or tid
 
     def toggle_sort(self):
