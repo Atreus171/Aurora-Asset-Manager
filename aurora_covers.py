@@ -2212,8 +2212,22 @@ class App:
                     if self._alt_dlg is not None and self._alt_dlg.winfo_exists():
                         self._alt_msg.configure(text=tr("alt_installed") if ok else tr("alt_failed"))
                     self.set_busy(False)
+                    # Preserve selection across refresh
+                    sel_tid = None
+                    g = self.selected_game()
+                    if g:
+                        sel_tid = g["tid"]
                     self.queue.put("__refresh_tree__")
                     self.queue.put("__preview_refresh__")
+                    if sel_tid:
+                        def _restore_sel():
+                            for item, gg in self.item_to_game.items():
+                                if gg.get("tid") == sel_tid:
+                                    self.tree.selection_set(item)
+                                    self.tree.focus(item)
+                                    self.tree.see(item)
+                                    break
+                        self.root.after(50, _restore_sel)
                 elif isinstance(msg, str) and msg.startswith("__progress__:"):
                     parts = msg.split(":")
                     self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
