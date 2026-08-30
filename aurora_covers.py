@@ -93,6 +93,7 @@ DEFAULT_CONFIG = {
     "lang": "pt",
     "show_status": True,
     "show_log": True,
+    "auto_search_titles": True,
     "ftp_host": "",
     "ftp_port": 21,
     "ftp_user": "xbox",
@@ -277,6 +278,7 @@ TEXT = {
         "sort_desc": "Z-A",
         "search_title": "Pesquisar título...",
         "debug_db": "Debug DB",
+        "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "m_search": "Pesquisar título...",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
@@ -449,6 +451,7 @@ TEXT = {
         "sort_desc": "Z-A",
         "search_title": "Search title...",
         "debug_db": "Debug DB",
+        "auto_search_titles": "Auto-search titles (XboxUnity)",
         "m_search": "Search title...",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
@@ -621,6 +624,7 @@ TEXT = {
         "sort_desc": "Z-A",
         "search_title": "Buscar título...",
         "debug_db": "Debug DB",
+        "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "m_search": "Buscar título...",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
@@ -793,6 +797,7 @@ TEXT = {
         "sort_desc": "Z-A",
         "search_title": "Rechercher titre...",
         "debug_db": "Debug DB",
+        "auto_search_titles": "Recherche auto des titres (XboxUnity)",
         "m_search": "Rechercher titre...",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
@@ -965,6 +970,7 @@ TEXT = {
         "sort_desc": "Z-A",
         "search_title": "タイトルを検索...",
         "debug_db": "DB デバッグ",
+        "auto_search_titles": "タイトル自動検索 (XboxUnity)",
         "m_search": "タイトルを検索...",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
@@ -1137,6 +1143,7 @@ TEXT = {
         "sort_desc": "Я-А",
         "search_title": "Поиск названия...",
         "debug_db": "Отладка БД",
+        "auto_search_titles": "Автопоиск названий (XboxUnity)",
         "m_search": "Поиск названия...",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
@@ -2073,18 +2080,19 @@ def selftest():
 
     cfg = {
         "theme": "escuro",
-"repo": "x360db",
-    "cover_format": "paisagem",
-    "screenshots": SS_MAX_DEFAULT,
-    "lang": "pt",
-    "show_status": True,
-    "show_log": True,
-    "ftp_host": "",
-    "ftp_port": 21,
-    "ftp_user": "xbox",
-    "ftp_pass": "xbox",
-    "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
-}
+        "repo": "x360db",
+        "cover_format": "paisagem",
+        "screenshots": SS_MAX_DEFAULT,
+        "lang": "pt",
+        "show_status": True,
+        "show_log": True,
+        "auto_search_titles": True,
+        "ftp_host": "",
+        "ftp_port": 21,
+        "ftp_user": "xbox",
+        "ftp_pass": "xbox",
+        "ftp_base": "Hdd:\\Aurora\\Data\\GameData",
+    }
     assert dict(DEFAULT_CONFIG) == cfg
     _old_lang = globals()["CURRENT_LANG"]
     globals()["CURRENT_LANG"] = "pt"
@@ -2588,11 +2596,12 @@ class App:
                             }
                         )
             self.log("Total de jogos: %d" % len(self.games))
-            # Busca nomes faltando no XboxUnity em background
-            missing = [g for g in self.games if self.game_title(g) == g["tid"]]
-            if missing:
-                self.log("Buscando %d nomes no XboxUnity..." % len(missing))
-                threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
+            # Busca nomes faltando no XboxUnity em background (se habilitado)
+            if self.cfg.get("auto_search_titles", True):
+                missing = [g for g in self.games if self.game_title(g) == g["tid"]]
+                if missing:
+                    self.log("Buscando %d nomes no XboxUnity..." % len(missing))
+                    threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
             self.queue.put("__refresh_tree__")
         except Exception as exc:
             self.queue.put("Erro no scan: %s" % exc)
@@ -2643,18 +2652,23 @@ class App:
         # Busca no x360db
         name = self.db.title_name(tid)
         if name != tid:
-            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {name} (x360db)")
+            g["dname"] = name
+            self.log("Título encontrado no x360db: %s" % name)
+            self.refresh_tree()
             return
         # Busca no XboxUnity
         unity_name = self.unity.get_best_title(tid)
         if unity_name:
-            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {unity_name} (XboxUnity)")
+            g["dname"] = unity_name
+            self.log("Título encontrado no XboxUnity: %s" % unity_name)
+            self.refresh_tree()
             return
         # Fallback: dname
         if g.get("dname"):
-            messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {g['dname']} (pasta)")
+            self.log("Usando nome da pasta: %s" % g["dname"])
+            self.refresh_tree()
             return
-        messagebox.showinfo(tr("search_title"), f"{tr('search_title')}: {tid} (não encontrado)")
+        self.log("Título não encontrado para %s" % tid)
 
     def debug_database(self):
         path = self.aurora_path.get().strip().strip('"')
@@ -3296,6 +3310,9 @@ class App:
         spin.pack(anchor="w")
         add_row(tr("set_screenshots"), sf)
 
+        auto_search_var = tk.BooleanVar(value=self.cfg.get("auto_search_titles", True))
+        add_row(tr("auto_search_titles"), ttk.Checkbutton(outer, text=tr("auto_search_titles"), variable=auto_search_var))
+
         # FTP
         add_section(tr("set_ftp"))
 
@@ -3368,6 +3385,7 @@ class App:
                     lang=new_lang,
                     show_status=self.show_status,
                     show_log=self.show_log,
+                    auto_search_titles=bool(auto_search_var.get()),
                     ftp_host=self.ftp_host,
                     ftp_port=self.ftp_port,
                     ftp_user=self.ftp_user,
