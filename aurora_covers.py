@@ -2,6 +2,7 @@ import io
 import json
 import os
 import re
+import sqlite3
 import struct
 import sys
 import threading
@@ -299,6 +300,9 @@ TEXT = {
         "m_rename": "Renomear jogo",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
+        "rename_ftp_start": "Renomeando a pasta no console via FTP...",
+        "rename_ftp_ok": "Pasta renomeada no console: %s",
+        "rename_ftp_err": "Não foi possível renomear no console: %s",
         "m_open_folder": "Abrir pasta do jogo",
         "set_ftp": "Enviar por FTP (console):",
         "ftp_host_lbl": "IP do console:",
@@ -478,6 +482,9 @@ TEXT = {
         "m_rename": "Rename game",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
+        "rename_ftp_start": "Renaming folder on the console via FTP...",
+        "rename_ftp_ok": "Folder renamed on the console: %s",
+        "rename_ftp_err": "Could not rename on the console: %s",
         "m_open_folder": "Open game folder",
         "set_ftp": "Send via FTP (console):",
         "ftp_host_lbl": "Console IP:",
@@ -657,6 +664,9 @@ TEXT = {
         "m_rename": "Renombrar juego",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
+        "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
+        "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
+        "rename_ftp_err": "No se pudo renombrar en la consola: %s",
         "m_open_folder": "Abrir carpeta del juego",
         "set_ftp": "Enviar por FTP (consola):",
         "ftp_host_lbl": "IP de la consola:",
@@ -836,6 +846,9 @@ TEXT = {
         "m_rename": "Renommer le jeu",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
+        "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
+        "rename_ftp_ok": "Dossier renommé sur la console : %s",
+        "rename_ftp_err": "Impossible de renommer sur la console : %s",
         "m_open_folder": "Ouvrir le dossier du jeu",
         "set_ftp": "Envoyer par FTP (console):",
         "ftp_host_lbl": "IP de la console:",
@@ -1015,6 +1028,9 @@ TEXT = {
         "m_rename": "ゲーム名を変更",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
+        "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
+        "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
+        "rename_ftp_err": "本体でフォルダ名を変更できませんでした: %s",
         "m_open_folder": "ゲームフォルダを開く",
         "set_ftp": "FTPで送信 (コンソール):",
         "ftp_host_lbl": "コンソールIP:",
@@ -1194,6 +1210,9 @@ TEXT = {
         "m_rename": "Переименовать игру",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
+        "rename_ftp_start": "Переименование папки на консоли по FTP...",
+        "rename_ftp_ok": "Папка на консоли переименована в: %s",
+        "rename_ftp_err": "Не удалось переименовать на консоли: %s",
         "m_open_folder": "Открыть папку игры",
         "set_ftp": "Отправить по FTP (консоль):",
         "ftp_host_lbl": "IP консоли:",
@@ -1958,8 +1977,12 @@ def scan_aurora_db(root, logger=None):
                 continue
             dname = title
             folder = None
-            if path and os.path.isdir(os.path.join(root, path.lstrip("\\/"))):
-                folder = os.path.join(root, path.lstrip("\\/"))
+            rel = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", (path or "").strip())
+            for _base in (root, os.path.join(root, "Aurora")):
+                _cand = os.path.join(_base, rel) if rel else ""
+                if _cand and os.path.isdir(_cand):
+                    folder = _cand
+                    break
             has_cover = False
             if folder:
                 for fn in os.listdir(folder):
@@ -2034,9 +2057,15 @@ def scan_aurora(root):
             })
         # Merge: jogos do DB têm prioridade, pastas preenchem faltantes
         existing_tids = {g["tid"] for g in games}
-        for g in folder_games:
-            if g["tid"] not in existing_tids:
-                games.append(g)
+        for fg in folder_games:
+            if fg["tid"] not in existing_tids:
+                games.append(fg)
+                continue
+            dbg = next(g for g in games if g["tid"] == fg["tid"])
+            if not dbg.get("folder"):
+                dbg["folder"] = fg["folder"]
+                dbg["folder_name"] = fg["folder_name"]
+                dbg["has_cover"] = bool(dbg.get("has_cover")) or bool(fg["has_cover"])
 
     # Também escaneia pasta Import para homebrews sem GameData
     import_dir = os.path.join(root, "User", "Import")
@@ -2827,6 +2856,33 @@ class App:
         except Exception as e:
             messagebox.showerror(tr("debug_db"), f"Erro: {e}")
 
+    def find_gamedata_folder(self, tid):
+        path = self.aurora_path.get().strip().strip('"')
+        if not path or not os.path.isdir(path):
+            return None
+        cands = [
+            os.path.join(path, "Data", "GameData"),
+            os.path.join(path, "Aurora", "Data", "GameData"),
+            os.path.join(path, "GameData"),
+            path,
+        ]
+        prefix = tid + "_"
+        seen = set()
+        for base in cands:
+            if base in seen or not os.path.isdir(base):
+                continue
+            seen.add(base)
+            try:
+                names = sorted(os.listdir(base))
+            except OSError:
+                continue
+            for name in names:
+                if name.startswith(prefix):
+                    full = os.path.join(base, name)
+                    if os.path.isdir(full):
+                        return full
+        return None
+
     def rename_game(self, g):
         current = self.game_title(g)
         name = simpledialog.askstring(
@@ -2844,22 +2900,35 @@ class App:
         if clean == current:
             return
         # Se tem pasta GameData, renomeia a pasta
-        if g.get("folder"):
-            parent = os.path.dirname(g["folder"])
+        folder = g.get("folder")
+        if not folder:
+            folder = self.find_gamedata_folder(g["tid"])
+        if folder:
+            parent = os.path.dirname(folder)
             new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
             try:
-                os.rename(g["folder"], new_folder)
+                os.rename(folder, new_folder)
             except OSError as exc:
                 messagebox.showerror(tr("error"), str(exc))
                 return
             g["folder"] = new_folder
             g["folder_name"] = os.path.basename(new_folder)
             self.log("Renamed folder: %s -> %s" % (g["folder_name"], os.path.basename(new_folder)))
+        else:
+            self.log("  pasta GameData não encontrada para %s; renomeação salva apenas na lista." % g["tid"])
         g["dname"] = clean
         # Salva nome customizado permanentemente
         custom_names = load_custom_names()
         custom_names[g["tid"]] = clean
         save_custom_names(custom_names)
+        # Se o console estiver configurado (FTP), renomeia a pasta no Aurora também
+        if self.ftp_host.strip():
+            new_folder_name = "%s_%s" % (g["tid"], clean)
+            threading.Thread(
+                target=self._ftp_rename_game,
+                args=(g["tid"], new_folder_name),
+                daemon=True,
+            ).start()
         self.log(tr("renamed", self.db.title_name(g["tid"]), clean))
         self.refresh_tree()
         try:
@@ -2868,6 +2937,43 @@ class App:
             )
         except tk.TclError:
             pass
+
+    def _ftp_rename_game(self, tid, new_folder_name):
+        try:
+            self.log(tr("rename_ftp_start"))
+            ftp = ftplib.FTP()
+            ftp.connect(self.ftp_host, int(self.ftp_port), timeout=30)
+            ftp.login(self.ftp_user, self.ftp_pass)
+            remote = self._ftp_ensure_dir(ftp, self.ftp_base)
+            try:
+                names = ftp.nlst(remote)
+            except ftplib.error_perm:
+                names = []
+            prefix = tid + "_"
+            found = None
+            for entry in names:
+                base = os.path.basename(entry)
+                if base.startswith(prefix):
+                    found = base
+                    break
+            if found is None:
+                self.log(tr("rename_ftp_err", "pasta não encontrada no console"))
+                return
+            if found == new_folder_name:
+                self.log(tr("rename_ftp_ok", new_folder_name))
+                return
+            try:
+                ftp.rename(found, new_folder_name)
+            except ftplib.error_perm as exc:
+                self.log(tr("rename_ftp_err", str(exc)))
+                return
+            self.log(tr("rename_ftp_ok", new_folder_name))
+            try:
+                ftp.quit()
+            except Exception:
+                pass
+        except Exception as exc:
+            self.log(tr("rename_ftp_err", str(exc)))
 
     def open_game_folder(self, g):
         if not g.get("folder"):
