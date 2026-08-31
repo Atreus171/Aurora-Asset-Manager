@@ -1579,21 +1579,10 @@ def cover_fit(image, target_w, target_h):
     return image
 
 
-def cover_fit_canvas(image, target_w, target_h):
-    image = ImageOps.exif_transpose(image)
-    image = image.convert("RGBA")
-    image.thumbnail((target_w, target_h), Image.LANCZOS)
-    canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 255))
-    ox = (target_w - image.width) // 2
-    oy = (target_h - image.height) // 2
-    canvas.paste(image, (ox, oy), image)
-    return canvas
-
-
 def box_render(image, cover_format):
     if cover_format == "retrato":
-        return cover_fit_canvas(image, COVER_W, COVER_H)
-    return cover_fit_canvas(image, BOXART_W, BOXART_H)
+        return cover_fill(image, COVER_W, COVER_H)
+    return cover_fill(image, BOXART_W, BOXART_H)
 
 
 def encode_texture(image):
