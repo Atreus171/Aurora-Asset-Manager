@@ -2056,13 +2056,9 @@ def scan_aurora_db(root, logger=None):
             has_cover = False
             if folder:
                 for fn in os.listdir(folder):
-                    if fn.upper().startswith("GC"):
-                        try:
-                            if os.path.getsize(os.path.join(folder, fn)) >= MIN_ASSET_SIZE:
-                                has_cover = True
-                                break
-                        except OSError:
-                            pass
+                    if fn.upper().startswith("GC") and has_cover_image(os.path.join(folder, fn)):
+                        has_cover = True
+                        break
             games.append({
                 "folder": folder,
                 "tid": tid,
@@ -2111,11 +2107,7 @@ def scan_aurora(root):
                 full = os.path.join(folder, file_name)
                 if not os.path.isfile(full):
                     continue
-                try:
-                    size = os.path.getsize(full)
-                except OSError:
-                    size = 0
-                if file_name.upper().startswith("GC") and size >= MIN_ASSET_SIZE:
+                if file_name.upper().startswith("GC") and has_cover_image(full):
                     has_cover = True
                     break
             folder_games.append({
@@ -2155,13 +2147,11 @@ def scan_aurora(root):
             has_cover = False
             if os.path.isdir(import_path):
                 for fn in os.listdir(import_path):
-                    if fn.upper().startswith("GC") and fn.lower().endswith(".png"):
-                        try:
-                            if os.path.getsize(os.path.join(import_path, fn)) >= MIN_ASSET_SIZE:
-                                has_cover = True
-                                break
-                        except OSError:
-                            pass
+                    upper = fn.upper()
+                    if upper == "COVER.PNG" or (upper.startswith("GC") and fn.lower().endswith((".png", ".asset"))):
+                        if has_cover_image(os.path.join(import_path, fn)):
+                            has_cover = True
+                            break
             games.append({
                 "folder": None,
                 "tid": tid,
@@ -2237,6 +2227,17 @@ def open_cover_image(path):
             except Exception:
                 pass
     return None
+
+
+def has_cover_image(path):
+    """Detecta de forma leve se um arquivo contém uma imagem de capa real:
+    container RXEA do app, JPEG/PNG puro ou JPEG embutido após um header."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(4096)
+    except OSError:
+        return False
+    return head[:4] == b"RXEA" or b"\xFF\xD8\xFF" in head or b"\x89PNG\r\n\x1a\n" in head
 
 
 def selftest():
