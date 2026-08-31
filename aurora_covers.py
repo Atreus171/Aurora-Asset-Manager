@@ -2187,7 +2187,10 @@ def scan_aurora_db(root, logger=None):
             rel = rel.replace("/", os.sep).replace("\\", os.sep)
             rel = re.sub(r"^[\\/]+", "", rel)
             if rel:
-                for _base in (root, os.path.join(root, "Aurora")):
+                # O Directory no content.db é relativo à RAIZ do drive (ex: \homebrew\...,
+                # \jogos\...), não a \Aurora. Resolve contra a raiz do drive primeiro.
+                drive_root = os.path.splitdrive(os.path.abspath(root))[0] + os.sep
+                for _base in (drive_root, root, os.path.join(root, "Aurora")):
                     _cand = os.path.join(_base, rel)
                     if os.path.isdir(_cand):
                         folder = _cand
@@ -3258,18 +3261,21 @@ class App:
         path = filedialog.askdirectory(title=tr("aurora_folder"))
         if not path:
             return
-        # Se for uma unidade (ex: X:\), tenta detectar estrutura Aurora automaticamente
+        # Se for a raiz de uma unidade, mantém a raiz: o content.db guarda caminhos
+        # relativos à raiz (\homebrew, \jogos, \content...), então apontar para X:\
+        # permite resolver as pastas físicas das capas junto com a base do Aurora.
         if os.path.splitdrive(path)[1] in ("\\", "/"):
-            # É uma raiz de unidade, tenta encontrar estrutura Aurora
-            aurora_paths = [
-                os.path.join(path, "Aurora"),
-                os.path.join(path, "Aurora", "Data", "GameData"),
-                os.path.join(path, "Data", "GameData"),
-            ]
-            for p in aurora_paths:
-                if os.path.isdir(p):
-                    path = p
-                    break
+            self.aurora_path.set(path)
+            self.root.after(100, self.start_scan)
+            return
+        # Caso contrário (pasta manual), tenta detectar a estrutura Aurora
+        for p in (
+            os.path.join(path, "Aurora"),
+            os.path.join(path, "Data", "GameData"),
+        ):
+            if os.path.isdir(p):
+                path = p
+                break
         self.aurora_path.set(path)
         self.root.after(100, self.start_scan)
 
