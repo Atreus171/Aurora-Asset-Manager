@@ -2384,6 +2384,102 @@ def db_delete_row(conn, table, sc, rowid):
     conn.execute('DELETE FROM "%s" WHERE "%s" = ?' % (table, sc["id"]), (rowid,))
 
 
+def scan_homebrew_xex(root, known_folders=None):
+    """Descobre homebrews do mesmo jeito que o Aurora/Unity: pela presença de um
+    executável (.xex) dentro dos scan paths (360, homebrew e os ScanPaths do content.db).
+    Homebrews não têm TitleId válido, então recebem um TID sintético estável."""
+    known = set(os.path.normpath(f) for f in (known_folders or []) if f)
+    bases = []
+    db_path = find_content_db(root)
+    if db_path:
+        try:
+            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn.row_factory = sqlite3.Row
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if "ScanPaths" in tables:
+                dev_map = {}
+                if "MountedDevices" in tables:
+                    try:
+                        mcols = [r[1] for r in conn.execute('PRAGMA table_info("MountedDevices")')]
+                        mdev_id = next((c for c in mcols if c.lower() in ("deviceid", "device_id", "id")), None)
+                        mdev_mnt = next((c for c in mcols if "mountpoint" in c.lower() or c.lower() in ("path", "root")), None)
+                        if mdev_id and mdev_mnt:
+                            for r in conn.execute('SELECT "%s","%s" FROM "MountedDevices"' % (mdev_id, mdev_mnt)):
+                                dev_map[r[0]] = r[1] or ""
+                    except sqlite3.Error:
+                        pass
+                try:
+                    scols = [r[1] for r in conn.execute('PRAGMA table_info("ScanPaths")')]
+                    sp_id = next((c for c in scols if c.lower() in ("id", "scanpathid", "pathid")), None)
+                    sp_path = next((c for c in scols if c.lower() in ("path", "contentpath", "location", "dir")), None)
+                    sp_dev = next((c for c in scols if "deviceid" in c.lower() or "device" in c.lower()), None)
+                    for r in conn.execute('SELECT * FROM "ScanPaths"'):
+                        devid = r[sp_dev] if sp_dev else None
+                        mount = dev_map.get(devid, "") if devid is not None else ""
+                        seg = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", (mount or "") + (r[sp_path] or "") if sp_path else "")
+                        seg = seg.replace("/", os.sep).replace("\\", os.sep).rstrip("\\")
+                        if not seg or not os.path.isdir(os.path.join(root, seg)):
+                            continue
+                        low = seg.lower()
+                        if low.startswith(os.path.join("content", "")) or low == "content" or "gamedata" in low:
+                            continue  # os jogos reais/DLC já vêm do DB
+                        bases.append(os.path.join(root, seg))
+                except sqlite3.Error:
+                    pass
+            conn.close()
+        except sqlite3.Error:
+            pass
+    bases += [os.path.join(root, "360"), os.path.join(root, "homebrew")]
+    bases = list(dict.fromkeys(b for b in bases if os.path.isdir(b)))
+
+    out = []
+    hex8 = re.compile(r"^([0-9A-F]{8})$")
+    for base in bases:
+        for dirpath, dirnames, filenames in os.walk(base):
+            depth = 0
+            relpath = dirpath
+            if base != root:
+                try:
+                    relpath = os.path.relpath(dirpath, base)
+                    depth = 0 if relpath == "." else len(relpath.split(os.sep))
+                except ValueError:
+                    pass
+            if depth > 4:
+                dirnames[:] = []
+                continue
+            if not any(fn.lower().endswith(".xex") for fn in filenames):
+                continue
+            folder = os.path.normpath(dirpath)
+            if folder in known:
+                continue
+            known.add(folder)
+            rel = os.path.relpath(dirpath, root).replace("/", os.sep)
+            # TID: usar um TID hex de 8 dígitos se a pasta (ou a mãe) tiver
+            m = hex8.match(os.path.basename(dirpath)) or (
+                hex8.match(os.path.basename(os.path.dirname(dirpath)))
+                if os.path.basename(dirpath).lower() in ("00000000", "content", "0000000000000000")
+                else None
+            )
+            src = rel if rel else os.path.basename(dirpath)
+            tid = m.group(1) if m else "%08X" % (int(hashlib.sha1(src.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+            name = os.path.basename(dirpath)
+            if name.lower() in ("00000000", "content") or not name:
+                name = os.path.basename(os.path.dirname(dirpath)) or tid
+            has_cover = False
+            for fn in os.listdir(dirpath):
+                if fn.upper().startswith("GC") and has_cover_image(os.path.join(dirpath, fn)):
+                    has_cover = True
+                    break
+            out.append({
+                "folder": folder,
+                "tid": tid,
+                "folder_name": os.path.basename(folder),
+                "dname": name,
+                "has_cover": has_cover,
+            })
+    return out
+
+
 def scan_aurora(root):
     # Carrega nomes customizados salvos
     custom_names = load_custom_names()
@@ -2470,6 +2566,15 @@ def scan_aurora(root):
                 "dname": dname,
                 "has_cover": has_cover,
             })
+
+    # Varredura física de homebrews (identificação por executável, como o Aurora/Unity)
+    homebrew = scan_homebrew_xex(
+        root,
+        known_folders=[g.get("folder") for g in games if g.get("folder")],
+    )
+    if homebrew:
+        log(f"  [SCAN] Homebrews encontrados por .xex: {len(homebrew)}")
+        games.extend(homebrew)
 
     # Aplica nomes customizados aos jogos do DB que não têm dname
     for g in games:
