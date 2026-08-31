@@ -17,6 +17,20 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 
 from PIL import Image, ImageDraw, ImageOps, ImageTk
 
+def resource_path(name):
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, name)
+
+
+def set_window_icon(root):
+    try:
+        icon = resource_path("icon.ico")
+        if os.path.isfile(icon):
+            root.iconbitmap(icon)
+    except Exception:
+        pass
+
+
 X360DB_RAW = "https://raw.githubusercontent.com/xenia-manager/x360db/main/"
 GAMES_INDEX_URL = X360DB_RAW + "games.json"
 GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
@@ -4168,6 +4182,7 @@ def main():
         selftest()
         return 0
     root = tk.Tk()
+    set_window_icon(root)
     App(root)
     root.mainloop()
     return 0

@@ -177,12 +177,17 @@ pip install -r requirements.txt
 python -m py_compile aurora_covers.py
 python aurora_covers.py --selftest
 
-# Build standalone exe
+# Build single-file exe (release, slower first start)
 python -m PyInstaller --noconfirm --onefile --windowed \
   --name "AuroraAssetManager" --clean \
-  --icon "assets/icon.ico" aurora_covers.py
-
+  --icon "assets/icon.ico" --add-data "assets/icon.ico;." aurora_covers.py
 # Output: dist/AuroraAssetManager.exe (~19 MB)
+
+# Build folder build (faster startup, recommended for daily use)
+python -m PyInstaller --noconfirm --onedir --windowed \
+  --name "AuroraAssetManager" --clean \
+  --icon "assets/icon.ico" --add-data "assets/icon.ico;." aurora_covers.py
+# Output: dist/AuroraAssetManager/ (exe + _internal folder)
 ```
 
 ---
@@ -235,8 +240,3 @@ aurora-x360db-covers/
 
 MIT License — see [LICENSE](LICENSE) for details.
 
----
-
-<p align="center">
-  Made with ❤️ for the Xbox 360 homebrew community
-</p>
