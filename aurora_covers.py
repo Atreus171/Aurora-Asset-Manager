@@ -2217,6 +2217,28 @@ def find_cover_file(folder):
     return None
 
 
+def open_cover_image(path):
+    """Abre uma capa instalada: container RXEA do app, JPEG/PNG puro ou
+    JPEG/PNG com header proprio embutido (como alguns arquivos do Aurora)."""
+    blob = _read_file(path)
+    if blob is None:
+        return None
+    img = _decode_asset_safe(blob, ASSET_TYPE_BOXART)
+    if img is not None:
+        return img
+    img = _open_image(path)
+    if img is not None:
+        return img
+    for marker in (b"\xFF\xD8\xFF", b"\x89PNG\r\n\x1a\n"):
+        idx = blob.find(marker)
+        if idx > 0:
+            try:
+                return Image.open(io.BytesIO(blob[idx:])).convert("RGBA")
+            except Exception:
+                pass
+    return None
+
+
 def selftest():
     img = Image.new("RGBA", (900, 600), (200, 30, 30, 255))
     draw = ImageDraw.Draw(img)
@@ -3182,12 +3204,7 @@ class App:
         img = None
         cover_file = find_cover_file(g["folder"])
         if cover_file:
-            try:
-                with open(cover_file, "rb") as f:
-                    blob = f.read()
-                img = decode_asset(blob, ASSET_TYPE_BOXART)
-            except Exception:
-                img = None
+            img = open_cover_image(cover_file)
         if img is None:
             png = os.path.join(
                 self.aurora_path.get().strip().strip('"'), "User", "Import", g["tid"], "cover.png"
