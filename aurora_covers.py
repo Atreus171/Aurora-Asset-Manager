@@ -1,5 +1,6 @@
 import io
 import json
+import hashlib
 import os
 import re
 import sqlite3
@@ -2059,7 +2060,7 @@ def is_installed(tid, kind):
 
 
 def scan_aurora_db(root, logger=None):
-    """Lê o content.db do Aurora para obter nomes reais dos jogos."""
+    """Lê o content.db do Aurora para obter nomes reais dos jogos (inclui homebrews)."""
     def _log(msg):
         if logger:
             logger(msg)
@@ -2079,88 +2080,109 @@ def scan_aurora_db(root, logger=None):
             break
     if not db_path:
         return games
-    
+
+    def _cols(conn, table):
+        try:
+            return [r[1] for r in conn.execute('PRAGMA table_info("%s")' % table)]
+        except sqlite3.Error:
+            return []
+
     try:
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
-        
-        # Tenta descobrir a tabela e colunas corretas
         tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
         _log(f"  [DB] Tabelas encontradas: {tables}")
-        
-        # Tenta várias tabelas possíveis (ordem de prioridade baseada no debug)
+
         content_table = None
         for t in ["ContentItems", "Content", "Games", "GameList", "Titles", "ContentList"]:
             if t in tables:
                 content_table = t
                 _log(f"  [DB] Usando tabela: {content_table}")
                 break
-        
         if not content_table:
-            _log(f"  [DB] Nenhuma tabela conhecida encontrada")
+            _log("  [DB] Nenhuma tabela conhecida encontrada")
             conn.close()
             return games
-        
-        # Descobre colunas disponíveis
-        cols = [row[1] for row in conn.execute(f"PRAGMA table_info({content_table})")]
-        _log(f"  [DB] Colunas em {content_table}: {cols}")
-        
-        # Para ContentItems, usa colunas específicas conhecidas
-        if content_table == "ContentItems":
-            query = """
-                SELECT TitleId, TitleName, Directory, MediaId, ContentType, FileType
-                FROM ContentItems
-                WHERE TitleId IS NOT NULL AND TitleId != 0
-                ORDER BY TitleName
-            """
-        else:
-            # Mapeia colunas esperadas
-            col_tid = next((c for c in cols if c.lower() in ("titleid", "tid", "title_id")), "TitleID")
-            col_title = next((c for c in cols if c.lower() in ("title", "name", "gamename", "displayname", "titlename")), "Title")
-            col_dbid = next((c for c in cols if c.lower() in ("databaseid", "dbid", "db_id")), "DatabaseID")
-            col_mediaid = next((c for c in cols if c.lower() in ("mediaid", "media_id")), "MediaID")
-            col_path = next((c for c in cols if c.lower() in ("path", "gamepath", "location", "directory", "dir")), "Path")
-            col_type = next((c for c in cols if c.lower() in ("titletype", "type", "gametype", "title_type", "contenttype", "filetype")), "TitleType")
-            
-            _log(f"  [DB] Mapeamento: tid={col_tid}, title={col_title}, type={col_type}")
-            
-            # Tenta query sem filtro de tipo primeiro (mais robusto)
-            query = f"""
-                SELECT {col_tid}, {col_title}, {col_dbid}, {col_mediaid}, {col_path}, {col_type}
-                FROM {content_table}
-                ORDER BY {col_title}
-            """
-        
+
+        cols = _cols(conn, content_table)
+        cv = lambda *names: next((c for c in cols if c.lower() in names), None)
+        col_tid = cv("titleid", "tid", "title_id")
+        col_title = cv("title", "name", "titlename", "gamename", "displayname")
+        col_dir = cv("path", "gamepath", "location", "directory", "dir")
+        col_sp = cv("scanpathid")
+        col_exe = cv("executable", "exe")
+        _log(f"  [DB] Mapeamento: tid={col_tid}, title={col_title}, dir={col_dir}")
+
+        # ScanPaths + MountedDevices: resolve pastas absolutas no PC
+        dev_map = {}
+        if "MountedDevices" in tables:
+            try:
+                mcols = _cols(conn, "MountedDevices")
+                mdev_id = next((c for c in mcols if c.lower() in ("deviceid", "device_id", "id")), None)
+                mdev_mnt = next((c for c in mcols if "mountpoint" in c.lower() or c.lower() in ("path", "root")), None)
+                if mdev_id and mdev_mnt:
+                    for r in conn.execute('SELECT "%s","%s" FROM "MountedDevices"' % (mdev_id, mdev_mnt)):
+                        dev_map[r[0]] = r[1] or ""
+            except sqlite3.Error:
+                pass
+        sp_map = {}
+        if "ScanPaths" in tables:
+            try:
+                scols = _cols(conn, "ScanPaths")
+                sp_id = next((c for c in scols if c.lower() in ("id", "scanpathid", "pathid")), None)
+                sp_path = next((c for c in scols if c.lower() in ("path", "contentpath", "location", "dir")), None)
+                sp_dev = next((c for c in scols if "deviceid" in c.lower() or "device" in c.lower()), None)
+                if sp_id and sp_path:
+                    for r in conn.execute('SELECT * FROM "ScanPaths"'):
+                        devid = r[sp_dev] if sp_dev else None
+                        sp_map[r[sp_id]] = (dev_map.get(devid, "") if devid is not None else "", r[sp_path] or "")
+            except sqlite3.Error:
+                pass
+
+        sel_cols = [c for c in (col_tid, col_title, col_dir, col_sp, col_exe) if c]
+        sel_cols += [c for c in cols if c.lower() in ("mediaid", "contenttype", "filetype")]
+        qcols = ", ".join('"%s"' % c for c in sel_cols) if sel_cols else "*"
+        query = 'SELECT %s FROM "%s"' % (qcols, content_table)
         _log(f"  [DB] Query: {query}")
-        cur = conn.execute(query)
         count = 0
-        for row in cur:
+        for row in conn.execute(query):
             count += 1
-            # Para ContentItems, TitleId é integer
-            if content_table == "ContentItems":
-                tid_int = row["TitleId"]
-                if tid_int is None or tid_int == 0:
-                    continue
-                tid = f"{tid_int:08X}"
-                title = (row["TitleName"] or "").strip()
-                path = row["Directory"]
+            tid_raw = row[col_tid] if col_tid else None
+            if tid_raw is None:
+                tid = ""
+            elif isinstance(tid_raw, int):
+                tid = "%08X" % tid_raw
             else:
-                tid = (row[col_tid] or "").upper()
-                if not tid or tid == "00000000":
-                    continue
-                title = (row[col_title] or "").strip()
-                path = row[col_path]
-            
-            if not title:
-                continue
-            dname = title
+                tid = (str(tid_raw) or "").strip().upper()
+            title = (str(row[col_title] or "")).strip() if col_title else ""
+            directory = (str(row[col_dir] or "")).strip() if col_dir else ""
+            scanpath = row[col_sp] if col_sp else None
+            mount, spbase = sp_map.get(scanpath, ("", "")) if scanpath is not None else ("", "")
             folder = None
-            rel = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", (path or "").strip())
-            for _base in (root, os.path.join(root, "Aurora")):
-                _cand = os.path.join(_base, rel) if rel else ""
-                if _cand and os.path.isdir(_cand):
-                    folder = _cand
-                    break
+            rel = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", (mount or "") + (spbase or "") + directory)
+            rel = rel.replace("/", os.sep).replace("\\", os.sep)
+            rel = re.sub(r"^[\\/]+", "", rel)
+            if rel:
+                for _base in (root, os.path.join(root, "Aurora")):
+                    _cand = os.path.join(_base, rel)
+                    if os.path.isdir(_cand):
+                        folder = _cand
+                        break
+            # Homebrews (TitleId zerado/vazio) recebem TID pela pasta ou TID sintético
+            if not tid or tid == "00000000":
+                m = re.match(r"^([0-9A-F]{8})[_\s]?", os.path.basename(folder)) if folder else None
+                if m:
+                    tid = m.group(1)
+                elif folder:
+                    tid = "%08X" % (int(hashlib.sha1(rel.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+                elif title:
+                    tid = "%08X" % (int(hashlib.sha1(title.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+                else:
+                    continue
+            if not title and folder:
+                title = os.path.basename(folder)
+            if not title:
+                title = tid
             has_cover = False
             if folder:
                 for fn in os.listdir(folder):
@@ -2171,7 +2193,7 @@ def scan_aurora_db(root, logger=None):
                 "folder": folder,
                 "tid": tid,
                 "folder_name": os.path.basename(folder) if folder else tid,
-                "dname": dname,
+                "dname": title,
                 "has_cover": has_cover,
             })
         conn.close()
