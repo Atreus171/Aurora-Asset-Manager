@@ -2449,10 +2449,18 @@ def scan_homebrew_xex(root, known_folders=None):
         except sqlite3.Error:
             pass
     bases += [os.path.join(root, "360"), os.path.join(root, "homebrew")]
+    # Homebrews/ILA XBLA costumam ficar em Content\\0000000000000000\\<TID>\\...
+    # (mesmo endereço dos jogos do sistema), então incluímos a raiz de conteúdo e
+    # filtramos no walk pelos códigos de subpasta que NÃO são o jogo em si.
+    content_root = os.path.join(root, "Content", "0000000000000000")
+    if os.path.isdir(content_root):
+        bases.append(content_root)
     bases = list(dict.fromkeys(b for b in bases if os.path.isdir(b)))
 
     out = []
     hex8 = re.compile(r"^([0-9A-F]{8})$")
+    # Códigos de subpasta de conteúdo que NÃO representam o jogo/base (DLC, TU, dados)
+    skip_seg = {"00000002", "000B0000", "000D0000", "00008000"}
     for base in bases:
         for dirpath, dirnames, filenames in os.walk(base):
             depth = 0
@@ -2466,6 +2474,11 @@ def scan_homebrew_xex(root, known_folders=None):
             if depth > 4:
                 dirnames[:] = []
                 continue
+            # Poda subpastas de conteúdo que não são o jogo/base (DLC/TU/dados)
+            parts = re.split(r"[\\/]", dirpath)
+            if any(p.upper() in skip_seg for p in parts):
+                dirnames[:] = []
+                continue
             if not any(fn.lower().endswith(".xex") for fn in filenames):
                 continue
             folder = os.path.normpath(dirpath)
@@ -2473,17 +2486,37 @@ def scan_homebrew_xex(root, known_folders=None):
                 continue
             known.add(folder)
             rel = os.path.relpath(dirpath, root).replace("/", os.sep)
-            # TID: usar um TID hex de 8 dígitos se a pasta (ou a mãe) tiver
-            m = hex8.match(os.path.basename(dirpath)) or (
-                hex8.match(os.path.basename(os.path.dirname(dirpath)))
-                if os.path.basename(dirpath).lower() in ("00000000", "content", "0000000000000000")
-                else None
-            )
+            # TID: usar um TID hex de 8 dígitos encontrado na árvore do caminho
+            # (a pasta do jogo, ou a pasta TID em Content\\...\\<TID>\\...).
+            # Códigos de subpasta de conteúdo (00007000, 00000002, etc) não são TIDs.
+            non_tid = {"00000000", "0000000000000000", "00000002", "00007000", "00004000", "000B0000", "000D0000", "00008000"}
+            try:
+                rel_parts = os.path.relpath(dirpath, base).split(os.sep)
+            except ValueError:
+                rel_parts = parts
+            candidate_tid = None
+            for seg in (os.path.basename(dirpath), os.path.basename(os.path.dirname(dirpath))):
+                if hex8.match(seg) and seg not in non_tid:
+                    candidate_tid = seg
+                    break
+            if candidate_tid is None:
+                for seg in rel_parts:
+                    if hex8.match(seg) and seg not in non_tid:
+                        candidate_tid = seg
+                        break
+            m = candidate_tid
             src = rel if rel else os.path.basename(dirpath)
-            tid = m.group(1) if m else "%08X" % (int(hashlib.sha1(src.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+            tid = m if m else "%08X" % (int(hashlib.sha1(src.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+            # Nome legível: primeiro segmento que não seja código de conteúdo nem TID
+            def _bad_seg(s):
+                u = (s or "").upper()
+                return (not s) or u in non_tid or u in ("CONTENT",) or hex8.match(s)
             name = os.path.basename(dirpath)
-            if name.lower() in ("00000000", "content") or not name:
-                name = os.path.basename(os.path.dirname(dirpath)) or tid
+            if _bad_seg(name):
+                name = next(
+                    (s for s in reversed(rel_parts) if not _bad_seg(s)),
+                    tid,
+                )
             has_cover = False
             for fn in os.listdir(dirpath):
                 if fn.upper().startswith("GC") and has_cover_image(os.path.join(dirpath, fn)):
@@ -2564,9 +2597,6 @@ def scan_aurora(root):
             tid = tid_dir.upper()
             if tid == "00000000":
                 continue
-            # Verifica se já temos esse jogo
-            if any(g["tid"] == tid for g in games):
-                continue
             # Tenta pegar nome customizado
             dname = custom_names.get(tid, tid)
             import_path = os.path.join(import_dir, tid_dir)
@@ -2574,16 +2604,30 @@ def scan_aurora(root):
             if os.path.isdir(import_path):
                 for fn in os.listdir(import_path):
                     upper = fn.upper()
-                    if upper == "COVER.PNG" or (upper.startswith("GC") and fn.lower().endswith((".png", ".asset"))):
+                    # Aurora: capa de Import é cover.png / cover.jpg / cover.dds (ou GC*.asset legado)
+                    if (
+                        upper.startswith("COVER") and fn.lower().endswith((".png", ".jpg", ".jpeg", ".dds"))
+                    ) or (upper.startswith("GC") and fn.lower().endswith((".png", ".asset"))):
                         if has_cover_image(os.path.join(import_path, fn)):
                             has_cover = True
                             break
+            # Se o jogo já veio do DB/pastas (ex: homebrew via .xex), aproveita o
+            # título e só enriquece a capa de Import que o scan anterior não achou.
+            existing = next((g for g in games if g["tid"] == tid), None)
+            if existing is not None:
+                if not existing.get("dname") and dname != tid:
+                    existing["dname"] = dname
+                if has_cover and not existing["has_cover"]:
+                    existing["has_cover"] = True
+                    existing["import_cover"] = import_path
+                continue
             games.append({
                 "folder": None,
                 "tid": tid,
                 "folder_name": tid,
                 "dname": dname,
                 "has_cover": has_cover,
+                "import_cover": import_path if has_cover else None,
             })
 
     # Varredura física de homebrews (identificação por executável, como o Aurora/Unity)
@@ -3286,6 +3330,16 @@ class App:
                             "has_cover": False,
                         }
                     )
+            # Capas já baixadas/instaladas (tracker) contam como "têm capa", mesmo
+            # quando o arquivo não é encontrado no disco num re-scan (ex.: capa de
+            # homebrew guardada em local que a varredura física não alcança).
+            try:
+                _inst = json.load(open(installed_path(), "r", encoding="utf-8"))
+            except Exception:
+                _inst = {}
+            for _g in self.games:
+                if not _g["has_cover"] and bool((_inst.get(_g["tid"]) or {}).get("boxart")):
+                    _g["has_cover"] = True
             self.log("Total de jogos: %d" % len(self.games))
             # Busca nomes faltando no XboxUnity em background (se habilitado)
             if self.cfg.get("auto_search_titles", True):
@@ -3891,14 +3945,21 @@ class App:
         if cover_file:
             img = open_cover_image(cover_file)
         if img is None:
-            png = os.path.join(
-                self.aurora_path.get().strip().strip('"'), "User", "Import", g["tid"], "cover.png"
+            import_dir = os.path.join(
+                self.aurora_path.get().strip().strip('"'), "User", "Import", g["tid"]
             )
-            if os.path.isfile(png):
-                try:
-                    img = Image.open(png).convert("RGBA")
-                except Exception:
-                    img = None
+            if os.path.isdir(import_dir):
+                for fn in sorted(os.listdir(import_dir)):
+                    if (
+                        fn.lower().startswith("cover")
+                        and fn.lower().endswith((".png", ".jpg", ".jpeg", ".dds"))
+                    ):
+                        try:
+                            img = Image.open(os.path.join(import_dir, fn)).convert("RGBA")
+                        except Exception:
+                            img = None
+                        if img is not None:
+                            break
         self.preview_cache[key] = img
         return img
 
