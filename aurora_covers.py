@@ -296,6 +296,7 @@ TEXT = {
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "show_debug_button": "Mostrar botão Debug DB",
         "m_search": "Pesquisar título...",
+        "m_rename": "Renomear jogo",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
         "m_open_folder": "Abrir pasta do jogo",
@@ -474,6 +475,7 @@ TEXT = {
         "auto_search_titles": "Auto-search titles (XboxUnity)",
         "show_debug_button": "Show Debug DB button",
         "m_search": "Search title...",
+        "m_rename": "Rename game",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
         "m_open_folder": "Open game folder",
@@ -652,6 +654,7 @@ TEXT = {
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "show_debug_button": "Mostrar botón Debug DB",
         "m_search": "Buscar título...",
+        "m_rename": "Renombrar juego",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
         "m_open_folder": "Abrir carpeta del juego",
@@ -830,6 +833,7 @@ TEXT = {
         "auto_search_titles": "Recherche auto des titres (XboxUnity)",
         "show_debug_button": "Afficher bouton Debug DB",
         "m_search": "Rechercher titre...",
+        "m_rename": "Renommer le jeu",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
         "m_open_folder": "Ouvrir le dossier du jeu",
@@ -1008,6 +1012,7 @@ TEXT = {
         "auto_search_titles": "タイトル自動検索 (XboxUnity)",
         "show_debug_button": "Debug DB ボタンを表示",
         "m_search": "タイトルを検索...",
+        "m_rename": "ゲーム名を変更",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
         "m_open_folder": "ゲームフォルダを開く",
@@ -1186,6 +1191,7 @@ TEXT = {
         "auto_search_titles": "Автопоиск названий (XboxUnity)",
         "show_debug_button": "Показать кнопку Debug DB",
         "m_search": "Поиск названия...",
+        "m_rename": "Переименовать игру",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
         "m_open_folder": "Открыть папку игры",
@@ -2196,6 +2202,11 @@ def selftest():
     assert tr("warn") == "Предупреждение"
     assert tr("alt_count", 4) == "Найдено обложек: 4."
     globals()["CURRENT_LANG"] = _old_lang
+    en_keys = set(TEXT["en"].keys())
+    for lang_code in LANGUAGES:
+        missing = en_keys - set(TEXT[lang_code].keys())
+        assert not missing, "translations missing in %s: %s" % (lang_code, sorted(missing))
+    assert tr("m_rename") != "m_rename"
     assert [k for k, *_ in ASSET_KINDS] == ["boxart", "background", "icon", "banner", "screenshots"]
     assert THEMES["escuro"]["fg"] == "#e6e6e6"
     print("selftest OK: configurações e temas OK")
