@@ -327,6 +327,10 @@ TEXT = {
         "db_removed": "Entrada removida: %s",
         "db_confirm_remove": "Remover '%s' do registro? O conteúdo em disco NÃO é apagado.",
         "db_only_dlc": "Somente DLC / XBLA / TU",
+        "db_filter": "Tipo:",
+        "db_all": "Todos",
+        "db_search": "Pesquisar nome, TID ou pasta...",
+        "filter_games": "Filtrar jogos...",
         "db_need_name": "Informe um nome.",
         "rename_ftp_start": "Renomeando a pasta no console via FTP...",
         "rename_ftp_ok": "Pasta renomeada no console: %s",
@@ -536,6 +540,10 @@ TEXT = {
         "db_removed": "Entry removed: %s",
         "db_confirm_remove": "Remove '%s' from the database? Content on disk is NOT deleted.",
         "db_only_dlc": "Only DLC / XBLA / TU",
+        "db_filter": "Type:",
+        "db_all": "All",
+        "db_search": "Search name, TID or folder...",
+        "filter_games": "Filter games...",
         "db_need_name": "Enter a name.",
         "rename_ftp_start": "Renaming folder on the console via FTP...",
         "rename_ftp_ok": "Folder renamed on the console: %s",
@@ -745,6 +753,10 @@ TEXT = {
         "db_removed": "Entrada eliminada: %s",
         "db_confirm_remove": "¿Eliminar '%s' del registro? El contenido en disco NO se borra.",
         "db_only_dlc": "Solo DLC / XBLA / TU",
+        "db_filter": "Tipo:",
+        "db_all": "Todos",
+        "db_search": "Buscar nombre, TID o carpeta...",
+        "filter_games": "Filtrar juegos...",
         "db_need_name": "Introduce un nombre.",
         "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
@@ -954,6 +966,10 @@ TEXT = {
         "db_removed": "Entrée supprimée : %s",
         "db_confirm_remove": "Supprimer '%s' du registre ? Le contenu sur le disque n'est PAS effacé.",
         "db_only_dlc": "Uniquement DLC / XBLA / TU",
+        "db_filter": "Type :",
+        "db_all": "Tous",
+        "db_search": "Rechercher nom, TID ou dossier...",
+        "filter_games": "Filtrer les jeux...",
         "db_need_name": "Entrez un nom.",
         "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
@@ -1163,6 +1179,10 @@ TEXT = {
         "db_removed": "エントリを削除: %s",
         "db_confirm_remove": "'%s' を登録から削除しますか？ ディスク上のコンテンツは消去されません。",
         "db_only_dlc": "DLC / XBLA / TU のみ",
+        "db_filter": "種類:",
+        "db_all": "すべて",
+        "db_search": "名前・TID・フォルダを検索...",
+        "filter_games": "ゲームを絞り込む...",
         "db_need_name": "名前を入力してください。",
         "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
@@ -1372,6 +1392,10 @@ TEXT = {
         "db_removed": "Запись удалена: %s",
         "db_confirm_remove": "Удалить '%s' из реестра? Содержимое на диске НЕ удаляется.",
         "db_only_dlc": "Только DLC / XBLA / TU",
+        "db_filter": "Тип:",
+        "db_all": "Все",
+        "db_search": "Поиск по имени, TID или папке...",
+        "filter_games": "Фильтр игр...",
         "db_need_name": "Введите название.",
         "rename_ftp_start": "Переименование папки на консоли по FTP...",
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
@@ -2278,9 +2302,15 @@ def db_kind_label(kind):
     return m.get(kind, m["other"]).get(lang, "Other")
 
 
-def db_rows(conn, table, sc, only_special=False):
+def db_rows(conn, table, sc, only_special=False, kinds=None, text=""):
     conn.row_factory = sqlite3.Row
     out = []
+    text = (text or "").strip().lower()
+    kw = set()
+    if only_special:
+        kw = {"dlc", "xbla", "tu"}
+    elif kinds:
+        kw = set(kinds)
     for row in conn.execute('SELECT * FROM "%s"' % table):
         tid = row[sc["tid"]]
         if isinstance(tid, int):
@@ -2289,12 +2319,15 @@ def db_rows(conn, table, sc, only_special=False):
             tid = (str(tid) or "").strip().upper()
         directory = str(row[sc["dir"]] or "").strip() if sc["dir"] else ""
         kind = db_row_kind(directory)
-        if only_special and kind not in ("dlc", "xbla", "tu"):
+        if kw and kind not in kw:
+            continue
+        name = str(row[sc["title"]] or "").strip()
+        if text and text not in " ".join((tid, name, directory)).lower():
             continue
         out.append({
             "id": row[sc["id"]],
             "tid": tid,
-            "name": str(row[sc["title"]] or "").strip(),
+            "name": name,
             "dir": directory,
             "kind": kind,
             "label": db_kind_label(kind),
@@ -2650,6 +2683,7 @@ class App:
         self.worker = None
         self.busy = False
         self.item_to_game = {}
+        self.search_var = tk.StringVar()
         self._photo = None
         self.preview_cache = {}
         self._assets_dlg = None
@@ -2758,6 +2792,13 @@ class App:
         tk.Label(
             opts2, text=tr("info_note"), fg=UNITY_WAIT,
         ).pack(side=tk.LEFT)
+
+        filter_row = ttk.Frame(frm)
+        filter_row.pack(fill=tk.X, pady=(6, 0))
+        ttk.Label(filter_row, text=tr("filter_games")).pack(side=tk.LEFT)
+        e_filter = ttk.Entry(filter_row, textvariable=self.search_var, width=40)
+        e_filter.pack(side=tk.LEFT, padx=(6, 0))
+        self.search_var.trace_add("write", lambda *_: self.root.after_idle(self.refresh_tree))
 
         btn_row = ttk.Frame(frm)
         btn_row.pack(fill=tk.X, pady=(8, 0))
@@ -3138,8 +3179,17 @@ class App:
         for item in self.tree.get_children():
             self.tree.delete(item)
         self.item_to_game.clear()
+        text = self.search_var.get().strip().lower()
+        games = self.games
+        if text:
+            games = [
+                g for g in games
+                if text in self.game_title(g).lower()
+                or text in g["tid"].lower()
+                or text in (g.get("dname") or "").lower()
+            ]
         order = sorted(
-            self.games,
+            games,
             key=lambda g: (
                 g.get("has_cover") is True,
                 (self.game_title(g) or "").lower(),
@@ -3408,23 +3458,50 @@ class App:
         ttk.Label(frm, text=tr("db_warn1")).pack(anchor="w")
         bar = ttk.Frame(frm)
         bar.pack(fill=tk.X, pady=(6, 4))
-        only_special = tk.BooleanVar(value=False)
+        kind_map = [None, "game", "dlc", "xbla", "tu", "data", "other"]
+        kind_opts = [
+            tr("db_all"),
+            db_kind_label("game"),
+            db_kind_label("dlc"),
+            db_kind_label("xbla"),
+            db_kind_label("tu"),
+            db_kind_label("data"),
+            db_kind_label("other"),
+        ]
+        kind_var = tk.StringVar(value=kind_opts[0])
+        search_var = tk.StringVar()
+
+        try:
+            all_rows = db_rows(conn, table, sc)
+        except sqlite3.Error as exc:
+            conn.close()
+            messagebox.showerror(tr("error"), str(exc))
+            dlg.destroy()
+            return
 
         def reload_rows():
             for item in tree.get_children():
                 tree.delete(item)
-            try:
-                rows = db_rows(conn, table, sc, only_special=only_special.get())
-            except sqlite3.Error as exc:
-                messagebox.showerror(tr("error"), str(exc))
-                return
-            for r in rows:
+            kkind = kind_map[kind_opts.index(kind_var.get())]
+            text = search_var.get().strip()
+            for r in all_rows:
+                if kkind is not None and r["kind"] != kkind:
+                    continue
+                if text and text.lower() not in " ".join((r["tid"], r["name"], r["dir"])).lower():
+                    continue
                 tree.insert("", tk.END, values=(r["id"], r["tid"], r["name"], r["dir"], r["label"]))
 
-        ttk.Checkbutton(
-            bar, text=tr("db_only_dlc"), variable=only_special, command=reload_rows
-        ).pack(side=tk.LEFT)
-        ttk.Button(bar, text=tr("db_reload"), command=reload_rows).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Label(bar, text=tr("db_filter")).pack(side=tk.LEFT)
+        kind_cb = ttk.Combobox(
+            bar, textvariable=kind_var, values=kind_opts, state="readonly", width=14
+        )
+        kind_cb.pack(side=tk.LEFT, padx=(4, 10))
+        kind_cb.bind("<<ComboboxSelected>>", lambda _e: reload_rows())
+        ttk.Label(bar, text=tr("db_search")).pack(side=tk.LEFT)
+        e_search = ttk.Entry(bar, textvariable=search_var, width=30)
+        e_search.pack(side=tk.LEFT, padx=(4, 8))
+        search_var.trace_add("write", lambda *_: reload_rows())
+        ttk.Button(bar, text=tr("db_reload"), command=reload_rows).pack(side=tk.LEFT)
 
         sel = {"row": None}
 
