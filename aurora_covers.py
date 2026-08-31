@@ -2207,12 +2207,7 @@ def scan_aurora_db(root, logger=None):
                 title = os.path.basename(folder)
             if not title:
                 title = tid
-            has_cover = False
-            if folder:
-                for fn in os.listdir(folder):
-                    if fn.upper().startswith("GC") and has_cover_image(os.path.join(folder, fn)):
-                        has_cover = True
-                        break
+            has_cover = bool(folder and find_cover_file(folder))
             games.append({
                 "folder": folder,
                 "tid": tid,
@@ -2517,11 +2512,7 @@ def scan_homebrew_xex(root, known_folders=None):
                     (s for s in reversed(rel_parts) if not _bad_seg(s)),
                     tid,
                 )
-            has_cover = False
-            for fn in os.listdir(dirpath):
-                if fn.upper().startswith("GC") and has_cover_image(os.path.join(dirpath, fn)):
-                    has_cover = True
-                    break
+            has_cover = bool(find_cover_file(dirpath))
             out.append({
                 "folder": folder,
                 "tid": tid,
@@ -2562,13 +2553,7 @@ def scan_aurora(root):
             if not os.path.isdir(folder):
                 continue
             has_cover = False
-            for file_name in os.listdir(folder):
-                full = os.path.join(folder, file_name)
-                if not os.path.isfile(full):
-                    continue
-                if file_name.upper().startswith("GC") and has_cover_image(full):
-                    has_cover = True
-                    break
+            has_cover = bool(find_cover_file(folder))
             folder_games.append({
                 "folder": folder,
                 "tid": tid,
@@ -2677,12 +2662,38 @@ def scan_hdd_content(root):
     return [t for t in tids if t != "00000000"]
 
 
+def cover_exts():
+    return (".png", ".jpg", ".jpeg", ".dds")
+
+
+def iter_cover_names(folder):
+    """Gera os nomes de arquivos de capa que o Aurora reconhece dentro da pasta do jogo:
+    GC*.asset (container AURORA/COM do app e do Aurora) e boxart/cover em PNG/JPEG/DDS
+    (usados pelo Aurora para capas de homebrews e jogos). Ordenado para priorizar o GC."""
+    try:
+        names = os.listdir(folder)
+    except OSError:
+        return
+    exts = cover_exts()
+    for name in sorted(names):
+        up = name.upper()
+        if up.startswith("GC") and name.lower().endswith((".asset",) + exts):
+            yield name
+    for name in sorted(names):
+        up = name.upper()
+        if (up.startswith("BOXART") or up.startswith("COVER")) and name.lower().endswith(exts):
+            yield name
+
+
 def find_cover_file(folder):
+    """Encontra a capa de um jogo na pasta, igual ao Aurora: além do GC*.asset,
+    aceita boxart.* e cover.* (PNG/JPEG/DDS) que ficam dentro da pasta do jogo."""
     if not folder or not os.path.isdir(folder):
         return None
-    for name in sorted(os.listdir(folder)):
-        if name.upper().startswith("GC") and name.lower().endswith(".asset"):
-            return os.path.join(folder, name)
+    for name in iter_cover_names(folder):
+        path = os.path.join(folder, name)
+        if has_cover_image(path):
+            return path
     return None
 
 
