@@ -2275,18 +2275,35 @@ def db_schema(conn):
 
 
 def db_row_kind(directory):
-    d = (directory or "").upper()
-    if "00000002" in d:
-        return "dlc"
-    if "00004000" in d:
-        return "xbla"
-    if "00007000" in d:
-        return "tu"
-    if "000D0000" in d:
-        return "data"
-    if d and ("GAMEDATA" in d or "00000000" in d):
+    """Classifica pelo CÓDIGO DE PASTA exato (segmento de 8 hex), não por substring
+    (evita TIDs/pastas conterem códigos e marcarem jogo normal como DLC/TU/XBLA).
+    Mapeamento real do 360/Aurora:
+      00000000 -> jogo (base), GAMEDATA -> jogo
+      00000002 -> DLC
+      00004000 -> XBLA (Arcade)
+      00007000 -> GOD (Games on Demand -> é um JOGO)
+      00008000 -> Avatar
+      000B0000 -> Title Update
+      000D0000 -> Dados instalados/save
+    """
+    segs = [s for s in re.split(r"[\\/]", (directory or "").upper()) if s]
+    codes = {
+        "00000002": "dlc",
+        "00004000": "xbla",
+        "00007000": "god",
+        "00008000": "avatar",
+        "000B0000": "tu",
+        "000D0000": "data",
+    }
+    for s in segs:
+        if s in codes:
+            return codes[s]
+    if not segs:
+        return "other"
+    if "00000000" in segs or "GAMEDATA" in segs:
         return "game"
-    return "other"
+    # sem código explícito, mas a última pasta é um TID (rip direto na pasta de scan)
+    return "game" if re.match(r"^[0-9A-F]{8}$", segs[-1]) else "other"
 
 
 def db_kind_label(kind):
@@ -2294,6 +2311,8 @@ def db_kind_label(kind):
     m = {
         "dlc": {"pt": "DLC", "en": "DLC", "es": "DLC", "fr": "DLC", "ja": "DLC", "ru": "DLC"},
         "xbla": {"pt": "XBLA", "en": "XBLA", "es": "XBLA", "fr": "XBLA", "ja": "XBLA", "ru": "XBLA"},
+        "god": {"pt": "Jogo GOD", "en": "Games on Demand", "es": "Juego GOD", "fr": "Jeu GoD", "ja": "GODゲーム", "ru": "Игра GOD"},
+        "avatar": {"pt": "Avatar", "en": "Avatar", "es": "Avatar", "fr": "Avatar", "ja": "アバター", "ru": "Аватар"},
         "tu": {"pt": "TU/Update", "en": "Title Update", "es": "TU/Update", "fr": "Màj titre", "ja": "TU/アップデート", "ru": "TU/Обновление"},
         "data": {"pt": "Dados", "en": "Data", "es": "Datos", "fr": "Données", "ja": "データ", "ru": "Данные"},
         "game": {"pt": "Jogo", "en": "Game", "es": "Juego", "fr": "Jeu", "ja": "ゲーム", "ru": "Игра"},
@@ -3563,12 +3582,14 @@ class App:
         ttk.Label(frm, text=tr("db_warn1")).pack(anchor="w")
         bar = ttk.Frame(frm)
         bar.pack(fill=tk.X, pady=(6, 4))
-        kind_map = [None, "game", "dlc", "xbla", "tu", "data", "other"]
+        kind_map = [None, "game", "god", "dlc", "xbla", "avatar", "tu", "data", "other"]
         kind_opts = [
             tr("db_all"),
             db_kind_label("game"),
+            db_kind_label("god"),
             db_kind_label("dlc"),
             db_kind_label("xbla"),
+            db_kind_label("avatar"),
             db_kind_label("tu"),
             db_kind_label("data"),
             db_kind_label("other"),
@@ -3954,7 +3975,7 @@ class App:
     def update_tree_row(self, g):
         status = "Capa OK" if g["has_cover"] else "Sem capa"
         for item, game in self.item_to_game.items():
-            if game is g:
+            if game is g or game.get("tid") == g.get("tid"):
                 self.tree.item(
                     item,
                     values=(g["tid"], self.game_title(g), status),
