@@ -309,6 +309,24 @@ TEXT = {
         "add_game_exists": "Este jogo já está na lista.",
         "add_game_need_name": "Informe um nome para criar a pasta.",
         "add_game_added": "Jogo adicionado: %s (%s)",
+        "db_editor": "Banco do Aurora (content.db)",
+        "db_add": "Adicionar...",
+        "db_rename": "Renomear...",
+        "db_remove": "Remover...",
+        "db_reload": "Atualizar",
+        "db_backup": "Backup criado: %s",
+        "db_warn1": "Edite apenas com o Aurora fechado e o disco parado (o banco fica travado em uso). Um backup automático (.bak) é criado antes de cada alteração.",
+        "db_nodb": "content.db do Aurora não encontrado. Conecte o HD e escaneie antes.",
+        "db_need_id": "Selecione uma entrada na lista.",
+        "db_new_tid": "Title ID (8 dígitos hex):",
+        "db_new_name": "Nome:",
+        "db_new_dir": "Pasta relativa (ex.: \\Content\\0000000000000000\\5841120F):",
+        "db_added": "Entrada adicionada: %s (%s)",
+        "db_renamed": "Entrada renomeada: %s",
+        "db_removed": "Entrada removida: %s",
+        "db_confirm_remove": "Remover '%s' do registro? O conteúdo em disco NÃO é apagado.",
+        "db_only_dlc": "Somente DLC / XBLA / TU",
+        "db_need_name": "Informe um nome.",
         "rename_ftp_start": "Renomeando a pasta no console via FTP...",
         "rename_ftp_ok": "Pasta renomeada no console: %s",
         "rename_ftp_err": "Não foi possível renomear no console: %s",
@@ -500,6 +518,24 @@ TEXT = {
         "add_game_exists": "This game is already in the list.",
         "add_game_need_name": "Enter a name to create the folder.",
         "add_game_added": "Game added: %s (%s)",
+        "db_editor": "Aurora database (content.db)",
+        "db_add": "Add...",
+        "db_rename": "Rename...",
+        "db_remove": "Remove...",
+        "db_reload": "Refresh",
+        "db_backup": "Backup created: %s",
+        "db_warn1": "Only edit with Aurora closed and the drive idle (the database is locked while in use). An automatic backup (.bak) is created before each change.",
+        "db_nodb": "Aurora content.db not found. Connect the HD and scan first.",
+        "db_need_id": "Select an entry in the list.",
+        "db_new_tid": "Title ID (8 hex digits):",
+        "db_new_name": "Name:",
+        "db_new_dir": "Relative folder (e.g.: \\Content\\0000000000000000\\5841120F):",
+        "db_added": "Entry added: %s (%s)",
+        "db_renamed": "Entry renamed: %s",
+        "db_removed": "Entry removed: %s",
+        "db_confirm_remove": "Remove '%s' from the database? Content on disk is NOT deleted.",
+        "db_only_dlc": "Only DLC / XBLA / TU",
+        "db_need_name": "Enter a name.",
         "rename_ftp_start": "Renaming folder on the console via FTP...",
         "rename_ftp_ok": "Folder renamed on the console: %s",
         "rename_ftp_err": "Could not rename on the console: %s",
@@ -691,6 +727,24 @@ TEXT = {
         "add_game_exists": "Este juego ya está en la lista.",
         "add_game_need_name": "Introduce un nombre para crear la carpeta.",
         "add_game_added": "Juego agregado: %s (%s)",
+        "db_editor": "Base de datos de Aurora (content.db)",
+        "db_add": "Agregar...",
+        "db_rename": "Renombrar...",
+        "db_remove": "Eliminar...",
+        "db_reload": "Actualizar",
+        "db_backup": "Copia creada: %s",
+        "db_warn1": "Edita solo con Aurora cerrado y disco libre (la BD se bloquea mientras se usa). Se crea una copia automática (.bak) antes de cada cambio.",
+        "db_nodb": "No se encontró content.db de Aurora. Conecta el disco y escanea antes.",
+        "db_need_id": "Selecciona una entrada de la lista.",
+        "db_new_tid": "Title ID (8 dígitos hex):",
+        "db_new_name": "Nombre:",
+        "db_new_dir": "Carpeta relativa (ej.: \\Content\\0000000000000000\\5841120F):",
+        "db_added": "Entrada agregada: %s (%s)",
+        "db_renamed": "Entrada renombrada: %s",
+        "db_removed": "Entrada eliminada: %s",
+        "db_confirm_remove": "¿Eliminar '%s' del registro? El contenido en disco NO se borra.",
+        "db_only_dlc": "Solo DLC / XBLA / TU",
+        "db_need_name": "Introduce un nombre.",
         "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
         "rename_ftp_err": "No se pudo renombrar en la consola: %s",
@@ -882,6 +936,24 @@ TEXT = {
         "add_game_exists": "Ce jeu est déjà dans la liste.",
         "add_game_need_name": "Entrez un nom pour créer le dossier.",
         "add_game_added": "Jeu ajouté : %s (%s)",
+        "db_editor": "Base de données Aurora (content.db)",
+        "db_add": "Ajouter...",
+        "db_rename": "Renommer...",
+        "db_remove": "Supprimer...",
+        "db_reload": "Actualiser",
+        "db_backup": "Sauvegarde créée : %s",
+        "db_warn1": "Éditez uniquement avec Aurora fermé et le disque au repos (la base est verrouillée pendant l'usage). Une sauvegarde automatique (.bak) est créée avant chaque modification.",
+        "db_nodb": "content.db d'Aurora introuvable. Connectez le disque et scannez d'abord.",
+        "db_need_id": "Sélectionnez une entrée de la liste.",
+        "db_new_tid": "Title ID (8 chiffres hex) :",
+        "db_new_name": "Nom :",
+        "db_new_dir": "Dossier relatif (ex. : \\Content\\0000000000000000\\5841120F) :",
+        "db_added": "Entrée ajoutée : %s (%s)",
+        "db_renamed": "Entrée renommée : %s",
+        "db_removed": "Entrée supprimée : %s",
+        "db_confirm_remove": "Supprimer '%s' du registre ? Le contenu sur le disque n'est PAS effacé.",
+        "db_only_dlc": "Uniquement DLC / XBLA / TU",
+        "db_need_name": "Entrez un nom.",
         "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
         "rename_ftp_err": "Impossible de renommer sur la console : %s",
@@ -1073,6 +1145,24 @@ TEXT = {
         "add_game_exists": "このゲームはすでにリストにあります。",
         "add_game_need_name": "フォルダを作成するには名前を入力してください。",
         "add_game_added": "ゲームを追加しました: %s (%s)",
+        "db_editor": "Auroraデータベース (content.db)",
+        "db_add": "追加...",
+        "db_rename": "名前変更...",
+        "db_remove": "削除...",
+        "db_reload": "更新",
+        "db_backup": "バックアップ作成: %s",
+        "db_warn1": "Auroraを閉じてHDの動きが止まった状態で編集してください（使用中はDBがロックされます）。変更前には自動バックアップ(.bak)が作成されます。",
+        "db_nodb": "Auroraのcontent.dbが見つかりません。HDを接続して先にスキャンしてください。",
+        "db_need_id": "一覧からエントリを選択してください。",
+        "db_new_tid": "Title ID（8桁の16進数）:",
+        "db_new_name": "名前:",
+        "db_new_dir": "相対フォルダ（例: \\Content\\0000000000000000\\5841120F）:",
+        "db_added": "エントリを追加: %s (%s)",
+        "db_renamed": "エントリ名を変更: %s",
+        "db_removed": "エントリを削除: %s",
+        "db_confirm_remove": "'%s' を登録から削除しますか？ ディスク上のコンテンツは消去されません。",
+        "db_only_dlc": "DLC / XBLA / TU のみ",
+        "db_need_name": "名前を入力してください。",
         "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
         "rename_ftp_err": "本体でフォルダ名を変更できませんでした: %s",
@@ -1264,6 +1354,24 @@ TEXT = {
         "add_game_exists": "Эта игра уже есть в списке.",
         "add_game_need_name": "Введите название, чтобы создать папку.",
         "add_game_added": "Игра добавлена: %s (%s)",
+        "db_editor": "База данных Aurora (content.db)",
+        "db_add": "Добавить...",
+        "db_rename": "Переименовать...",
+        "db_remove": "Удалить...",
+        "db_reload": "Обновить",
+        "db_backup": "Создана резервная копия: %s",
+        "db_warn1": "Редактируйте только при закрытой Aurora и свободном диске (БД блокируется при использовании). Перед каждым изменением создаётся резервная копия (.bak).",
+        "db_nodb": "content.db Aurora не найден. Подключите диск и выполните сканирование.",
+        "db_need_id": "Выберите запись в списке.",
+        "db_new_tid": "Title ID (8 шестнадцатеричных цифр):",
+        "db_new_name": "Название:",
+        "db_new_dir": "Относительная папка (напр.: \\Content\\0000000000000000\\5841120F):",
+        "db_added": "Запись добавлена: %s (%s)",
+        "db_renamed": "Запись переименована: %s",
+        "db_removed": "Запись удалена: %s",
+        "db_confirm_remove": "Удалить '%s' из реестра? Содержимое на диске НЕ удаляется.",
+        "db_only_dlc": "Только DLC / XBLA / TU",
+        "db_need_name": "Введите название.",
         "rename_ftp_start": "Переименование папки на консоли по FTP...",
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
         "rename_ftp_err": "Не удалось переименовать на консоли: %s",
@@ -2073,6 +2181,154 @@ def scan_aurora_db(root, logger=None):
     return games
 
 
+def find_content_db(root):
+    for p in (
+        os.path.join(root, "Aurora", "Data", "Databases", "content.db"),
+        os.path.join(root, "Data", "Databases", "content.db"),
+        os.path.join(root, "Aurora", "Data", "content.db"),
+    ):
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def db_backup(db_path):
+    bak = db_path + ".bak"
+    with open(db_path, "rb") as f:
+        data = f.read()
+    with open(bak, "wb") as f:
+        f.write(data)
+    return bak
+
+
+def db_schema(conn):
+    """Descobre a tabela e colunas principais do content.db do Aurora."""
+    tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+    table = next(
+        (t for t in ("ContentItems", "Content", "Games", "GameList", "Titles", "ContentList") if t in tables),
+        None,
+    )
+    if table is None:
+        return None, None
+    cols = [r[1] for r in conn.execute('PRAGMA table_info("%s")' % table)]
+    col_types = {}
+    for row in conn.execute('PRAGMA table_info("%s")' % table):
+        col_types[row[1]] = row[2] or ""
+    col_id = next((c for c in cols if c.lower() in ("id", "contentitemid", "gameid")), None)
+    col_tid = next((c for c in cols if c.lower() in ("titleid", "tid", "title_id")), None)
+    col_title = next((c for c in cols if c.lower() in ("title", "name", "titlename", "gamename", "displayname")), None)
+    col_dir = next((c for c in cols if c.lower() in ("path", "gamepath", "location", "directory", "dir")), None)
+    return table, {
+        "cols": cols,
+        "col_types": col_types,
+        "id": col_id,
+        "tid": col_tid,
+        "title": col_title,
+        "dir": col_dir,
+    }
+
+
+def db_row_kind(directory):
+    d = (directory or "").upper()
+    if "00000002" in d:
+        return "dlc"
+    if "00004000" in d:
+        return "xbla"
+    if "00007000" in d:
+        return "tu"
+    if "000D0000" in d:
+        return "data"
+    if d and ("GAMEDATA" in d or "00000000" in d):
+        return "game"
+    return "other"
+
+
+def db_kind_label(kind):
+    lang = CURRENT_LANG
+    m = {
+        "dlc": {"pt": "DLC", "en": "DLC", "es": "DLC", "fr": "DLC", "ja": "DLC", "ru": "DLC"},
+        "xbla": {"pt": "XBLA", "en": "XBLA", "es": "XBLA", "fr": "XBLA", "ja": "XBLA", "ru": "XBLA"},
+        "tu": {"pt": "TU/Update", "en": "Title Update", "es": "TU/Update", "fr": "Màj titre", "ja": "TU/アップデート", "ru": "TU/Обновление"},
+        "data": {"pt": "Dados", "en": "Data", "es": "Datos", "fr": "Données", "ja": "データ", "ru": "Данные"},
+        "game": {"pt": "Jogo", "en": "Game", "es": "Juego", "fr": "Jeu", "ja": "ゲーム", "ru": "Игра"},
+        "other": {"pt": "Outro", "en": "Other", "es": "Otro", "fr": "Autre", "ja": "その他", "ru": "Другое"},
+    }
+    return m.get(kind, m["other"]).get(lang, "Other")
+
+
+def db_rows(conn, table, sc, only_special=False):
+    conn.row_factory = sqlite3.Row
+    out = []
+    for row in conn.execute('SELECT * FROM "%s"' % table):
+        tid = row[sc["tid"]]
+        if isinstance(tid, int):
+            tid = "%08X" % tid
+        else:
+            tid = (str(tid) or "").strip().upper()
+        directory = str(row[sc["dir"]] or "").strip() if sc["dir"] else ""
+        kind = db_row_kind(directory)
+        if only_special and kind not in ("dlc", "xbla", "tu"):
+            continue
+        out.append({
+            "id": row[sc["id"]],
+            "tid": tid,
+            "name": str(row[sc["title"]] or "").strip(),
+            "dir": directory,
+            "kind": kind,
+            "label": db_kind_label(kind),
+        })
+    return out
+
+
+def db_add_row(conn, table, sc, tid, name, directory):
+    fields = {}
+    if sc["tid"]:
+        ctype = (sc["col_types"].get(sc["tid"]) or "").upper()
+        fields[sc["tid"]] = int(tid, 16) if "INT" in ctype else tid
+    if sc["title"]:
+        fields[sc["title"]] = name
+    if sc["dir"]:
+        fields[sc["dir"]] = directory
+    for cn in sc["cols"]:
+        lcn = cn.lower()
+        if cn in fields:
+            continue
+        if lcn in ("scanpathid", "databaseid", "dbid"):
+            scanpath = 1
+            try:
+                for row in conn.execute('SELECT "%s" FROM "%s" LIMIT 1' % (cn, table)):
+                    scanpath = row[0]
+                    break
+            except sqlite3.Error:
+                pass
+            fields[cn] = scanpath
+        elif lcn == "mediaid":
+            fields[cn] = 0
+        elif lcn == "contenttype":
+            fields[cn] = 0
+        elif lcn == "filetype":
+            fields[cn] = 0
+        elif lcn in ("executable", "exe"):
+            fields[cn] = "default.xex"
+    if not fields:
+        return False
+    cols_str = ", ".join('"%s"' % c for c in fields)
+    ph = ", ".join("?" * len(fields))
+    conn.execute('INSERT INTO "%s" (%s) VALUES (%s)' % (table, cols_str, ph), list(fields.values()))
+    return True
+
+
+def db_update_title(conn, table, sc, rowid, newtitle):
+    conn.execute(
+        'UPDATE "%s" SET "%s" = ? WHERE "%s" = ?' % (table, sc["title"], sc["id"]),
+        (newtitle, rowid),
+    )
+
+
+def db_delete_row(conn, table, sc, rowid):
+    conn.execute('DELETE FROM "%s" WHERE "%s" = ?' % (table, sc["id"]), (rowid,))
+
+
 def scan_aurora(root):
     # Carrega nomes customizados salvos
     custom_names = load_custom_names()
@@ -2487,6 +2743,8 @@ class App:
         self.btn_scan.pack(side=tk.LEFT)
         self.btn_add = ttk.Button(btn_row, text=tr("add_game"), command=self.add_game)
         self.btn_add.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_db = ttk.Button(btn_row, text=tr("db_editor"), command=self.db_editor)
+        self.btn_db.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_dl = ttk.Button(
             btn_row, text=tr("download"), command=self.start_download, state=tk.DISABLED
         )
@@ -3090,6 +3348,207 @@ class App:
             os.startfile(g["folder"])
         except Exception as e:
             self.log("Erro ao abrir pasta: %s" % e)
+
+    def db_editor(self):
+        root = self.aurora_path.get().strip().strip('"')
+        db_path = find_content_db(root)
+        if not db_path:
+            messagebox.showwarning(tr("warn"), tr("db_nodb"))
+            return
+        try:
+            conn = sqlite3.connect(db_path)
+        except sqlite3.Error as exc:
+            messagebox.showerror(tr("error"), str(exc))
+            return
+        table, sc = db_schema(conn)
+        if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
+            conn.close()
+            messagebox.showerror(tr("error"), "Schema desconhecido (tabela=%s)" % table)
+            return
+        backed_up = [False]
+
+        def ensure_backup():
+            if backed_up[0]:
+                return
+            try:
+                bak = db_backup(db_path)
+                backed_up[0] = True
+                self.log(tr("db_backup", os.path.basename(bak)))
+            except OSError as exc:
+                messagebox.showerror(tr("error"), str(exc))
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("%s - %s" % (tr("db_editor"), os.path.basename(db_path)))
+        dlg.transient(self.root)
+        dlg.geometry("820x500")
+        frm = ttk.Frame(dlg, padding=10)
+        frm.pack(fill=tk.BOTH, expand=True)
+        ttk.Label(frm, text=tr("db_warn1")).pack(anchor="w")
+        bar = ttk.Frame(frm)
+        bar.pack(fill=tk.X, pady=(6, 4))
+        only_special = tk.BooleanVar(value=False)
+
+        def reload_rows():
+            for item in tree.get_children():
+                tree.delete(item)
+            try:
+                rows = db_rows(conn, table, sc, only_special=only_special.get())
+            except sqlite3.Error as exc:
+                messagebox.showerror(tr("error"), str(exc))
+                return
+            for r in rows:
+                tree.insert("", tk.END, values=(r["id"], r["tid"], r["name"], r["dir"], r["label"]))
+
+        ttk.Checkbutton(
+            bar, text=tr("db_only_dlc"), variable=only_special, command=reload_rows
+        ).pack(side=tk.LEFT)
+        ttk.Button(bar, text=tr("db_reload"), command=reload_rows).pack(side=tk.LEFT, padx=(8, 0))
+
+        sel = {"row": None}
+
+        def on_select(_e=None):
+            cur = tree.selection()
+            r = tree.item(cur[0], "values") if cur else None
+            sel["row"] = r
+
+        holder = ttk.Frame(frm)
+        holder.pack(fill=tk.BOTH, expand=True, pady=(0, 6))
+        tree = ttk.Treeview(holder, columns=("id", "tid", "title", "dir", "type"), show="headings", height=16)
+        tree.heading("id", text="ID")
+        tree.heading("tid", text="TID")
+        tree.heading("title", text=tr("db_new_name"))
+        tree.heading("dir", text="Pasta")
+        tree.heading("type", text="Tipo")
+        tree.column("id", width=50, anchor="center")
+        tree.column("tid", width=90, anchor="center")
+        tree.column("title", width=270)
+        tree.column("dir", width=310)
+        tree.column("type", width=100)
+        vsb = ttk.Scrollbar(holder, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        vsb.pack(side=tk.RIGHT, fill=tk.Y)
+        tree.bind("<<TreeviewSelect>>", on_select)
+        reload_rows()
+
+        act = ttk.Frame(frm)
+        act.pack(fill=tk.X)
+        ttk.Button(act, text=tr("db_add"), command=lambda: self._db_add(conn, table, sc, ensure_backup, reload_rows, dlg)).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(act, text=tr("db_rename"), command=lambda: self._db_rename(conn, table, sc, ensure_backup, reload_rows, sel, dlg)).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(act, text=tr("db_remove"), command=lambda: self._db_remove(conn, table, sc, ensure_backup, reload_rows, sel, dlg)).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(act, text=tr("close"), command=dlg.destroy).pack(side=tk.RIGHT)
+
+        def on_close():
+            try:
+                conn.commit()
+                conn.close()
+            except sqlite3.Error:
+                pass
+            dlg.destroy()
+
+        dlg.protocol("WM_DELETE_WINDOW", on_close)
+        dlg.grab_set()
+        self.root.wait_window(dlg)
+        self.refresh_tree()
+
+    def _db_add(self, conn, table, sc, ensure_backup, reload_rows, parent):
+        dlg = tk.Toplevel(parent)
+        dlg.title(tr("db_add"))
+        dlg.transient(parent)
+        dlg.resizable(False, False)
+        frm = ttk.Frame(dlg, padding=12)
+        frm.pack(fill=tk.BOTH, expand=True)
+
+        def add_row(label_text, entry_var, width, row):
+            ttk.Label(frm, text=label_text).grid(row=row, column=0, sticky="w", pady=4, padx=(0, 12))
+            e = ttk.Entry(frm, textvariable=entry_var, width=width)
+            e.grid(row=row, column=1, sticky="w", pady=4)
+            return e
+
+        v_tid = tk.StringVar()
+        v_name = tk.StringVar()
+        v_dir = tk.StringVar()
+        add_row(tr("db_new_tid"), v_tid, 20, 0)
+        add_row(tr("db_new_name"), v_name, 36, 1)
+        add_row(tr("db_new_dir"), v_dir, 60, 2)
+        btns = ttk.Frame(frm)
+        btns.grid(row=3, column=0, columnspan=2, sticky="e", pady=(8, 0))
+        res = {"ok": False}
+
+        def _ok(_e=None):
+            res["tid"] = v_tid.get().strip().upper()
+            res["name"] = v_name.get().strip()
+            d = v_dir.get().strip()
+            d = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", d)
+            if d and not d.startswith("\\"):
+                d = "\\" + d
+            res["dir"] = d
+            res["ok"] = True
+            dlg.destroy()
+
+        ttk.Button(btns, text=tr("ok"), command=_ok).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btns, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT)
+        dlg.bind("<Return>", _ok)
+        dlg.grab_set()
+        parent.wait_window(dlg)
+        if not res["ok"]:
+            return
+        tid, name, directory = res["tid"], res["name"], res["dir"]
+        if not re.match(r"^[0-9A-F]{8}$", tid):
+            messagebox.showerror(tr("warn"), tr("add_game_bad_tid"))
+            return
+        if not name:
+            messagebox.showwarning(tr("warn"), tr("db_need_name"))
+            return
+        ensure_backup()
+        try:
+            db_add_row(conn, table, sc, tid, name, directory)
+            conn.commit()
+        except sqlite3.Error as exc:
+            messagebox.showerror(tr("error"), str(exc))
+            return
+        self.log(tr("db_added", name, tid))
+        reload_rows()
+
+    def _db_rename(self, conn, table, sc, ensure_backup, reload_rows, sel, parent):
+        r = sel["row"]
+        if not r:
+            messagebox.showwarning(tr("warn"), tr("db_need_id"))
+            return
+        rc_id, rc_name = r[0], r[2]
+        newname = simpledialog.askstring(tr("db_rename"), tr("db_new_name"), initialvalue=rc_name, parent=parent)
+        if newname is None:
+            return
+        newname = newname.strip()
+        if not newname:
+            return
+        ensure_backup()
+        try:
+            db_update_title(conn, table, sc, rc_id, newname)
+            conn.commit()
+        except sqlite3.Error as exc:
+            messagebox.showerror(tr("error"), str(exc))
+            return
+        self.log(tr("db_renamed", newname))
+        reload_rows()
+
+    def _db_remove(self, conn, table, sc, ensure_backup, reload_rows, sel, parent):
+        r = sel["row"]
+        if not r:
+            messagebox.showwarning(tr("warn"), tr("db_need_id"))
+            return
+        rc_id, rc_name = r[0], r[2]
+        if not messagebox.askyesno(tr("db_remove"), tr("db_confirm_remove", rc_name)):
+            return
+        ensure_backup()
+        try:
+            db_delete_row(conn, table, sc, rc_id)
+            conn.commit()
+        except sqlite3.Error as exc:
+            messagebox.showerror(tr("error"), str(exc))
+            return
+        self.log(tr("db_removed", rc_name))
+        reload_rows()
 
     def gamedata_dir(self):
         path = self.aurora_path.get().strip().strip('"')
