@@ -300,6 +300,15 @@ TEXT = {
         "m_rename": "Renomear jogo",
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
+        "ok": "OK",
+        "add_game": "Adicionar jogo...",
+        "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game_name": "Nome (opcional):",
+        "add_game_mkdir": "Criar pasta GameData no HD",
+        "add_game_bad_tid": "Title ID inválido (use 8 dígitos hex, ex.: 5841120F).",
+        "add_game_exists": "Este jogo já está na lista.",
+        "add_game_need_name": "Informe um nome para criar a pasta.",
+        "add_game_added": "Jogo adicionado: %s (%s)",
         "rename_ftp_start": "Renomeando a pasta no console via FTP...",
         "rename_ftp_ok": "Pasta renomeada no console: %s",
         "rename_ftp_err": "Não foi possível renomear no console: %s",
@@ -482,6 +491,15 @@ TEXT = {
         "m_rename": "Rename game",
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
+        "ok": "OK",
+        "add_game": "Add game...",
+        "add_game_tid": "Title ID (8 hex digits):",
+        "add_game_name": "Name (optional):",
+        "add_game_mkdir": "Create GameData folder on HD",
+        "add_game_bad_tid": "Invalid Title ID (use 8 hex digits, e.g. 5841120F).",
+        "add_game_exists": "This game is already in the list.",
+        "add_game_need_name": "Enter a name to create the folder.",
+        "add_game_added": "Game added: %s (%s)",
         "rename_ftp_start": "Renaming folder on the console via FTP...",
         "rename_ftp_ok": "Folder renamed on the console: %s",
         "rename_ftp_err": "Could not rename on the console: %s",
@@ -664,6 +682,15 @@ TEXT = {
         "m_rename": "Renombrar juego",
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
+        "ok": "Aceptar",
+        "add_game": "Agregar juego...",
+        "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game_name": "Nombre (opcional):",
+        "add_game_mkdir": "Crear carpeta GameData en el disco",
+        "add_game_bad_tid": "Title ID no válido (usa 8 dígitos hex, ej.: 5841120F).",
+        "add_game_exists": "Este juego ya está en la lista.",
+        "add_game_need_name": "Introduce un nombre para crear la carpeta.",
+        "add_game_added": "Juego agregado: %s (%s)",
         "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
         "rename_ftp_err": "No se pudo renombrar en la consola: %s",
@@ -846,6 +873,15 @@ TEXT = {
         "m_rename": "Renommer le jeu",
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
+        "ok": "OK",
+        "add_game": "Ajouter un jeu...",
+        "add_game_tid": "Title ID (8 chiffres hex) :",
+        "add_game_name": "Nom (optionnel) :",
+        "add_game_mkdir": "Créer le dossier GameData sur le disque",
+        "add_game_bad_tid": "Title ID invalide (utilisez 8 chiffres hex, ex. : 5841120F).",
+        "add_game_exists": "Ce jeu est déjà dans la liste.",
+        "add_game_need_name": "Entrez un nom pour créer le dossier.",
+        "add_game_added": "Jeu ajouté : %s (%s)",
         "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
         "rename_ftp_err": "Impossible de renommer sur la console : %s",
@@ -1028,6 +1064,15 @@ TEXT = {
         "m_rename": "ゲーム名を変更",
         "rename_prompt": "%s (%s) の新しい名前:",
         "renamed": "ゲーム %s を %s にリネームしました。",
+        "ok": "OK",
+        "add_game": "ゲームを追加...",
+        "add_game_tid": "Title ID（8桁の16進数）:",
+        "add_game_name": "名前（任意）:",
+        "add_game_mkdir": "HDにGameDataフォルダを作成",
+        "add_game_bad_tid": "Title IDが無効です（8桁の16進数、例: 5841120F）。",
+        "add_game_exists": "このゲームはすでにリストにあります。",
+        "add_game_need_name": "フォルダを作成するには名前を入力してください。",
+        "add_game_added": "ゲームを追加しました: %s (%s)",
         "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
         "rename_ftp_err": "本体でフォルダ名を変更できませんでした: %s",
@@ -1210,6 +1255,15 @@ TEXT = {
         "m_rename": "Переименовать игру",
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
+        "ok": "OK",
+        "add_game": "Добавить игру...",
+        "add_game_tid": "Title ID (8 шестнадцатеричных цифр):",
+        "add_game_name": "Название (необязательно):",
+        "add_game_mkdir": "Создать папку GameData на диске",
+        "add_game_bad_tid": "Неверный Title ID (используйте 8 шестнадцатеричных цифр, напр. 5841120F).",
+        "add_game_exists": "Эта игра уже есть в списке.",
+        "add_game_need_name": "Введите название, чтобы создать папку.",
+        "add_game_added": "Игра добавлена: %s (%s)",
         "rename_ftp_start": "Переименование папки на консоли по FTP...",
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
         "rename_ftp_err": "Не удалось переименовать на консоли: %s",
@@ -1844,6 +1898,33 @@ def save_custom_names(data):
         pass
 
 
+def extra_games_path():
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_extra_games.json")
+
+
+def load_extra_games():
+    try:
+        with open(extra_games_path(), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
+    except Exception:
+        pass
+    return []
+
+
+def save_extra_games(tids):
+    try:
+        tmp = extra_games_path() + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(tids, f, indent=2)
+        os.replace(tmp, extra_games_path())
+    except Exception:
+        pass
+
+
 def mark_installed(tid, kind):
     try:
         data = {}
@@ -2381,6 +2462,8 @@ class App:
         btn_row.pack(fill=tk.X, pady=(8, 0))
         self.btn_scan = ttk.Button(btn_row, text=tr("scan"), command=self.start_scan)
         self.btn_scan.pack(side=tk.LEFT)
+        self.btn_add = ttk.Button(btn_row, text=tr("add_game"), command=self.add_game)
+        self.btn_add.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_dl = ttk.Button(
             btn_row, text=tr("download"), command=self.start_download, state=tk.DISABLED
         )
@@ -2722,6 +2805,19 @@ class App:
                                 "has_cover": False,
                             }
                         )
+            # Jogos adicionados manualmente (persistidos) não são perdidos no rescan
+            existing = {g["tid"] for g in self.games}
+            for t in sorted(load_extra_games()):
+                if t not in existing:
+                    self.games.append(
+                        {
+                            "folder": None,
+                            "tid": t,
+                            "folder_name": t,
+                            "dname": "",
+                            "has_cover": False,
+                        }
+                    )
             self.log("Total de jogos: %d" % len(self.games))
             # Busca nomes faltando no XboxUnity em background (se habilitado)
             if self.cfg.get("auto_search_titles", True):
@@ -2971,6 +3067,94 @@ class App:
             os.startfile(g["folder"])
         except Exception as e:
             self.log("Erro ao abrir pasta: %s" % e)
+
+    def gamedata_dir(self):
+        path = self.aurora_path.get().strip().strip('"')
+        if not path or not os.path.isdir(path):
+            return None
+        for cand in (
+            os.path.join(path, "Data", "GameData"),
+            os.path.join(path, "Aurora", "Data", "GameData"),
+            os.path.join(path, "GameData"),
+        ):
+            if os.path.isdir(cand):
+                return cand
+        return None
+
+    def add_game(self):
+        dlg = tk.Toplevel(self.root)
+        dlg.title(tr("add_game"))
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        frm = ttk.Frame(dlg, padding=12)
+        frm.pack(fill=tk.BOTH, expand=True)
+        ttk.Label(frm, text=tr("add_game_tid")).grid(row=0, column=0, sticky="w", pady=(0, 6))
+        v_tid = tk.StringVar()
+        e_tid = ttk.Entry(frm, textvariable=v_tid, width=16)
+        e_tid.grid(row=0, column=1, sticky="w", pady=(0, 6))
+        ttk.Label(frm, text=tr("add_game_name")).grid(row=1, column=0, sticky="w", pady=(0, 6))
+        v_name = tk.StringVar()
+        e_name = ttk.Entry(frm, textvariable=v_name, width=24)
+        e_name.grid(row=1, column=1, sticky="w", pady=(0, 6))
+        v_mkdir = tk.BooleanVar(value=self.gamedata_dir() is not None)
+        ttk.Checkbutton(frm, text=tr("add_game_mkdir"), variable=v_mkdir).grid(
+            row=2, column=0, columnspan=2, sticky="w", pady=(0, 10)
+        )
+        btns = ttk.Frame(frm)
+        btns.grid(row=3, column=0, columnspan=2, sticky="e")
+        res = {"ok": False, "tid": None, "name": None, "mkdir": False}
+
+        def _ok(_event=None):
+            res["tid"] = v_tid.get().strip().upper()
+            res["name"] = v_name.get().strip()
+            res["mkdir"] = v_mkdir.get()
+            res["ok"] = True
+            dlg.destroy()
+
+        ttk.Button(btns, text=tr("ok"), command=_ok).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btns, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT)
+        e_tid.focus_set()
+        dlg.bind("<Return>", _ok)
+        dlg.grab_set()
+        self.root.wait_window(dlg)
+        if not res["ok"]:
+            return
+        tid = res["tid"]
+        if not re.match(r"^[0-9A-F]{8}$", tid):
+            messagebox.showerror(tr("warn"), tr("add_game_bad_tid"))
+            return
+        if any(g["tid"] == tid for g in self.games):
+            messagebox.showwarning(tr("warn"), tr("add_game_exists"))
+            return
+        name = res["name"]
+        g = {"folder": None, "tid": tid, "folder_name": tid, "dname": name, "has_cover": False}
+        if res["mkdir"]:
+            if not name:
+                messagebox.showwarning(tr("warn"), tr("add_game_need_name"))
+                return
+            gamedata = self.gamedata_dir()
+            if not gamedata:
+                gamedata = os.path.join(self.aurora_path.get().strip().strip('"'), "Data", "GameData")
+            try:
+                fld = os.path.join(gamedata, "%s_%s" % (tid, name))
+                os.makedirs(fld, exist_ok=True)
+                g["folder"] = fld
+                g["folder_name"] = os.path.basename(fld)
+                self.log("Pasta GameData criada: %s" % g["folder_name"])
+            except OSError as exc:
+                messagebox.showerror(tr("error"), str(exc))
+                return
+        if name:
+            custom_names = load_custom_names()
+            custom_names[tid] = name
+            save_custom_names(custom_names)
+        extra = load_extra_games()
+        if tid not in extra:
+            extra.append(tid)
+            save_extra_games(extra)
+        self.games.append(g)
+        self.log(tr("add_game_added", name or tid, tid))
+        self.refresh_tree()
 
     def selected_game(self):
         sel = self.tree.selection()
