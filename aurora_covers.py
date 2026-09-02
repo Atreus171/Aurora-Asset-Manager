@@ -2577,8 +2577,9 @@ def scan_aurora(root):
                 dbg["has_cover"] = bool(dbg.get("has_cover")) or bool(fg["has_cover"])
 
     # Também escaneia pasta Import para homebrews sem GameData
-    import_dir = os.path.join(root, "User", "Import")
-    if os.path.isdir(import_dir):
+    # (checa User\Import na raiz do drive E dentro de \Aurora, onde versões
+    # antigas do app gravavam capas baixadas)
+    for import_dir in import_dirs_existing(root):
         for tid_dir in os.listdir(import_dir):
             if not re.match(r"^[0-9A-Fa-f]{8}$", tid_dir):
                 continue
@@ -2602,6 +2603,16 @@ def scan_aurora(root):
             # Se o jogo já veio do DB/pastas (ex: homebrew via .xex), aproveita o
             # título e só enriquece a capa de Import que o scan anterior não achou.
             existing = next((g for g in games if g["tid"] == tid), None)
+            if existing is None:
+                # Reconcile: versões antigas do app gravavam capas de homebrew sob
+                # um TID sintético = SHA1 do NOME do jogo (ex: Sonic Mania = FA5F679D).
+                # Se o TID do Import bater com esse hash, usa o jogo correspondente.
+                legacy = next(
+                    (g for g in games if legacy_tid_for(g.get("dname")) == tid),
+                    None,
+                )
+                if legacy is not None:
+                    existing = legacy
             if existing is not None:
                 if not existing.get("dname") and dname != tid:
                     existing["dname"] = dname
@@ -2663,6 +2674,40 @@ def scan_hdd_content(root):
             if pattern.match(d) and d not in tids:
                 tids.append(d)
     return [t for t in tids if t != "00000000"]
+
+
+def import_bases(root):
+    """Pastas User\\Import onde o Aurora (e o app) guardam capas baixadas.
+
+    O Aurora lê as capas de Import a partir da RAIZ do drive (\\User\\Import).
+    Versões antigas do app gravavam em \\Aurora\\User\\Import quando o caminho
+    selecionado era a pasta do Aurora; por isso checamos as duas localizações,
+    priorizando a raiz do drive (localização oficial), para nunca perder capas."""
+    bases = []
+    r = (root or "").strip().strip('"')
+    roots = [r] if r else []
+    drive = os.path.splitdrive(os.path.abspath(r or os.getcwd()))[0] + os.sep
+    if drive and drive not in roots:
+        roots.append(drive)
+    # Prioridade: raiz do drive primeiro, depois o caminho selecionado.
+    ordered = []
+    for rr in (["%s" % drive] if drive else []) + roots:
+        for p in (os.path.join(rr, "User", "Import"), os.path.join(rr, "Aurora", "User", "Import")):
+            p = os.path.normpath(p)
+            if p not in ordered:
+                ordered.append(p)
+    return ordered
+
+
+def import_dirs_existing(root):
+    return [d for d in import_bases(root) if os.path.isdir(d)]
+
+
+def legacy_tid_for(name):
+    """TID sintético que versões antigas do app usavam para homebrews: SHA1 do NOME."""
+    if not name:
+        return None
+    return "%08X" % (int(hashlib.sha1(name.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
 
 
 def cover_exts():
@@ -3962,21 +4007,23 @@ class App:
         if cover_file:
             img = open_cover_image(cover_file)
         if img is None:
-            import_dir = os.path.join(
-                self.aurora_path.get().strip().strip('"'), "User", "Import", g["tid"]
-            )
-            if os.path.isdir(import_dir):
-                for fn in sorted(os.listdir(import_dir)):
+            for import_dir in import_dirs_existing(self.aurora_path.get()):
+                cand = os.path.join(import_dir, g["tid"])
+                if not os.path.isdir(cand):
+                    continue
+                for fn in sorted(os.listdir(cand)):
                     if (
                         fn.lower().startswith("cover")
                         and fn.lower().endswith((".png", ".jpg", ".jpeg", ".dds"))
                     ):
                         try:
-                            img = Image.open(os.path.join(import_dir, fn)).convert("RGBA")
+                            img = Image.open(os.path.join(cand, fn)).convert("RGBA")
                         except Exception:
                             img = None
                         if img is not None:
                             break
+                if img is not None:
+                    break
         self.preview_cache[key] = img
         return img
 
@@ -4112,33 +4159,23 @@ class App:
         if self.opt_force.get():
             return True
         folder = g["folder"]
-        base = folder if folder else os.path.join(path, "User", "Import", g["tid"])
+        bases = ([folder] if folder else [])
+        for import_dir in import_dirs_existing(path):
+            bases.append(os.path.join(import_dir, g["tid"]))
+        if not bases:
+            bases.append(os.path.join(path, "User", "Import", g["tid"]))
+        def _has(name_ok):
+            return any(any(os.path.exists(os.path.join(b, f)) for f in name_ok) for b in bases)
         checks = []
         if self.opt_boxart.get():
-            checks.append(
-                os.path.join(base, "GC%s.asset" % g["tid"])
-                if folder
-                else os.path.join(base, "cover.png")
-            )
+            checks.append(_has(["GC%s.asset" % g["tid"]] if folder else ["cover.png", "cover.jpg", "cover.jpeg", "cover.dds"]))
         if self.opt_background.get():
-            checks.append(
-                os.path.join(base, "BK%s.asset" % g["tid"])
-                if folder
-                else os.path.join(base, "background.png")
-            )
+            checks.append(_has(["BK%s.asset" % g["tid"]] if folder else ["background.png"]))
         if self.opt_icon.get() or self.opt_banner.get():
-            checks.append(
-                os.path.join(base, "GL%s.asset" % g["tid"])
-                if folder
-                else os.path.join(base, "icon.png")
-            )
+            checks.append(_has(["GL%s.asset" % g["tid"]] if folder else ["icon.png"]))
         if self.opt_screenshots.get():
-            checks.append(
-                os.path.join(base, "SS%s.asset" % g["tid"])
-                if folder
-                else os.path.join(base, "screenshot1.png")
-            )
-        return any(not os.path.exists(ck) for ck in checks)
+            checks.append(_has(["SS%s.asset" % g["tid"]] if folder else ["screenshot1.png"]))
+        return not all(checks)
 
     def download_one(self, path, g):
         tid = g["tid"]
@@ -4299,17 +4336,26 @@ class App:
         self.log("  gravado %s" % display_path(target))
 
     def write_import(self, root, tid, name, img):
-        import_dir = os.path.join(root, "User", "Import", tid)
-        try:
-            os.makedirs(import_dir, exist_ok=True)
-        except OSError:
-            return
-        target = os.path.join(import_dir, name)
-        try:
-            img.save(target, "PNG")
-        except OSError:
-            return
-        self.log("  import alternativo em %s" % display_path(target))
+        # Grava na raiz do drive (\\User\\Import, onde o Aurora lê) e também na
+        # pasta do Aurora (onde versões antigas do app gravavam), para a capa
+        # ficar visível em qualquer configuração de caminho.
+        bases = []
+        for p in (os.path.join(root, "User", "Import"),) + tuple(import_bases(root)):
+            p = os.path.normpath(p)
+            if p not in bases:
+                bases.append(p)
+        for import_dir in bases:
+            import_dir = os.path.join(import_dir, tid)
+            try:
+                os.makedirs(import_dir, exist_ok=True)
+            except OSError:
+                continue
+            target = os.path.join(import_dir, name)
+            try:
+                img.save(target, "PNG")
+            except OSError:
+                continue
+            self.log("  import alternativo em %s" % display_path(target))
 
     def install_custom(self, g=None):
         if self.busy:
@@ -4791,11 +4837,24 @@ class App:
         self._assets_ss_index += 1
         self._assets_on_select()
 
+    def _import_paths(self, tid, path):
+        dirs = [os.path.join(d, tid) for d in import_dirs_existing(path)]
+        if not dirs:
+            dirs.append(os.path.join(path, "User", "Import", tid))
+        return dirs
+
+    def _open_import_image(self, tid, path, name):
+        for d in self._import_paths(tid, path):
+            im = _open_image(os.path.join(d, name))
+            if im is not None:
+                return im
+        return None
+
     def load_kind_images(self, g, kind, path):
         imgs = []
         tid = g["tid"]
         folder = g["folder"]
-        import_path = os.path.join(path, "User", "Import", tid)
+        import_paths = self._import_paths(tid, path)
         if kind == "screenshots":
             if folder:
                 asset = os.path.join(folder, "SS%s.asset" % tid)
@@ -4813,10 +4872,15 @@ class App:
                             imgs.append(im)
             i = 1
             while True:
-                im = _open_image(os.path.join(import_path, "screenshot%d.png" % i))
-                if im is None:
+                found = None
+                for import_path in import_paths:
+                    im = _open_image(os.path.join(import_path, "screenshot%d.png" % i))
+                    if im is not None:
+                        found = im
+                        break
+                if found is None:
                     break
-                imgs.append(im)
+                imgs.append(found)
                 i += 1
             return imgs
         im = self.load_kind_image(g, kind, path)
@@ -4828,7 +4892,6 @@ class App:
         tid = g["tid"]
         folder = g["folder"]
         raw = None
-        import_path = os.path.join(path, "User", "Import", tid)
         if kind == "boxart":
             if folder:
                 asset = os.path.join(folder, "GC%s.asset" % tid)
@@ -4838,7 +4901,7 @@ class App:
                         im = _decode_asset_safe(raw, ASSET_TYPE_BOXART)
                         if im:
                             return im
-            return _open_image(os.path.join(import_path, "cover.png"))
+            return self._open_import_image(tid, path, "cover.png")
         if kind == "background":
             if folder:
                 asset = os.path.join(folder, "BK%s.asset" % tid)
@@ -4848,7 +4911,7 @@ class App:
                         im = _decode_asset_safe(raw, ASSET_TYPE_BACKGROUND)
                         if im:
                             return im
-            return _open_image(os.path.join(import_path, "background.png"))
+            return self._open_import_image(tid, path, "background.png")
         if kind == "icon" or kind == "banner":
             at = ASSET_TYPE_ICON if kind == "icon" else ASSET_TYPE_BANNER
             name = "icon.png" if kind == "icon" else "banner.png"
@@ -4860,7 +4923,7 @@ class App:
                         im = _decode_asset_safe(raw, at)
                         if im:
                             return im
-            return _open_image(os.path.join(import_path, name))
+            return self._open_import_image(tid, path, name)
         if kind == "screenshots":
             if folder:
                 asset = os.path.join(folder, "SS%s.asset" % tid)
@@ -4870,7 +4933,7 @@ class App:
                         im = _decode_asset_safe(raw, ASSET_TYPE_SCREENSHOT)
                         if im:
                             return im
-            return _open_image(os.path.join(import_path, "screenshot1.png"))
+            return self._open_import_image(tid, path, "screenshot1.png")
         return None
 
     def _selected_kind(self):
