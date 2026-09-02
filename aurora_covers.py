@@ -1791,8 +1791,9 @@ class XboxUnity:
                     data2 = json.loads(b2.decode("utf-8"))
                 except Exception:
                     data2 = None
-                if isinstance(data2, dict) and isinstance(data2.get("covers"), list):
-                    items = [it for it in data2["covers"] if isinstance(it, dict)]
+                if isinstance(data2, dict) and isinstance(data2.get("Covers") or data2.get("covers"), list):
+                    covers_list = data2.get("Covers") or data2.get("covers")
+                    items = [it for it in covers_list if isinstance(it, dict)]
         if got:
             self._down_until = 0.0
         elif time.time() >= self._down_until:
@@ -3873,6 +3874,7 @@ class App:
         if name != tid:
             g["dname"] = name
             self.log("Título encontrado no x360db: %s" % name)
+            self._update_content_db_name(tid, name)
             self.refresh_tree()
             return
         # Busca no XboxUnity
@@ -3880,6 +3882,7 @@ class App:
         if unity_name:
             g["dname"] = unity_name
             self.log("Título encontrado no XboxUnity: %s" % unity_name)
+            self._update_content_db_name(tid, unity_name)
             self.refresh_tree()
             return
         # Fallback: dname
@@ -3888,6 +3891,20 @@ class App:
             self.refresh_tree()
             return
         self.log("Título não encontrado para %s" % tid)
+
+    def _update_content_db_name(self, tid, new_name):
+        """Atualiza o TitleName no content.db para o TID informado."""
+        try:
+            path = self.aurora_path.get().strip().strip('"')
+            if not path or not os.path.isdir(path):
+                return
+            db_path = self.find_content_db(path)
+            if not db_path:
+                return
+            self.log("Atualizando content.db: TID=%s -> %s" % (tid, new_name))
+            db_rename_by_tid(db_path, tid, new_name)
+        except Exception as e:
+            self.log("Erro ao atualizar content.db: %s" % e)
 
     def debug_database(self):
         path = self.aurora_path.get().strip().strip('"')
@@ -4903,9 +4920,9 @@ class App:
                 self.log("  Homebrew: nenhuma capa por nome no XboxUnity (%s)" % self.game_title(g))
         if not items:
             if self.unity._down_until > time.time():
-                self.log(tr("unity_offline") + " (%s)" % tid)
+                self.log("XboxUnity fora do ar (%s)" % tid)
             else:
-                self.log(tr("unity_no_cover", tid))
+                self.log("XboxUnity sem capas para %s" % tid)
             return None
         ordered = sorted(
             items,
@@ -4918,7 +4935,7 @@ class App:
                     self.log("  Capa vazia/preta ignorada (bugada) no XboxUnity.")
                     continue
                 return b
-        self.log(tr("unity_fallback") + " (%s)" % tid)
+        self.log("XboxUnity sem capa utilizável (%s)" % tid)
         return None
 
     def download_kind(self, path, g, kind):
