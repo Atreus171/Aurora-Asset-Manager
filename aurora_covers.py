@@ -4164,9 +4164,41 @@ class App:
                 except Exception:
                     continue
         
-        # Fallback: abre a pasta Aurora se nada mais funcionou
+        # Fallback: tenta abrir pastas raiz conhecidas de jogos baseado no tipo/caminho
         path = self.aurora_path.get().strip().strip('"')
         if path and os.path.isdir(path):
+            # Determina pasta raiz provável baseada no folder do jogo
+            game_folder = g.get("folder", "")
+            root_folders = []
+            
+            if game_folder:
+                # Se o jogo tem folder conhecido, acha a raiz (ex: X:\homebrew\... -> X:\homebrew)
+                parts = game_folder.split(os.sep)
+                if len(parts) >= 3:  # X:\homebrew\game
+                    root_folders.append(os.sep.join(parts[:3]))  # X:\homebrew
+                    root_folders.append(os.sep.join(parts[:2]))  # X:\
+            
+            # Pastas comuns de jogos no Aurora/RGH
+            common_roots = [
+                os.path.join(path, "homebrew"),
+                os.path.join(path, "Homebrew"),
+                os.path.join(path, "jogos"),
+                os.path.join(path, "Jogos"),
+                os.path.join(path, "360"),
+                os.path.join(path, "emuladores"),
+                os.path.join(path, "Emuladores"),
+                os.path.join(path, "Games"),
+                os.path.join(path, "games"),
+            ]
+            for r in root_folders + common_roots:
+                if os.path.isdir(r):
+                    try:
+                        os.startfile(r)
+                        return
+                    except Exception:
+                        continue
+            
+            # Último fallback: abre a pasta Aurora
             try:
                 os.startfile(path)
             except Exception as e:
@@ -4486,7 +4518,8 @@ class App:
         self.log(tr("db_removed", rc_name))
         reload_rows()
 
-    def gamedata_dir(self):
+    def gamedata_dir(self, create=False):
+        """Retorna a pasta GameData do Aurora. Se create=True, cria a estrutura se não existir."""
         path = self.aurora_path.get().strip().strip('"')
         if not path or not os.path.isdir(path):
             return None
@@ -4497,6 +4530,14 @@ class App:
         ):
             if os.path.isdir(cand):
                 return cand
+        if create:
+            # Cria a estrutura padrão Data\GameData
+            gamedata = os.path.join(path, "Data", "GameData")
+            try:
+                os.makedirs(gamedata, exist_ok=True)
+                return gamedata
+            except OSError:
+                return None
         return None
 
     def add_game(self):
@@ -4655,7 +4696,7 @@ class App:
         name = res["name"] or tid
         g = {"folder": None, "tid": tid, "folder_name": tid, "dname": name, "has_cover": False}
         if res["mkdir"]:
-            gamedata = self.gamedata_dir()
+            gamedata = self.gamedata_dir(create=True)
             if not gamedata:
                 gamedata = os.path.join(self.aurora_path.get().strip().strip('"'), "Data", "GameData")
             try:
@@ -5143,7 +5184,7 @@ class App:
         if g is None:
             messagebox.showwarning(tr("warn"), tr("pick_game"))
             return
-        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp"), ("Todos", "*.*")]
+        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp *.ico"), ("Todos", "*.*")]
         file_name = filedialog.askopenfilename(
             title=tr("custom_cover") + " (%s)" % self.db.title_name(g["tid"]),
             filetypes=filetypes,
@@ -5906,7 +5947,7 @@ class App:
     def pick_kind_file(self, g, kind):
         if self.busy:
             return
-        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp"), ("Todos", "*.*")]
+        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp *.ico"), ("Todos", "*.*")]
         titles = {
             "boxart": tr("kind_boxart"),
             "background": tr("kind_background"),
