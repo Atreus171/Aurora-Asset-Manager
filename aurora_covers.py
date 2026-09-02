@@ -3353,6 +3353,10 @@ class App:
         self.hidden_tids = set(load_hidden_games())
         self.worker = None
         self.busy = False
+        # Download queue: each item = (games_list, path, kinds_dict)
+        self.download_queue = queue.Queue()
+        self.download_worker_thread = None
+        self.current_download_job = None
         self.item_to_game = {}
         self.search_var = tk.StringVar()
         self._photo = None
@@ -3398,6 +3402,9 @@ class App:
         threading.Thread(target=self.load_db, daemon=True).start()
         threading.Thread(target=self.status_loop, daemon=True).start()
         threading.Thread(target=self.theme_loop, daemon=True).start()
+        # Persistent download worker
+        self.download_worker_thread = threading.Thread(target=self._download_queue_worker, daemon=True)
+        self.download_worker_thread.start()
         self.root.after(0, self.apply_theme)
 
     @property
@@ -3680,6 +3687,8 @@ class App:
                 elif isinstance(msg, str) and msg.startswith("__progress__:"):
                     parts = msg.split(":")
                     self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
+                elif msg == "__busy_true__":
+                    self.set_busy(True)
                 else:
                     self.post(msg)
         except queue.Empty:
@@ -3784,6 +3793,12 @@ class App:
 
     def cancel_worker(self):
         self.cancel_event.set()
+        try:
+            while True:
+                self.download_queue.get_nowait()
+                self.download_queue.task_done()
+        except queue.Empty:
+            pass
         self.log(tr("canceled"))
 
     def start_scan(self):
@@ -4894,6 +4909,10 @@ class App:
             return None
         return self.item_to_game.get(sel[0])
 
+    def get_selected_games(self):
+        sel = self.tree.selection()
+        return [self.item_to_game[item] for item in sel if item in self.item_to_game]
+
     def on_select(self, _event=None):
         g = self.selected_game()
         if g is None:
@@ -5016,8 +5035,6 @@ class App:
                 return
 
     def start_download(self):
-        if self.busy:
-            return
         if not self.games:
             messagebox.showwarning(tr("warn"), tr("scan_first"))
             return
@@ -5030,38 +5047,60 @@ class App:
         ):
             messagebox.showwarning(tr("warn"), tr("pick_art"))
             return
-        self.cancel_event.clear()
-        self.set_busy(True)
-        threading.Thread(target=self.download_worker, daemon=True).start()
+        selected = self.get_selected_games()
+        if not selected:
+            selected = self.games
+        path = self.aurora_path.get().strip().strip('"')
+        targets = [g for g in selected if self.needs_download(g, path)]
+        if not targets:
+            self.log(tr("no_games_notice"))
+            return
+        kinds = {
+            "boxart": self.opt_boxart.get(),
+            "background": self.opt_background.get(),
+            "icon": self.opt_icon.get(),
+            "banner": self.opt_banner.get(),
+            "screenshots": self.opt_screenshots.get(),
+        }
+        self.download_queue.put((targets, path, kinds))
+        if not self.busy:
+            self.cancel_event.clear()
+            self.set_busy(True)
 
-    def download_worker(self):
-        try:
-            path = self.aurora_path.get().strip().strip('"')
-            targets = [g for g in self.games if self.needs_download(g, path)]
-            total = len(targets)
-            if total == 0:
-                self.log(tr("no_games_notice"))
-            done = 0
-            for g in targets:
-                if self.cancel_event.is_set():
-                    self.log(tr("canceled"))
-                    break
-                done += 1
-                self.queue.put("__progress__:%d:%d" % (done, total))
-                self.log(
-                    "[%d/%d] %s (%s)" % (done, total, self.db.title_name(g["tid"]), g["tid"])
-                )
-                try:
-                    self.download_one(path, g)
-                except Exception as exc:
-                    self.log("  erro neste jogo: %s" % exc)
-                time.sleep(0.4)
-            self.log(tr("done_notice"))
-            self.queue.put("__refresh_tree__")
-        except Exception as exc:
-            self.queue.put("Erro: %s" % exc)
-        finally:
-            self.queue.put("__done__")
+    def _download_queue_worker(self):
+        while True:
+            targets, path, kinds = self.download_queue.get()
+            self.current_download_job = (targets, path, kinds)
+            self.cancel_event.clear()
+            self.queue.put("__busy_true__")
+            try:
+                total = len(targets)
+                if total == 0:
+                    self.log(tr("no_games_notice"))
+                else:
+                    self.log("Iniciando fila: %d jogo(s)" % total)
+                done = 0
+                for g in targets:
+                    if self.cancel_event.is_set():
+                        self.log(tr("canceled"))
+                        break
+                    done += 1
+                    remaining = self.download_queue.qsize()
+                    self.queue.put("__progress__:%d:%d" % (done, total))
+                    self.log("[%d/%d] %s (%s)" % (done, total, self.db.title_name(g["tid"]), g["tid"]))
+                    try:
+                        self.download_one(path, g, kinds)
+                    except Exception as exc:
+                        self.log("  erro neste jogo: %s" % exc)
+                    time.sleep(0.3)
+                self.log(tr("done_notice"))
+                self.queue.put("__refresh_tree__")
+            except Exception as exc:
+                self.queue.put("Erro: %s" % exc)
+            finally:
+                self.current_download_job = None
+                self.queue.put("__done__")
+            self.download_queue.task_done()
 
     def _kind_exists(self, g, path, kind):
         folder = g["folder"]
@@ -5107,22 +5146,22 @@ class App:
             checks.append(_has(["SS%s.asset" % g["tid"]] if folder else ["screenshot1.png"]))
         return not all(checks)
 
-    def download_one(self, path, g):
+    def download_one(self, path, g, kinds):
         tid = g["tid"]
         if self.opt_force.get():
             skip = lambda kind: False
         else:
             skip = lambda kind: self._kind_exists(g, path, kind)
         got = False
-        if self.opt_boxart.get() and not skip("boxart"):
+        if kinds.get("boxart") and not skip("boxart"):
             got = self.download_kind(path, g, "boxart") or got
-        if self.opt_background.get() and not skip("background"):
+        if kinds.get("background") and not skip("background"):
             self.download_kind(path, g, "background")
-        if self.opt_icon.get() and not skip("icon"):
+        if kinds.get("icon") and not skip("icon"):
             self.download_kind(path, g, "icon")
-        if self.opt_banner.get() and not skip("banner"):
+        if kinds.get("banner") and not skip("banner"):
             self.download_kind(path, g, "banner")
-        if self.opt_screenshots.get() and not skip("screenshots"):
+        if kinds.get("screenshots") and not skip("screenshots"):
             self.download_kind(path, g, "screenshots")
         if got:
             g["has_cover"] = True
