@@ -1,6 +1,23 @@
 # Release Notes
 
-## v1.5.0 (Latest) - "Game Management & Homebrew Fixes Release"
+## v1.5.1 (Latest) - "Download Queue Release"
+
+### ✨ New Features
+- **Persistent download queue** with background worker thread:
+  - Click "Baixar assets" multiple times → jobs stack up and process sequentially
+  - Global progress bar shows `[3/12] Game Name (TID)` for current job
+  - UI stays fully responsive during downloads
+  - "Cancelar" clears pending queue + stops current job
+  - Button labels never change (no "Baixando..." text swap)
+
+### 🔧 Improvements
+- Sequential processing = zero rate-limit risk (x360db/XboxUnity friendly)
+- Each queued job remembers its own asset types (boxart, background, etc.)
+- Cancel drains queue instantly without waiting for current file
+
+---
+
+## v1.5.0 - "Game Management & Homebrew Fixes Release"
 
 ### ✨ New Features
 - **Redesigned "Adicionar jogos" dialog**:
