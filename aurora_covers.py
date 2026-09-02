@@ -3011,6 +3011,11 @@ def scan_aurora(root):
             continue
         if not keep.get("dname") and other.get("dname"):
             keep["dname"] = other["dname"]
+        elif keep.get("dname") and other.get("dname"):
+            # Prefere nome do DB (content.db TitleName) sobre nome de pasta do XEX scan
+            # Heurística: nomes do DB não parecem caminhos de pasta
+            if ("\\" in keep["dname"] or "/" in keep["dname"]) and not ("\\" in other["dname"] or "/" in other["dname"]):
+                keep["dname"] = other["dname"]
         if not keep["has_cover"] and other["has_cover"]:
             keep["has_cover"] = True
     log(f"  [SCAN] Total de jogos encontrados: {len(merged)}")
@@ -3806,10 +3811,22 @@ class App:
             for _g in self.games:
                 if not _g["has_cover"] and bool((_inst.get(_g["tid"]) or {}).get("boxart")):
                     _g["has_cover"] = True
-            self.log("Total de jogos: %d" % len(self.games))
-            # Busca nomes faltando no XboxUnity em background (se habilitado)
+            
+            # Busca nomes faltando/no XboxUnity em background (se habilitado)
+            # Homebrews com nome "fraco" (nome de pasta, tudo minúsculo, contém caminhos)
+            # também devem tentar buscar no Unity
+            def _weak_name(dname):
+                if not dname:
+                    return True
+                d = dname.strip()
+                # Nome parece caminho de pasta (tem separadores) ou é tudo minúsculo
+                # ou é TID hex (8 chars) -> provável nome sintético
+                if "\\" in d or "/" in d or d.lower() == d or re.fullmatch(r"[0-9A-F]{8}", d.upper()):
+                    return True
+                return False
+            
             if self.cfg.get("auto_search_titles", True):
-                missing = [g for g in self.games if self.game_title(g) == g["tid"]]
+                missing = [g for g in self.games if _weak_name(g.get("dname"))]
                 if missing:
                     self.log("Buscando %d nomes no XboxUnity..." % len(missing))
                     threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
@@ -4090,12 +4107,70 @@ class App:
             self.log(tr("rename_ftp_err", str(exc)))
 
     def open_game_folder(self, g):
-        if not g.get("folder"):
-            return
-        try:
-            os.startfile(g["folder"])
-        except Exception as e:
-            self.log("Erro ao abrir pasta: %s" % e)
+        """Tenta abrir a pasta do jogo em várias localizações possíveis."""
+        folder = g.get("folder")
+        tid = g.get("tid")
+        
+        candidates = []
+        if folder:
+            candidates.append(folder)
+        
+        # GameData folder (criada pelo add_game ou pelo Aurora)
+        gamedata = self.gamedata_dir()
+        if gamedata and tid:
+            # Procura pasta no formato TID_Nome ou apenas TID
+            for name in os.listdir(gamedata) if os.path.isdir(gamedata) else []:
+                if name.upper().startswith(tid.upper() + "_") or name.upper() == tid.upper():
+                    candidates.append(os.path.join(gamedata, name))
+                    break
+        
+        # Pasta original do scan (para homebrews do DB)
+        if tid:
+            # Busca no content.db
+            try:
+                path = self.aurora_path.get().strip().strip('"')
+                if path and os.path.isdir(path):
+                    db_path = self.find_content_db(path)
+                    if db_path:
+                        import sqlite3
+                        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+                        try:
+                            cur = conn.execute(
+                                'SELECT "Directory" FROM "ContentItems" WHERE "TitleId"=? LIMIT 1',
+                                (int(tid, 16) if all(c in "0123456789ABCDEF" for c in tid.upper()) else 0,)
+                            )
+                            row = cur.fetchone()
+                            if row and row[0]:
+                                directory = str(row[0]).strip()
+                                if directory:
+                                    # Resolve contra raiz do drive
+                                    drive_root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+                                    for base in (drive_root, path, os.path.join(path, "Aurora")):
+                                        cand = os.path.join(base, directory.lstrip("\\/"))
+                                        if os.path.isdir(cand):
+                                            candidates.append(cand)
+                                            break
+                        finally:
+                            conn.close()
+            except Exception:
+                pass
+        
+        # Tenta abrir a primeira que existir
+        for c in candidates:
+            if os.path.isdir(c):
+                try:
+                    os.startfile(c)
+                    return
+                except Exception:
+                    continue
+        
+        # Fallback: abre a pasta Aurora se nada mais funcionou
+        path = self.aurora_path.get().strip().strip('"')
+        if path and os.path.isdir(path):
+            try:
+                os.startfile(path)
+            except Exception as e:
+                self.log("Erro ao abrir pasta: %s" % e)
 
     def remove_cover(self, g):
         if self.busy:
