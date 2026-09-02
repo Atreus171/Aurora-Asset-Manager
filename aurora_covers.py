@@ -336,6 +336,16 @@ TEXT = {
         "rename_ftp_ok": "Pasta renomeada no console: %s",
         "rename_ftp_err": "Não foi possível renomear no console: %s",
         "m_open_folder": "Abrir pasta do jogo",
+        "m_remove_cover": "Remover capa instalada",
+        "m_remove_game": "Remover da lista",
+        "m_restore_hidden": "Restaurar jogos removidos...",
+        "remove_cover_confirm": "Remover a capa instalada de '%s' (%s)?\nApaga GC<tid>.asset e a capa da Import.",
+        "cover_removed": "Capa removida de %s (%s).",
+        "cover_none_found": "Nenhum arquivo de capa encontrado para %s (%s).",
+        "remove_game_confirm": "Remover '%s' (%s) da lista? O conteúdo em disco NÃO é apagado.",
+        "game_removed": "Jogo %s (%s) removido da lista.",
+        "restore_hidden_confirm": "Restaurar %d jogo(s) removido(s) da lista?",
+        "restore_hidden_done": "Todos os jogos removidos foram restaurados.",
         "set_ftp": "Enviar por FTP (console):",
         "ftp_host_lbl": "IP do console:",
         "ftp_port_lbl": "Porta:",
@@ -549,6 +559,16 @@ TEXT = {
         "rename_ftp_ok": "Folder renamed on the console: %s",
         "rename_ftp_err": "Could not rename on the console: %s",
         "m_open_folder": "Open game folder",
+        "m_remove_cover": "Remove installed cover",
+        "m_remove_game": "Remove from list",
+        "m_restore_hidden": "Restore removed games...",
+        "remove_cover_confirm": "Remove the installed cover of '%s' (%s)?\nDeletes GC<tid>.asset and the Import cover.",
+        "cover_removed": "Cover removed from %s (%s).",
+        "cover_none_found": "No cover file found for %s (%s).",
+        "remove_game_confirm": "Remove '%s' (%s) from the list? Disk content is NOT deleted.",
+        "game_removed": "Game %s (%s) removed from the list.",
+        "restore_hidden_confirm": "Restore %d removed game(s) to the list?",
+        "restore_hidden_done": "All removed games were restored.",
         "set_ftp": "Send via FTP (console):",
         "ftp_host_lbl": "Console IP:",
         "ftp_port_lbl": "Port:",
@@ -762,6 +782,16 @@ TEXT = {
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
         "rename_ftp_err": "No se pudo renombrar en la consola: %s",
         "m_open_folder": "Abrir carpeta del juego",
+        "m_remove_cover": "Eliminar portada instalada",
+        "m_remove_game": "Quitar de la lista",
+        "m_restore_hidden": "Restaurar juegos eliminados...",
+        "remove_cover_confirm": "¿Eliminar la portada instalada de '%s' (%s)?\nBorra GC<tid>.asset y la portada de Import.",
+        "cover_removed": "Portada eliminada de %s (%s).",
+        "cover_none_found": "No se encontró portada para %s (%s).",
+        "remove_game_confirm": "¿Quitar '%s' (%s) de la lista? El contenido en disco NO se borra.",
+        "game_removed": "Juego %s (%s) eliminado de la lista.",
+        "restore_hidden_confirm": "¿Restaurar %d juego(s) eliminado(s) de la lista?",
+        "restore_hidden_done": "Se restauraron todos los juegos eliminados.",
         "set_ftp": "Enviar por FTP (consola):",
         "ftp_host_lbl": "IP de la consola:",
         "ftp_port_lbl": "Puerto:",
@@ -975,6 +1005,16 @@ TEXT = {
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
         "rename_ftp_err": "Impossible de renommer sur la console : %s",
         "m_open_folder": "Ouvrir le dossier du jeu",
+        "m_remove_cover": "Supprimer la jaquette installée",
+        "m_remove_game": "Retirer de la liste",
+        "m_restore_hidden": "Restaurer les jeux retirés...",
+        "remove_cover_confirm": "Supprimer la jaquette installée de '%s' (%s) ?\nSupprime GC<tid>.asset et la jaquette d'Import.",
+        "cover_removed": "Jaquette supprimée de %s (%s).",
+        "cover_none_found": "Aucune jaquette trouvée pour %s (%s).",
+        "remove_game_confirm": "Retirer '%s' (%s) de la liste ? Le contenu sur disque n'est PAS supprimé.",
+        "game_removed": "Jeu %s (%s) retiré de la liste.",
+        "restore_hidden_confirm": "Restaurer %d jeu(x) retiré(s) de la liste ?",
+        "restore_hidden_done": "Tous les jeux retirés ont été restaurés.",
         "set_ftp": "Envoyer par FTP (console):",
         "ftp_host_lbl": "IP de la console:",
         "ftp_port_lbl": "Port:",
@@ -1188,6 +1228,16 @@ TEXT = {
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
         "rename_ftp_err": "本体でフォルダ名を変更できませんでした: %s",
         "m_open_folder": "ゲームフォルダを開く",
+        "m_remove_cover": "インストール済みカバーを削除",
+        "m_remove_game": "リストから削除",
+        "m_restore_hidden": "削除したゲームを復元...",
+        "remove_cover_confirm": "'%s' (%s) のインストール済みカバーを削除しますか?\nGC<tid>.asset とインポートのカバーを削除します。",
+        "cover_removed": "%s (%s) のカバーを削除しました。",
+        "cover_none_found": "%s (%s) のカバーファイルが見つかりません。",
+        "remove_game_confirm": "'%s' (%s) をリストから削除しますか? ディスク上の内容は削除されません。",
+        "game_removed": "%s (%s) をリストから削除しました。",
+        "restore_hidden_confirm": "削除した %d 件のゲームをリストに復元しますか?",
+        "restore_hidden_done": "削除したゲームをすべて復元しました。",
         "set_ftp": "FTPで送信 (コンソール):",
         "ftp_host_lbl": "コンソールIP:",
         "ftp_port_lbl": "ポート:",
@@ -1401,6 +1451,16 @@ TEXT = {
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
         "rename_ftp_err": "Не удалось переименовать на консоли: %s",
         "m_open_folder": "Открыть папку игры",
+        "m_remove_cover": "Удалить установленную обложку",
+        "m_remove_game": "Убрать из списка",
+        "m_restore_hidden": "Восстановить удалённые игры...",
+        "remove_cover_confirm": "Удалить установленную обложку для '%s' (%s)?\nУдаляет GC<tid>.asset и обложку из Import.",
+        "cover_removed": "Обложка удалена: %s (%s).",
+        "cover_none_found": "Файл обложки не найден для %s (%s).",
+        "remove_game_confirm": "Убрать '%s' (%s) из списка? Содержимое на диске НЕ удаляется.",
+        "game_removed": "Игра %s (%s) убрана из списка.",
+        "restore_hidden_confirm": "Восстановить %d удалённую(ые) игру(ы) в список?",
+        "restore_hidden_done": "Все удалённые игры восстановлены.",
         "set_ftp": "Отправить по FTP (консоль):",
         "ftp_host_lbl": "IP консоли:",
         "ftp_port_lbl": "Порт:",
@@ -1806,6 +1866,22 @@ def unity_rating(item):
         return 0
 
 
+def is_black_cover(data):
+    """Detecta capas 'bugadas' do XboxUnity que são imagens totalmente pretas/vazias
+    (aparecem no automodelista sem arte). Retorna True se a imagem for basicamente preta."""
+    try:
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+        img = img.resize((32, 32), Image.BILINEAR)
+        px = list(img.getdata())
+    except Exception:
+        return False
+    total = len(px)
+    if total == 0:
+        return False
+    darkness = sum((r + g + b) for r, g, b in px) / (total * 3)
+    return darkness < 12
+
+
 def cover_fill(image, target_w, target_h):
     image = ImageOps.exif_transpose(image)
     image = image.convert("RGBA")
@@ -2113,6 +2189,33 @@ def save_extra_games(tids):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(tids, f, indent=2)
         os.replace(tmp, extra_games_path())
+    except Exception:
+        pass
+
+
+def hidden_games_path():
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_hidden.json")
+
+
+def load_hidden_games():
+    try:
+        with open(hidden_games_path(), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
+    except Exception:
+        pass
+    return []
+
+
+def save_hidden_games(tids):
+    try:
+        tmp = hidden_games_path() + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(list(set(tids)), f, indent=2)
+        os.replace(tmp, hidden_games_path())
     except Exception:
         pass
 
@@ -3008,6 +3111,7 @@ class App:
         self.opt_banner = tk.BooleanVar(value=True)
         self.opt_screenshots = tk.BooleanVar(value=True)
         self.games = []
+        self.hidden_tids = set(load_hidden_games())
         self.worker = None
         self.busy = False
         self.item_to_game = {}
@@ -3521,7 +3625,7 @@ class App:
             self.tree.delete(item)
         self.item_to_game.clear()
         text = self.search_var.get().strip().lower()
-        games = self.games
+        games = [g for g in self.games if g["tid"].upper() not in self.hidden_tids]
         if text:
             games = [
                 g for g in games
@@ -3678,23 +3782,26 @@ class App:
             return
         if clean == current:
             return
-        # Se tem pasta GameData, renomeia a pasta
-        folder = g.get("folder")
-        if not folder:
-            folder = self.find_gamedata_folder(g["tid"])
+        # Só renomeia a pasta quando for uma pasta GameData dedicada do jogo
+        # (pasta própria <tid>_<nome>). NUNCA renomeia pastas compartilhadas
+        # (ex.: \jogos\xbox 360 dvd com vários XBLA) nem pastas do jogo no HD,
+        # para não quebrar outros jogos nem perder a capa importada.
+        folder = self.find_gamedata_folder(g["tid"])
+        renamed_any = False
         if folder:
             parent = os.path.dirname(folder)
             new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
-            try:
-                os.rename(folder, new_folder)
-            except OSError as exc:
-                messagebox.showerror(tr("error"), str(exc))
-                return
-            g["folder"] = new_folder
-            g["folder_name"] = os.path.basename(new_folder)
-            self.log("Renamed folder: %s -> %s" % (g["folder_name"], os.path.basename(new_folder)))
-        else:
-            self.log("  pasta GameData não encontrada para %s; renomeação salva apenas na lista." % g["tid"])
+            if os.path.normpath(new_folder) != os.path.normpath(folder):
+                try:
+                    os.rename(folder, new_folder)
+                    g["folder"] = new_folder
+                    g["folder_name"] = os.path.basename(new_folder)
+                    renamed_any = True
+                    self.log("Renamed folder: %s -> %s" % (os.path.basename(folder), os.path.basename(new_folder)))
+                except OSError as exc:
+                    self.log("  não foi possível renomear a pasta: %s" % exc)
+        if not renamed_any:
+            self.log("  sem pasta GameData dedicada para %s; renomeação salva apenas na lista." % g["tid"])
         g["dname"] = clean
         # Salva nome customizado permanentemente
         custom_names = load_custom_names()
@@ -3761,6 +3868,90 @@ class App:
             os.startfile(g["folder"])
         except Exception as e:
             self.log("Erro ao abrir pasta: %s" % e)
+
+    def remove_cover(self, g):
+        if self.busy:
+            return
+        tid = g["tid"]
+        if not messagebox.askyesno(tr("warn"), tr("remove_cover_confirm", self.game_title(g), tid)):
+            return
+        removed = False
+        folder = g.get("folder")
+        if folder:
+            for name in ("GC%s.asset" % tid, "boxart.png", "boxart.jpg", "boxart.jpeg",
+                         "cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
+                p = os.path.join(folder, name)
+                if os.path.isfile(p):
+                    try:
+                        os.remove(p)
+                        removed = True
+                    except OSError:
+                        pass
+        # Remove a capa da Import (todas as bases: raiz do drive e pasta do Aurora)
+        path = self.aurora_path.get().strip().strip('"')
+        for base in import_bases(path):
+            d = os.path.join(base, tid)
+            if os.path.isdir(d):
+                for name in ("cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
+                    p = os.path.join(d, name)
+                    if os.path.isfile(p):
+                        try:
+                            os.remove(p)
+                            removed = True
+                        except OSError:
+                            pass
+                try:
+                    if not os.listdir(d):
+                        os.rmdir(d)
+                except OSError:
+                    pass
+        # Limpa o marcador 'instalado' para boxart
+        try:
+            p = installed_path()
+            data = {}
+            if os.path.isfile(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            if tid in data:
+                data[tid].pop("boxart", None)
+                if not data[tid]:
+                    data.pop(tid, None)
+                tmp = p + ".tmp"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                os.replace(tmp, p)
+        except Exception:
+            pass
+        g["has_cover"] = False
+        self.preview_cache.pop(tid + "|" + (g["folder"] or "import"), None)
+        if removed:
+            self.log(tr("cover_removed", self.game_title(g), tid))
+        else:
+            self.log(tr("cover_none_found", self.game_title(g), tid))
+        self.refresh_tree()
+
+    def remove_game(self, g):
+        if self.busy:
+            return
+        tid = g["tid"]
+        if not messagebox.askyesno(tr("warn"), tr("remove_game_confirm", self.game_title(g), tid)):
+            return
+        self.hidden_tids.add(tid.upper())
+        save_hidden_games(sorted(self.hidden_tids))
+        self.log(tr("game_removed", self.game_title(g), tid))
+        self.refresh_tree()
+
+    def restore_hidden_games(self):
+        if self.busy:
+            return
+        if not self.hidden_tids:
+            return
+        if not messagebox.askyesno(tr("warn"), tr("restore_hidden_confirm", len(self.hidden_tids))):
+            return
+        self.hidden_tids = set()
+        save_hidden_games([])
+        self.log(tr("restore_hidden_done"))
+        self.refresh_tree()
 
     def db_editor(self):
         root = self.aurora_path.get().strip().strip('"')
@@ -4338,9 +4529,12 @@ class App:
             items,
             key=lambda i: (0 if i.get("official") else 1, -unity_rating(i)),
         )
-        for item in ordered[:6]:
+        for item in ordered[:8]:
             b = self.unity.cover_bytes(item)
             if b:
+                if is_black_cover(b):
+                    self.log("  Capa vazia/preta ignorada (bugada) no XboxUnity.")
+                    continue
                 return b
         self.log(tr("unity_fallback") + " (%s)" % tid)
         return None
@@ -4526,6 +4720,12 @@ class App:
         menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
         if g.get("folder"):
             menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
+        menu.add_separator()
+        menu.add_command(label=tr("m_remove_cover"), command=lambda: self.remove_cover(g))
+        menu.add_command(label=tr("m_remove_game"), command=lambda: self.remove_game(g))
+        if self.hidden_tids:
+            menu.add_separator()
+            menu.add_command(label=tr("m_restore_hidden"), command=self.restore_hidden_games)
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -5279,7 +5479,7 @@ class App:
         self._alt_msg = msg
         self._alt_g = g
         dlg.protocol("WM_DELETE_WINDOW", self._close_alt_dlg)
-        threading.Thread(target=self._alt_fetch, args=(tid,), daemon=True).start()
+        threading.Thread(target=self._alt_fetch, args=(g,), daemon=True).start()
 
     def _close_alt_dlg(self):
         if self._alt_dlg is not None:
@@ -5294,11 +5494,21 @@ class App:
         self._alt_photo = None
         self._alt_g = None
 
-    def _alt_fetch(self, tid):
+    def _alt_fetch(self, g):
+        tid = g["tid"]
         try:
             items = self.unity.covers(tid, force=True) or []
         except Exception:
             items = []
+        # Homebrews: a Unity indexa a capa por um TitleID interno (pequeno) achado
+        # pela busca por NOME (TitleList), não pelo TID sintético/SHA1 nem pelo TID do XEX.
+        if not items and g:
+            for q in homebrew_search_queries(g):
+                real = self.unity.resolve_title_tid(q)
+                if real and real.upper() != tid.upper():
+                    items = self.unity.covers(real, force=True) or []
+                    if items:
+                        break
         if not items:
             items = [
                 {
@@ -5404,6 +5614,10 @@ class App:
                     b = self.unity.cover_bytes(item)
                 if not b:
                     self.log("  falha ao baixar a capa do XboxUnity.")
+                    self.queue.put("__alt_installed__:f")
+                    return
+                if is_black_cover(b):
+                    self.log("  Capa vazia/preta ignorada (bugada) no XboxUnity.")
                     self.queue.put("__alt_installed__:f")
                     return
                 img = box_render(Image.open(io.BytesIO(b)), self.cover_format)
