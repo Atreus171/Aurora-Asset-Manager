@@ -307,15 +307,18 @@ TEXT = {
         "rename_prompt": "Novo nome para %s (%s):",
         "renamed": "Jogo %s renomeado para: %s",
         "ok": "OK",
-        "add_game": "Adicionar jogo...",
-        "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game": "Adicionar jogos...",
+        "add_game_tid": "Title ID (8 dígitos hex; opcional se detectado):",
         "add_game_xex": "Arquivo .xex (detecta o TID):",
+        "add_game_folder": "Pasta para procurar jogos:",
+        "add_game_folder_note": "Procura vários jogos (.xex) dentro da pasta escolhida, um por subpasta.",
         "add_game_name": "Nome (opcional):",
         "add_game_mkdir": "Criar pasta GameData no HD",
         "add_game_bad_tid": "Title ID inválido (use 8 dígitos hex, ex.: 5841120F).",
         "add_game_exists": "Este jogo já está na lista.",
         "add_game_need_name": "Informe um nome para criar a pasta.",
         "add_game_added": "Jogo adicionado: %s (%s)",
+        "add_game_folder_done": "Pasta escaneada: %d jogo(s) adicionado(s) de %s.",
         "db_editor": "Banco do Aurora (content.db)",
         "db_add": "Adicionar...",
         "db_rename": "Renomear...",
@@ -535,15 +538,18 @@ TEXT = {
         "rename_prompt": "New name for %s (%s):",
         "renamed": "Game %s renamed to: %s",
         "ok": "OK",
-        "add_game": "Add game...",
-        "add_game_tid": "Title ID (8 hex digits):",
+        "add_game": "Add games...",
+        "add_game_tid": "Title ID (8 hex digits; optional if detected):",
         "add_game_xex": ".xex file (auto-detect TID):",
+        "add_game_folder": "Folder to search for games:",
+        "add_game_folder_note": "Searches for multiple games (.xex) inside the chosen folder, one per subfolder.",
         "add_game_name": "Name (optional):",
         "add_game_mkdir": "Create GameData folder on HD",
         "add_game_bad_tid": "Invalid Title ID (use 8 hex digits, e.g. 5841120F).",
         "add_game_exists": "This game is already in the list.",
         "add_game_need_name": "Enter a name to create the folder.",
         "add_game_added": "Game added: %s (%s)",
+        "add_game_folder_done": "Folder scanned: %d game(s) added from %s.",
         "db_editor": "Aurora database (content.db)",
         "db_add": "Add...",
         "db_rename": "Rename...",
@@ -763,15 +769,18 @@ TEXT = {
         "rename_prompt": "Nuevo nombre para %s (%s):",
         "renamed": "Juego %s renombrado a: %s",
         "ok": "Aceptar",
-        "add_game": "Agregar juego...",
-        "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game": "Agregar juegos...",
+        "add_game_tid": "Title ID (8 dígitos hex; opcional si se detecta):",
         "add_game_xex": "Archivo .xex (detectar TID):",
+        "add_game_folder": "Carpeta para buscar juegos:",
+        "add_game_folder_note": "Busca varios juegos (.xex) dentro de la carpeta elegida, uno por subcarpeta.",
         "add_game_name": "Nombre (opcional):",
         "add_game_mkdir": "Crear carpeta GameData en el disco",
         "add_game_bad_tid": "Title ID no válido (usa 8 dígitos hex, ej.: 5841120F).",
         "add_game_exists": "Este juego ya está en la lista.",
         "add_game_need_name": "Introduce un nombre para crear la carpeta.",
         "add_game_added": "Juego agregado: %s (%s)",
+        "add_game_folder_done": "Carpeta escaneada: %d juego(s) agregado(s) de %s.",
         "db_editor": "Base de datos de Aurora (content.db)",
         "db_add": "Agregar...",
         "db_rename": "Renombrar...",
@@ -991,15 +1000,18 @@ TEXT = {
         "rename_prompt": "Nouveau nom pour %s (%s):",
         "renamed": "Jeu %s renommé en: %s",
         "ok": "OK",
-        "add_game": "Ajouter un jeu...",
-        "add_game_tid": "Title ID (8 chiffres hex) :",
+        "add_game": "Ajouter des jeux...",
+        "add_game_tid": "Title ID (8 chiffres hex ; optionnel si détecté) :",
         "add_game_xex": "Fichier .xex (détecter le TID) :",
+        "add_game_folder": "Dossier pour rechercher des jeux :",
+        "add_game_folder_note": "Recherche plusieurs jeux (.xex) dans le dossier choisi, un par sous-dossier.",
         "add_game_name": "Nom (optionnel) :",
         "add_game_mkdir": "Créer le dossier GameData sur le disque",
         "add_game_bad_tid": "Title ID invalide (utilisez 8 chiffres hex, ex. : 5841120F).",
         "add_game_exists": "Ce jeu est déjà dans la liste.",
         "add_game_need_name": "Entrez un nom pour créer le dossier.",
         "add_game_added": "Jeu ajouté : %s (%s)",
+        "add_game_folder_done": "Dossier scanné : %d jeu(x) ajouté(s) depuis %s.",
         "db_editor": "Base de données Aurora (content.db)",
         "db_add": "Ajouter...",
         "db_rename": "Renommer...",
@@ -1220,14 +1232,17 @@ TEXT = {
         "renamed": "ゲーム %s を %s にリネームしました。",
         "ok": "OK",
         "add_game": "ゲームを追加...",
-        "add_game_tid": "Title ID（8桁の16進数）:",
+        "add_game_tid": "Title ID（8桁の16進数。検出時は省略可）:",
         "add_game_xex": ".xexファイル（TID自動検出）:",
+        "add_game_folder": "ゲームを探すフォルダ:",
+        "add_game_folder_note": "選択したフォルダ内の複数のゲーム（.xex）をサブフォルダごとに探します。",
         "add_game_name": "名前（任意）:",
         "add_game_mkdir": "HDにGameDataフォルダを作成",
         "add_game_bad_tid": "Title IDが無効です（8桁の16進数、例: 5841120F）。",
         "add_game_exists": "このゲームはすでにリストにあります。",
         "add_game_need_name": "フォルダを作成するには名前を入力してください。",
         "add_game_added": "ゲームを追加しました: %s (%s)",
+        "add_game_folder_done": "フォルダをスキャン: %s から %d ゲームを追加しました。",
         "db_editor": "Auroraデータベース (content.db)",
         "db_add": "追加...",
         "db_rename": "名前変更...",
@@ -1447,15 +1462,18 @@ TEXT = {
         "rename_prompt": "Новое имя для %s (%s):",
         "renamed": "Игра %s переименована в: %s",
         "ok": "OK",
-        "add_game": "Добавить игру...",
-        "add_game_tid": "Title ID (8 шестнадцатеричных цифр):",
+        "add_game": "Добавить игры...",
+        "add_game_tid": "Title ID (8 шестнадцатеричных цифр; необязательно, если определено):",
         "add_game_xex": "Файл .xex (автоопределение TID):",
+        "add_game_folder": "Папка для поиска игр:",
+        "add_game_folder_note": "Ищет несколько игр (.xex) внутри выбранной папки, по одной на каждую подпапку.",
         "add_game_name": "Название (необязательно):",
         "add_game_mkdir": "Создать папку GameData на диске",
         "add_game_bad_tid": "Неверный Title ID (используйте 8 шестнадцатеричных цифр, напр. 5841120F).",
         "add_game_exists": "Эта игра уже есть в списке.",
         "add_game_need_name": "Введите название, чтобы создать папку.",
         "add_game_added": "Игра добавлена: %s (%s)",
+        "add_game_folder_done": "Папка просканирована: добавлено %d игр(ы) из %s.",
         "db_editor": "База данных Aurora (content.db)",
         "db_add": "Добавить...",
         "db_rename": "Переименовать...",
@@ -2368,7 +2386,13 @@ def scan_aurora_db(root, logger=None):
             if tid_raw is None:
                 tid = ""
             elif isinstance(tid_raw, int):
-                tid = "%08X" % tid_raw
+                # TitleId guardado como inteiro. Valores negativos ou fora do
+                # intervalo de 32 bits (comuns em homebrews com TID inválido)
+                # não formam um TID válido -> trata como homebrew.
+                if 0 <= tid_raw <= 0xFFFFFFFF:
+                    tid = "%08X" % tid_raw
+                else:
+                    tid = ""
             else:
                 tid = (str(tid_raw) or "").strip().upper()
             title = (str(row[col_title] or "")).strip() if col_title else ""
@@ -2696,6 +2720,7 @@ def scan_homebrew_xex(root, known_folders=None):
     executável (.xex) dentro dos scan paths (360, homebrew e os ScanPaths do content.db).
     Homebrews não têm TitleId válido, então recebem um TID sintético estável."""
     known = set(os.path.normpath(f) for f in (known_folders or []) if f)
+    known_norm = set(os.path.normcase(f) for f in known)
     bases = []
     db_path = find_content_db(root)
     if db_path:
@@ -2744,6 +2769,7 @@ def scan_homebrew_xex(root, known_folders=None):
     if os.path.isdir(content_root):
         bases.append(content_root)
     bases = list(dict.fromkeys(b for b in bases if os.path.isdir(b)))
+    norm_bases = set(os.path.normcase(b) for b in bases)
 
     out = []
     hex8 = re.compile(r"^([0-9A-F]{8})$")
@@ -2767,11 +2793,20 @@ def scan_homebrew_xex(root, known_folders=None):
             if any(p.upper() in skip_seg for p in parts):
                 dirnames[:] = []
                 continue
+            # Subpastas Media/Managed contêm assemblies/.NET, não são jogos
+            if any(p.lower() in ("media", "managed") for p in parts):
+                dirnames[:] = []
+                continue
             if not any(fn.lower().endswith(".xex") for fn in filenames):
                 continue
             folder = os.path.normpath(dirpath)
-            if folder in known:
+            # A raiz de um scan path é um CONTÊINER de jogos (ex.: \\homebrew),
+            # não um jogo em si: nunca tratá-la como jogo (evita "homebres" na lista).
+            if os.path.normcase(folder) in norm_bases:
                 continue
+            if os.path.normcase(folder) in known_norm:
+                continue
+            known_norm.add(os.path.normcase(folder))
             known.add(folder)
             rel = os.path.relpath(dirpath, root).replace("/", os.sep)
             # TID: usar um TID hex de 8 dígitos encontrado na árvore do caminho
@@ -2933,7 +2968,9 @@ def scan_aurora(root):
         if g["tid"] in custom_names and not g.get("dname"):
             g["dname"] = custom_names[g["tid"]]
 
-    # Deduplicação
+    # Deduplicação — por TID e também por pasta (case-insensitive), para evitar
+    # duplicar homebrews que o DB encontra numa capitalização e o scan de .xex
+    # encontra noutra (ex.: \\homebrew\\supermariowar vs \\homebrew\\SuperMarioWar).
     seen = {}
     deduped = []
     for g in games:
@@ -2945,8 +2982,38 @@ def scan_aurora(root):
             i = deduped.index(seen[key])
             deduped[i] = g
             seen[key] = g
-    log(f"  [SCAN] Total de jogos encontrados: {len(deduped)}")
-    return deduped
+    # Merge por pasta normalizada (mantém a entrada com TID real/dname, descarta duplicata)
+    folder_seen = {}
+    merged = []
+    for g in deduped:
+        f = g.get("folder")
+        if not f:
+            merged.append(g)
+            continue
+        nf = os.path.normcase(os.path.normpath(f))
+        if nf not in folder_seen:
+            folder_seen[nf] = g
+            merged.append(g)
+            continue
+        keep = g
+        other = folder_seen[nf]
+        # Prefere a entrada com TID hex "real" (8 dígitos) e nome legível
+        def _real_tid(x):
+            t = str(x.get("tid") or "")
+            return bool(re.fullmatch(r"[0-9A-F]{8}", t)) and t not in ("00000000",)
+        if _real_tid(other) and not _real_tid(keep):
+            continue
+        if _real_tid(keep) and not _real_tid(other):
+            i = merged.index(other)
+            merged[i] = keep
+            folder_seen[nf] = keep
+            continue
+        if not keep.get("dname") and other.get("dname"):
+            keep["dname"] = other["dname"]
+        if not keep["has_cover"] and other["has_cover"]:
+            keep["has_cover"] = True
+    log(f"  [SCAN] Total de jogos encontrados: {len(merged)}")
+    return merged
 
 
 def scan_hdd_content(root):
@@ -4348,10 +4415,47 @@ class App:
         frm = ttk.Frame(dlg, padding=12)
         frm.pack(fill=tk.BOTH, expand=True)
 
+        # Linha 0: arquivo .xex
         ttk.Label(frm, text=tr("add_game_xex")).grid(row=0, column=0, sticky="w", pady=(0, 6))
         v_xex = tk.StringVar()
         e_xex = ttk.Entry(frm, textvariable=v_xex, width=36)
         e_xex.grid(row=0, column=1, sticky="w", pady=(0, 6), padx=(0, 4))
+
+        # Linha 1: pasta para procurar jogos (vários .xex de uma vez)
+        ttk.Label(frm, text=tr("add_game_folder")).grid(row=1, column=0, sticky="w", pady=(0, 6))
+        v_folder = tk.StringVar()
+        e_folder = ttk.Entry(frm, textvariable=v_folder, width=36)
+        e_folder.grid(row=1, column=1, sticky="w", pady=(0, 6), padx=(0, 4))
+        ttk.Label(
+            frm, text=tr("add_game_folder_note"), foreground="#888888"
+        ).grid(row=2, column=0, columnspan=3, sticky="w", pady=(0, 6))
+
+        # Linha 3: nome (opcional)
+        ttk.Label(frm, text=tr("add_game_name")).grid(row=3, column=0, sticky="w", pady=(0, 6))
+        v_name = tk.StringVar()
+        e_name = ttk.Entry(frm, textvariable=v_name, width=24)
+        e_name.grid(row=3, column=1, sticky="w", pady=(0, 6))
+
+        # Linha 4: Title ID (agora abaixo do nome)
+        ttk.Label(frm, text=tr("add_game_tid")).grid(row=4, column=0, sticky="w", pady=(0, 6))
+        v_tid = tk.StringVar()
+
+        def _fill_from_xex(fn):
+            v_xex.set(fn)
+            info = parse_xex2(fn) or {}
+            tid = ("%08X" % info["title_id"]) if info.get("title_id") else None
+            base = os.path.basename(os.path.dirname(fn) or fn)
+            if base.lower().endswith(".xex"):
+                base = os.path.basename(fn)
+            base = os.path.splitext(base)[0]
+            default_name = base.strip()
+            if not tid and default_name:
+                tid = legacy_tid_for(default_name)
+            if tid:
+                v_tid.set(tid)
+            if not e_name.get().strip() and default_name:
+                e_name.delete(0, tk.END)
+                e_name.insert(0, default_name)
 
         def _browse_xex():
             fn = filedialog.askopenfilename(
@@ -4359,60 +4463,96 @@ class App:
                 filetypes=[("XEX", "*.xex"), ("Todos", "*.*")],
             )
             if fn:
-                v_xex.set(fn)
-                info = parse_xex2(fn)
-                if info["title_id"]:
-                    v_tid.set("%08X" % info["title_id"])
-                ts = e_name.get().strip()
-                if not ts:
-                    if info["title_id"]:
-                        nm = self.db.title_name("%08X" % info["title_id"])
-                        if not nm or nm == "%08X" % info["title_id"]:
-                            nm = self.unity.get_best_title("%08X" % info["title_id"]) or ""
-                        if nm:
-                            e_name.delete(0, tk.END)
-                            e_name.insert(0, nm)
-                    if not e_name.get().strip():
-                        base = os.path.basename(os.path.dirname(fn) or fn)
-                        if base.lower().endswith(".xex"):
-                            base = os.path.basename(fn)
-                        if base and not e_name.get().strip():
-                            e_name.insert(0, os.path.splitext(base)[0])
+                _fill_from_xex(fn)
+
+        def _browse_folder():
+            fd = filedialog.askdirectory(title=tr("add_game_folder"), mustexist=True)
+            if fd:
+                v_folder.set(fd)
 
         ttk.Button(frm, text=tr("browse"), command=_browse_xex).grid(row=0, column=2, sticky="w", pady=(0, 6))
+        ttk.Button(frm, text=tr("browse"), command=_browse_folder).grid(row=1, column=2, sticky="w", pady=(0, 6))
 
-        ttk.Label(frm, text=tr("add_game_tid")).grid(row=1, column=0, sticky="w", pady=(0, 6))
-        v_tid = tk.StringVar()
         e_tid = ttk.Entry(frm, textvariable=v_tid, width=16)
-        e_tid.grid(row=1, column=1, sticky="w", pady=(0, 6))
-        ttk.Label(frm, text=tr("add_game_name")).grid(row=2, column=0, sticky="w", pady=(0, 6))
-        v_name = tk.StringVar()
-        e_name = ttk.Entry(frm, textvariable=v_name, width=24)
-        e_name.grid(row=2, column=1, sticky="w", pady=(0, 6))
+        e_tid.grid(row=4, column=1, sticky="w", pady=(0, 6))
         v_mkdir = tk.BooleanVar(value=self.gamedata_dir() is not None)
         ttk.Checkbutton(frm, text=tr("add_game_mkdir"), variable=v_mkdir).grid(
-            row=3, column=0, columnspan=2, sticky="w", pady=(0, 10)
+            row=5, column=0, columnspan=2, sticky="w", pady=(0, 10)
         )
         btns = ttk.Frame(frm)
-        btns.grid(row=4, column=0, columnspan=3, sticky="e")
-        res = {"ok": False, "tid": None, "name": None, "mkdir": False, "xex": None}
+        btns.grid(row=6, column=0, columnspan=3, sticky="e")
+        res = {"ok": False, "tid": None, "name": None, "mkdir": False, "xex": None, "folder": None}
 
-        def _ok(_event=None):
-            res["tid"] = v_tid.get().strip().upper()
-            res["name"] = v_name.get().strip()
-            res["mkdir"] = v_mkdir.get()
-            res["xex"] = v_xex.get().strip()
+        def stage_done(tid, name, folder=None):
+            res["tid"] = tid
+            res["name"] = name
+            res["folder"] = folder
             res["ok"] = True
             dlg.destroy()
 
+        # Confirmação do fluxo de pasta: adiciona todos os jogos encontrados na pasta
+        def _apply_folder_selection():
+            raw = v_folder.get().strip().strip('"')
+            if not raw:
+                messagebox.showwarning(tr("warn"), tr("add_game_bad_tid"))
+                return
+            if not os.path.isdir(raw):
+                messagebox.showerror(tr("warn"), "Pasta não encontrada: %s" % raw)
+                return
+            folder = os.path.normpath(raw)
+            games_found = self.probe_folder_games(folder)
+            count = 0
+            for t in games_found:
+                if any(g["tid"] == t["tid"] for g in self.games):
+                    continue
+                g = {
+                    "folder": t["folder"],
+                    "tid": t["tid"],
+                    "folder_name": os.path.basename(t["folder"]) if t["folder"] else t["tid"],
+                    "dname": t["name"],
+                    "has_cover": False,
+                }
+                custom_names = load_custom_names()
+                custom_names[t["tid"]] = t["name"]
+                save_custom_names(custom_names)
+                extra = load_extra_games()
+                if t["tid"] not in extra:
+                    extra.append(t["tid"])
+                    save_extra_games(extra)
+                self.games.append(g)
+                count += 1
+            if count:
+                targets = [g for g in self.games if g["tid"] in {t["tid"] for t in games_found}]
+                threading.Thread(target=self._fetch_unity_names, args=(targets,), daemon=True).start()
+            self.log(tr("add_game_folder_done", count, folder))
+            self.refresh_tree()
+            res["ok"] = True
+            res["folder"] = folder
+            dlg.destroy()
+
+        def _ok(_event=None):
+            tid = v_tid.get().strip().upper()
+            name = v_name.get().strip()
+            if not tid:
+                # Sem TID informado: gera sintético a partir do nome (para homebrew)
+                src = name or os.path.splitext(os.path.basename(v_xex.get().strip() or ""))[0]
+                if src:
+                    tid = legacy_tid_for(src)
+            if v_folder.get().strip():
+                _apply_folder_selection()
+                return
+            stage_done(tid, name)
+
         ttk.Button(btns, text=tr("ok"), command=_ok).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(btns, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT)
-        e_tid.focus_set()
+        e_name.focus_set()
         dlg.bind("<Return>", _ok)
         dlg.grab_set()
         self.root.wait_window(dlg)
         if not res["ok"]:
             return
+        if res["folder"]:
+            return  # fluxo de pasta já tratado
         tid = res["tid"]
         if not re.match(r"^[0-9A-F]{8}$", tid):
             messagebox.showerror(tr("warn"), tr("add_game_bad_tid"))
@@ -4445,7 +4585,47 @@ class App:
             save_extra_games(extra)
         self.games.append(g)
         self.log(tr("add_game_added", name or tid, tid))
+        threading.Thread(target=self._fetch_unity_names, args=([g],), daemon=True).start()
         self.refresh_tree()
+
+    def probe_folder_games(self, folder):
+        """Enumera jogos dentro de uma pasta escolhida (um por subpasta com .xex),
+        retornando uma lista de dicts {'tid','name','folder'}. Não trata a própria
+        pasta como um jogo e ignora subpastas Media/Managed."""
+        out = []
+        folder = os.path.normpath(folder)
+        max_depth = 4
+        for dirpath, dirnames, filenames in os.walk(folder):
+            rel = os.path.relpath(dirpath, folder)
+            depth = 0 if rel == "." else len(rel.split(os.sep))
+            if depth > max_depth:
+                dirnames[:] = []
+                continue
+            parts = [p.lower() for p in re.split(r"[\\/]", dirpath)]
+            if "media" in parts or "managed" in parts:
+                dirnames[:] = []
+                continue
+            xexs = sorted(fn for fn in filenames if fn.lower().endswith(".xex"))
+            if not xexs:
+                continue
+            if depth == 0:
+                # A própria pasta raiz tem um .xex solto: não tratar a pasta inteira como jogo
+                continue
+            xex = os.path.join(dirpath, xexs[0])
+            name = os.path.basename(dirpath).strip()
+            tid = None
+            info = parse_xex2(xex)
+            if info and info.get("title_id"):
+                tid = "%08X" % info["title_id"]
+            if name:
+                if tid is None:
+                    tid = legacy_tid_for(name)
+            if not tid or not re.match(r"^[0-9A-F]{8}$", tid):
+                continue
+            if any(o["tid"] == tid for o in out):
+                continue
+            out.append({"tid": tid, "name": name, "folder": dirpath})
+        return out
 
     def selected_game(self):
         sel = self.tree.selection()
