@@ -4284,21 +4284,18 @@ class App:
 
     def get_cover_blob(self, tid, g=None):
         try:
-            if self.repo == "xboxunity":
-                b = self._unity_cover(tid, g)
-                if b:
-                    return b
-                b = self.db.download_artwork(tid, "boxart")
-                if b:
-                    return b
-                self.log(tr("cover_missing_both"))
-                return None
-            b = self.db.download_artwork(tid, "boxart")
-            if b:
-                return b
+            # A capa (boxart) deve ser a CAIXA COMPLETA (frente + lombada com o nome + traseira),
+            # formato 900x600 que o Aurora exibe. Só o XboxUnity entrega esse formato; o "boxart"
+            # do x360db (boxartlg, ex. 219x300) traz apenas a arte da FRENTE, sem lombada/traseira.
+            # Logo a Unity é sempre tentada primeiro; o boxart do x360db vira fallback apenas quando
+            # o repositório selecionado é o x360db.
             b = self._unity_cover(tid, g)
             if b:
                 return b
+            if self.repo == "x360db":
+                b = self.db.download_artwork(tid, "boxart")
+                if b:
+                    return b
             self.log(tr("cover_missing_both"))
             return None
         except Exception as exc:
