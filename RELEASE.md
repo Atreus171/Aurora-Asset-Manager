@@ -1,6 +1,56 @@
 # Release Notes
 
-## v1.4.0 (Current) - "SQLite Integration Release"
+## v1.5.0 (Latest) - "Game Management & Homebrew Fixes Release"
+
+### ✨ New Features
+- **Redesigned "Adicionar jogos" dialog**:
+  - Auto-detects Title ID from `.xex` (real TID for XBLA/retail, synthetic for homebrew)
+  - Auto-fills game name from folder/XEX filename
+  - Title ID field moved below Name (optional when detected)
+  - "Criar pasta GameData no HD" checkbox creates folder structure on disk
+- **"Pasta para procurar jogos"** (batch add):
+  - Select a parent folder (e.g., `X:\homebrew`) → scans subfolders with `.xex`
+  - Ignores `Media/Managed` subfolders, depth limit 4
+  - One game per subfolder, auto TID + name
+- **"Gerenciar pastas..."** button:
+  - Lists all folders added via batch add
+  - Open folder in Explorer / remove selected (also removes associated games)
+  - Persisted in `aurora_covers_added_folders.json`
+- **ICO file support**: Import `.ico` files for custom covers/icons → auto-converted to PNG
+- **Sort button (A-Z/Z-A)** relocated next to "Adicionar jogos" for quick access
+
+### 🔧 Improvements
+- **GameData auto-creation**: `gamedata_dir(create=True)` creates `Data\GameData` if missing when "Criar pasta GameData" checked
+- **Enhanced "Abrir pasta do jogo"**: Tries multiple locations in order:
+  1. Game's registered folder
+  2. GameData subfolder (`TID_Name` or `TID`)
+  3. content.db Directory path (resolved via ScanPaths/MountedDevices)
+  4. Common game roots: `homebrew`, `jogos`, `emuladores`, `360`, `Games` (case-insensitive)
+  5. Aurora root folder fallback
+- **Homebrew names**: Merge logic prefers Aurora DB `TitleName` over XEX folder basename; auto-triggers Unity name fetch for weak/folder-like names
+- **Unity covers case bug fix**: RetroArch (TitleID `00000000`) now works — `CoverInfo.php` returns key `Covers` (capital C), not `covers`
+- **Search title updates content.db**: "Pesquisar título..." writes renamed game to `content.db` via `db_rename_by_tid` (Aurora sees change on rescan)
+- **Fixed misleading logs**: Removed "using x360db as fallback" messages when repo=XboxUnity; now shows source-specific messages
+- **Case-insensitive dedup**: Homebrews scanned by DB (lowercase paths) and XEX (original case) no longer duplicate
+- **Container folder fix**: `X:\homebrew` (loose `.xex` at root) no longer appears as a game; internal games restored
+
+### 🐛 Bug Fixes
+- Fixed: "homebres" container game appearing when loose `.xex` at homebrew root
+- Fixed: `Media\Managed` assemblies showing as games (e.g., `X:\homebrew\Granny - 1.2.1\Media\Managed`)
+- Fixed: Duplicate homebrews from DB (lowercase) vs XEX scan (mixed case) — e.g., `supermariowar` vs `SuperMarioWar`
+- Fixed: RetroArch covers not found (Unity `covers()` returned `[]` for `00000000`, fallback key was lowercase `covers`)
+- Fixed: Negative/invalid TitleIds from DB (`-3F216667` for Xexmenu) now generate valid synthetic TIDs
+- Fixed: `search_title` only updated display name, not `content.db`
+- Fixed: `open_game_folder` failed for many games (only checked `g["folder"]`)
+
+### 📦 Assets
+- `AuroraAssetManager.exe` (~19.8 MB) - Windows x64 standalone (onefile)
+- `AuroraAssetManager/` folder - Windows x64 onedir build (faster startup)
+- `AuroraAssetManager_fast.zip` - onefile compressed
+
+---
+
+## v1.4.0 - "SQLite Integration Release"
 
 ### ✨ New Features
 - **Aurora SQLite Database Reading**: Automatically detects and reads `Aurora\Data\Databases\content.db` for real game names, regions, and paths

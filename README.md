@@ -55,9 +55,21 @@ Perfect for: **homebrew collectors**, **XBLA enthusiasts**, **Aurora users** wan
 
 ### 🔍 Advanced
 - **Alternative covers**: Browse XboxUnity community covers with live preview
-- **Custom covers**: Pick any local image → auto-convert to Aurora format
+- **Custom covers**: Pick any local image (PNG/JPG/BMP/WebP/ICO) → auto-convert to Aurora format
 - **Screenshot navigation**: Prev/Next buttons for multi-screenshot games
 - **Installed status**: Based on actual preview (empty/corrupt = Missing)
+
+### 🆕 v1.5.0 Highlights
+- **Add games dialog redesign**: Detects TID from `.xex` auto, creates GameData folder, adds "Folder to search games" option
+- **Folder management**: "Manage folders..." button to view/remove added scan folders
+- **ICO support**: Import `.ico` files as custom covers/icons (auto-converted to PNG)
+- **Auto GameData creation**: `gamedata_dir(create=True)` creates `Data\GameData` structure if missing
+- **Improved "Open folder"**: Tries game folder → GameData → content.db path → common roots (`homebrew`, `jogos`, `emuladores`, `360`, `Games`) → Aurora root
+- **Unity covers case fix**: RetroArch (TitleID `00000000`) now works via `CoverInfo.php` (key `Covers` vs `covers`)
+- **Search title updates DB**: "Pesquisar título" now writes renamed game to `content.db` via `db_rename_by_tid`
+- **Fixed misleading logs**: Removed "using x360db" messages when using XboxUnity
+- **Homebrew names**: Prefers DB `TitleName` over XEX folder basename; auto-fetches Unity names for weak/folder-like names
+- **Sort button moved**: A-Z/Z-A now sits next to "Adicionar jogos"
 
 ---
 
@@ -94,6 +106,21 @@ python aurora_covers.py
 ### Auto-scan
 After selecting the Aurora folder, scanning starts automatically.
 
+### Adding Games (v1.5.0+)
+**Individual .xex**:
+1. Click **Adicionar jogos...** → select `.xex` file
+2. TID auto-detected (real TID from XEX, synthetic for homebrew)
+3. Name auto-filled from folder/XEX
+4. Title ID field now below Name (optional if detected)
+5. Check "Criar pasta GameData no HD" to create folder on disk
+
+**Batch via folder**:
+1. Click **Adicionar jogos...** → "Pasta para procurar jogos"
+2. Select a parent folder (e.g., `X:\homebrew`)
+3. App scans subfolders with `.xex` (ignores `Media/Managed`, depth ≤ 4)
+4. Each game added with auto TID + name
+5. View/remove added folders via **Gerenciar pastas...**
+
 ### Alternative Covers
 1. Right-click a game → **Capas alternativas online...**
 2. Browse community covers with preview
@@ -101,13 +128,18 @@ After selecting the Aurora folder, scanning starts automatically.
 
 ### Custom Cover
 1. Right-click a game → **Capa personalizada...**
-2. Select any image (PNG/JPG/BMP/WebP)
+2. Select any image (PNG/JPG/BMP/WebP/ICO)
 3. Auto-converts to your chosen format (landscape/portrait)
 
 ### FTP to Console
 1. Settings → **FTP** → enter Xbox IP (user: `xbox`, pass: `xbox`)
 2. In Assets dialog → **Enviar por FTP**
 3. Uploads all `.asset` files to `Hdd:\Aurora\Data\GameData\{TID}_{Name}\`
+
+### Search Title (v1.5.0+)
+1. Right-click a game → **Pesquisar título...**
+2. Searches x360db + XboxUnity
+3. If found, updates display name **AND** writes to `content.db` (Aurora sees new name on rescan)
 
 ---
 
@@ -135,6 +167,10 @@ Settings saved in `%USERPROFILE%\Documents\Aurora Asset Manager\`:
 - `aurora_covers_games.json` — x360db index cache (12h TTL)
 - `aurora_covers_unity_titles.json` — XboxUnity title cache (persistent)
 - `aurora_covers_installed.json` — asset install tracker
+- `aurora_covers_extra_games.json` — manually added TIDs
+- `aurora_covers_custom_names.json` — custom display names
+- `aurora_covers_hidden.json` — hidden game TIDs
+- `aurora_covers_added_folders.json` — folders added via "Pasta para procurar jogos" (v1.5.0+)
 
 ### Example Config
 ```json
@@ -239,4 +275,3 @@ aurora-x360db-covers/
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
-
