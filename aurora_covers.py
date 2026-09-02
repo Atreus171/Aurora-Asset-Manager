@@ -1705,6 +1705,65 @@ class XboxUnity:
                 return name.strip()
         return None
 
+    def search_titles(self, query, count=25):
+        """Busca títulos no XboxUnity por nome (TitleList.php). Retorna lista de dicts."""
+        params = urllib.parse.urlencode({
+            "page": "0",
+            "count": str(count),
+            "search": query,
+            "sort": "0",
+            "direction": "0",
+            "category": "0",
+            "filter": "0",
+        })
+        b = fetch_bytes(XBOXUNITY_LIB + "/TitleList.php?" + params, timeout=12, attempts=2)
+        if not b:
+            return []
+        try:
+            data = json.loads(b.decode("utf-8", "replace"))
+        except Exception:
+            return []
+        items = data.get("Items") or []
+        if not isinstance(items, list):
+            return []
+        return [it for it in items if isinstance(it, dict)]
+
+    def resolve_title_tid(self, query):
+        """Acha o TitleID (interno) que o XboxUnity usa para um homebrew, pesquisando por nome.
+        Só aceita entradas do tipo HomeBrew para não pegar capa de outro jogo."""
+        qkey = "nameidx|" + re.sub(r"\s+", " ", (query or "")).strip().lower()
+        if qkey in self._title_cache:
+            return self._title_cache[qkey] or None
+        found = None
+        items = self.search_titles(query)
+        ql = (query or "").strip().lower()
+        hb = [it for it in items if "brew" in str(it.get("TitleType") or "").lower()]
+        if hb:
+            exact = [it for it in hb if str(it.get("Name") or "").strip().lower() == ql]
+            if len(exact) == 1:
+                found = exact[0]
+            else:
+                contains = [it for it in hb if ql and ql in str(it.get("Name") or "").strip().lower()]
+                if contains:
+                    if len(contains) == 1:
+                        found = contains[0]
+                    else:
+                        found = sorted(contains, key=lambda it: len(str(it.get("Name") or "")))[0]
+        if found:
+            tid = str(found.get("TitleID") or "").strip().upper()
+            if len(tid) < 8:
+                try:
+                    tid = ("%08X" % int(tid, 16))
+                except ValueError:
+                    tid = tid.zfill(8)
+            if tid:
+                self._title_cache[qkey] = tid
+                self._save_title_cache()
+                return tid
+        self._title_cache[qkey] = None
+        self._save_title_cache()
+        return None
+
     def cover_bytes(self, item, small=False):
         if small:
             order = ["thumbnail", "front", "url", "large"]
@@ -2708,6 +2767,36 @@ def legacy_tid_for(name):
     if not name:
         return None
     return "%08X" % (int(hashlib.sha1(name.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+
+
+def homebrew_search_queries(g):
+    """Gera queries para buscar capa de homebrew no XboxUnity (TitleList.php).
+    A Unity indexa homebrews por um TitleID interno pequeno + nome, não pelo TID do XEX
+    (o HBTitleID é só informativo). O fallback procura pelo nome do jogo (DB e pasta)."""
+    seen = set()
+    out = []
+
+    def _add(q):
+        q = re.sub(r"\s+", " ", (q or "")).strip()
+        if not q:
+            return
+        low = q.lower()
+        if low in seen:
+            return
+        seen.add(low)
+        out.append(q)
+
+    for key in ("dname", "folder_name"):
+        raw = str(g.get(key) or "").strip()
+        if not raw or raw.lower() == str(g.get("tid") or "").lower():
+            continue
+        _add(raw)
+        toks = [t for t in re.split(r"[\s_\-\.\(\)\[\]]+", raw) if t]
+        if toks:
+            _add(toks[0])
+            if len(toks) >= 2:
+                _add("%s %s" % (toks[0], toks[1]))
+    return out[:6]
 
 
 def cover_exts():
@@ -4193,10 +4282,10 @@ class App:
         if got:
             g["has_cover"] = True
 
-    def get_cover_blob(self, tid):
+    def get_cover_blob(self, tid, g=None):
         try:
             if self.repo == "xboxunity":
-                b = self._unity_cover(tid)
+                b = self._unity_cover(tid, g)
                 if b:
                     return b
                 b = self.db.download_artwork(tid, "boxart")
@@ -4207,7 +4296,7 @@ class App:
             b = self.db.download_artwork(tid, "boxart")
             if b:
                 return b
-            b = self._unity_cover(tid)
+            b = self._unity_cover(tid, g)
             if b:
                 return b
             self.log(tr("cover_missing_both"))
@@ -4216,8 +4305,20 @@ class App:
             self.log("  erro ao buscar capa: %s" % exc)
             return None
 
-    def _unity_cover(self, tid):
+    def _unity_cover(self, tid, g=None):
         items = self.unity.covers(tid)
+        # Homebrews: a Unity indexa a capa por um TitleID interno (pequeno) achado
+        # pela busca por NOME (TitleList), não pelo TID sintético/SHA1 nem pelo TID do XEX.
+        if not items and g:
+            for q in homebrew_search_queries(g):
+                real = self.unity.resolve_title_tid(q)
+                if real and real.upper() != tid.upper():
+                    self.log("  Homebrew: TID do XboxUnity por nome '%s' = %s" % (q, real))
+                    items = self.unity.covers(real, force=True)
+                    if items:
+                        break
+            if not items:
+                self.log("  Homebrew: nenhuma capa por nome no XboxUnity (%s)" % self.game_title(g))
         if not items:
             if self.unity._down_until > time.time():
                 self.log(tr("unity_offline") + " (%s)" % tid)
@@ -4239,7 +4340,7 @@ class App:
         tid = g["tid"]
         try:
             if kind == "boxart":
-                blob = self.get_cover_blob(tid)
+                blob = self.get_cover_blob(tid, g)
                 if blob:
                     img = box_render(Image.open(io.BytesIO(blob)), self.cover_format)
                     if g["folder"]:
