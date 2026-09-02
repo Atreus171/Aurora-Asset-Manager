@@ -13,6 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import ftplib
+from datetime import datetime
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
@@ -319,6 +320,7 @@ TEXT = {
         "add_game_need_name": "Informe um nome para criar a pasta.",
         "add_game_added": "Jogo adicionado: %s (%s)",
         "add_game_folder_done": "Pasta escaneada: %d jogo(s) adicionado(s) de %s.",
+        "manage_folders": "Gerenciar pastas...",
         "db_editor": "Banco do Aurora (content.db)",
         "db_add": "Adicionar...",
         "db_rename": "Renomear...",
@@ -550,6 +552,7 @@ TEXT = {
         "add_game_need_name": "Enter a name to create the folder.",
         "add_game_added": "Game added: %s (%s)",
         "add_game_folder_done": "Folder scanned: %d game(s) added from %s.",
+        "manage_folders": "Manage folders...",
         "db_editor": "Aurora database (content.db)",
         "db_add": "Add...",
         "db_rename": "Rename...",
@@ -781,6 +784,7 @@ TEXT = {
         "add_game_need_name": "Introduce un nombre para crear la carpeta.",
         "add_game_added": "Juego agregado: %s (%s)",
         "add_game_folder_done": "Carpeta escaneada: %d juego(s) agregado(s) de %s.",
+        "manage_folders": "Gestionar carpetas...",
         "db_editor": "Base de datos de Aurora (content.db)",
         "db_add": "Agregar...",
         "db_rename": "Renombrar...",
@@ -1012,6 +1016,7 @@ TEXT = {
         "add_game_need_name": "Entrez un nom pour créer le dossier.",
         "add_game_added": "Jeu ajouté : %s (%s)",
         "add_game_folder_done": "Dossier scanné : %d jeu(x) ajouté(s) depuis %s.",
+        "manage_folders": "Gérer les dossiers...",
         "db_editor": "Base de données Aurora (content.db)",
         "db_add": "Ajouter...",
         "db_rename": "Renommer...",
@@ -1243,6 +1248,7 @@ TEXT = {
         "add_game_need_name": "フォルダを作成するには名前を入力してください。",
         "add_game_added": "ゲームを追加しました: %s (%s)",
         "add_game_folder_done": "フォルダをスキャン: %s から %d ゲームを追加しました。",
+        "manage_folders": "フォルダを管理...",
         "db_editor": "Auroraデータベース (content.db)",
         "db_add": "追加...",
         "db_rename": "名前変更...",
@@ -1474,6 +1480,7 @@ TEXT = {
         "add_game_need_name": "Введите название, чтобы создать папку.",
         "add_game_added": "Игра добавлена: %s (%s)",
         "add_game_folder_done": "Папка просканирована: добавлено %d игр(ы) из %s.",
+        "manage_folders": "Управление папками...",
         "db_editor": "База данных Aurora (content.db)",
         "db_add": "Добавить...",
         "db_rename": "Переименовать...",
@@ -2239,6 +2246,35 @@ def save_extra_games(tids):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(tids, f, indent=2)
         os.replace(tmp, extra_games_path())
+    except Exception:
+        pass
+
+
+def added_folders_path():
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager")
+    os.makedirs(docs, exist_ok=True)
+    return os.path.join(docs, "aurora_covers_added_folders.json")
+
+
+def load_added_folders():
+    """Carrega pastas adicionadas via 'Adicionar pasta para procurar jogos'.
+    Retorna lista de dicts: {'folder': path, 'added': timestamp, 'count': n}"""
+    try:
+        with open(added_folders_path(), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+    return []
+
+
+def save_added_folders(folders):
+    try:
+        tmp = added_folders_path() + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(folders, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, added_folders_path())
     except Exception:
         pass
 
@@ -3441,6 +3477,16 @@ class App:
         self.btn_scan.pack(side=tk.LEFT)
         self.btn_add = ttk.Button(btn_row, text=tr("add_game"), command=self.add_game)
         self.btn_add.pack(side=tk.LEFT, padx=(8, 0))
+        # Botão para gerenciar pastas adicionadas (ver/remover)
+        self.btn_folders = ttk.Button(
+            btn_row, text=tr("manage_folders"), command=self.manage_added_folders
+        )
+        self.btn_folders.pack(side=tk.LEFT, padx=(8, 0))
+        # Botão AZ (ordenar) ao lado do Adicionar jogos
+        self.btn_sort = ttk.Button(
+            btn_row, text=tr("sort_asc"), command=self.toggle_sort
+        )
+        self.btn_sort.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_db = ttk.Button(btn_row, text=tr("db_editor"), command=self.db_editor)
         self.btn_db.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_dl = ttk.Button(
@@ -3454,10 +3500,6 @@ class App:
         ttk.Button(btn_row, text=tr("settings"), command=self.open_settings).pack(
             side=tk.LEFT, padx=(8, 0)
         )
-        self.btn_sort = ttk.Button(
-            btn_row, text=tr("sort_asc"), command=self.toggle_sort
-        )
-        self.btn_sort.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_search = ttk.Button(
             btn_row, text=tr("search_title"), command=self.search_title, state=tk.DISABLED
         )
@@ -4288,6 +4330,81 @@ class App:
         self.log(tr("restore_hidden_done"))
         self.refresh_tree()
 
+    def manage_added_folders(self):
+        """Dialog para ver e remover pastas adicionadas via 'Adicionar pasta para procurar jogos'."""
+        folders = load_added_folders()
+        if not folders:
+            messagebox.showinfo(tr("info"), "Nenhuma pasta adicionada ainda.")
+            return
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title(tr("manage_folders"))
+        dlg.transient(self.root)
+        dlg.resizable(True, True)
+        dlg.geometry("700x400")
+
+        frm = ttk.Frame(dlg, padding=12)
+        frm.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(frm, text="Pastas adicionadas (via 'Adicionar pasta para procurar jogos'):").pack(anchor="w", pady=(0, 6))
+
+        # Treeview
+        cols = ("folder", "added", "count")
+        tree = ttk.Treeview(frm, columns=cols, show="headings", selectmode="extended")
+        tree.heading("folder", text="Pasta")
+        tree.heading("added", text="Adicionada em")
+        tree.heading("count", text="Jogos")
+        tree.column("folder", width=400, stretch=True)
+        tree.column("added", width=150, stretch=False)
+        tree.column("count", width=60, stretch=False)
+
+        sb = ttk.Scrollbar(frm, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=sb.set)
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+
+        for f in folders:
+            tree.insert("", "end", values=(f.get("folder", ""), f.get("added", ""), f.get("count", 0)))
+
+        btn_row = ttk.Frame(frm)
+        btn_row.pack(fill=tk.X, pady=(10, 0))
+
+        def remove_selected():
+            sel = tree.selection()
+            if not sel:
+                return
+            if not messagebox.askyesno(tr("warn"), "Remover %d pasta(s) selecionada(s)?" % len(sel)):
+                return
+            folders_set = {tree.item(item, "values")[0] for item in sel}
+            remaining = [f for f in folders if f.get("folder") not in folders_set]
+            save_added_folders(remaining)
+            # Também remove os jogos dessas pastas da lista
+            if folders_set:
+                self.games = [g for g in self.games if g.get("folder") not in folders_set]
+                self.refresh_tree()
+            # Atualiza tree
+            for item in sel:
+                tree.delete(item)
+            self.log("%d pasta(s) removida(s)" % len(sel))
+
+        def open_selected():
+            sel = tree.selection()
+            if not sel:
+                return
+            folder = tree.item(sel[0], "values")[0]
+            if os.path.isdir(folder):
+                try:
+                    os.startfile(folder)
+                except Exception as e:
+                    self.log("Erro ao abrir pasta: %s" % e)
+
+        ttk.Button(btn_row, text="Abrir pasta", command=open_selected).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btn_row, text="Remover selecionadas", command=remove_selected).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btn_row, text=tr("ok"), command=dlg.destroy).pack(side=tk.RIGHT)
+
+        dlg.grab_set()
+        self.root.wait_window(dlg)
+
     def db_editor(self):
         root = self.aurora_path.get().strip().strip('"')
         db_path = find_content_db(root)
@@ -4658,6 +4775,17 @@ class App:
                 targets = [g for g in self.games if g["tid"] in {t["tid"] for t in games_found}]
                 threading.Thread(target=self._fetch_unity_names, args=(targets,), daemon=True).start()
             self.log(tr("add_game_folder_done", count, folder))
+            # Salva a pasta na lista de pastas gerenciadas
+            if count:
+                added = load_added_folders()
+                # Evita duplicata
+                if not any(f.get("folder") == folder for f in added):
+                    added.append({
+                        "folder": folder,
+                        "added": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "count": count,
+                    })
+                    save_added_folders(added)
             self.refresh_tree()
             res["ok"] = True
             res["folder"] = folder
@@ -4854,7 +4982,6 @@ class App:
                     # Tenta parsear vários formatos comuns
                     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%d-%m-%Y"):
                         try:
-                            from datetime import datetime
                             dt = datetime.strptime(str(rd), fmt)
                             rd = dt.strftime("%d/%m/%Y")
                             break
