@@ -111,6 +111,7 @@ DEFAULT_CONFIG = {
     "show_log": True,
     "auto_search_titles": True,
     "show_debug_button": False,
+    "download_missing_only": True,
     "ftp_host": "",
     "ftp_port": 21,
     "ftp_user": "xbox",
@@ -215,6 +216,9 @@ TEXT = {
         "col_kind": "Tipo",
         "col_status": "Estado",
         "dl_online": "Baixar online",
+        "dl_all": "Baixar todos",
+        "dl_all_start": "Baixando todos os assets deste jogo...",
+        "dl_all_log": "Baixando todos os assets de %s (%s)...",
         "change_pc": "Alterar... (PC)",
         "close": "Fechar",
         "assets_hint": "Selecione um tipo e use os botões.",
@@ -297,6 +301,7 @@ TEXT = {
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "show_debug_button": "Mostrar botão Debug DB",
+        "download_missing_only": "Baixar só jogos sem capa",
         "m_search": "Pesquisar título...",
         "m_rename": "Renomear jogo",
         "rename_prompt": "Novo nome para %s (%s):",
@@ -304,6 +309,7 @@ TEXT = {
         "ok": "OK",
         "add_game": "Adicionar jogo...",
         "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game_xex": "Arquivo .xex (detecta o TID):",
         "add_game_name": "Nome (opcional):",
         "add_game_mkdir": "Criar pasta GameData no HD",
         "add_game_bad_tid": "Title ID inválido (use 8 dígitos hex, ex.: 5841120F).",
@@ -330,7 +336,7 @@ TEXT = {
         "db_filter": "Tipo:",
         "db_all": "Todos",
         "db_search": "Pesquisar nome, TID ou pasta...",
-        "filter_games": "Filtrar jogos...",
+        "filter_games": "Pesquisar jogos: ",
         "db_need_name": "Informe um nome.",
         "rename_ftp_start": "Renomeando a pasta no console via FTP...",
         "rename_ftp_ok": "Pasta renomeada no console: %s",
@@ -437,6 +443,9 @@ TEXT = {
         "col_kind": "Type",
         "col_status": "Status",
         "dl_online": "Download online",
+        "dl_all": "Download all",
+        "dl_all_start": "Downloading all assets of this game...",
+        "dl_all_log": "Downloading all assets of %s (%s)...",
         "change_pc": "Change... (PC)",
         "close": "Close",
         "assets_hint": "Select a type and use the buttons.",
@@ -520,6 +529,7 @@ TEXT = {
         "debug_db": "Debug DB",
         "auto_search_titles": "Auto-search titles (XboxUnity)",
         "show_debug_button": "Show Debug DB button",
+        "download_missing_only": "Download only games without a cover",
         "m_search": "Search title...",
         "m_rename": "Rename game",
         "rename_prompt": "New name for %s (%s):",
@@ -527,6 +537,7 @@ TEXT = {
         "ok": "OK",
         "add_game": "Add game...",
         "add_game_tid": "Title ID (8 hex digits):",
+        "add_game_xex": ".xex file (auto-detect TID):",
         "add_game_name": "Name (optional):",
         "add_game_mkdir": "Create GameData folder on HD",
         "add_game_bad_tid": "Invalid Title ID (use 8 hex digits, e.g. 5841120F).",
@@ -553,7 +564,7 @@ TEXT = {
         "db_filter": "Type:",
         "db_all": "All",
         "db_search": "Search name, TID or folder...",
-        "filter_games": "Filter games...",
+        "filter_games": "Search games: ",
         "db_need_name": "Enter a name.",
         "rename_ftp_start": "Renaming folder on the console via FTP...",
         "rename_ftp_ok": "Folder renamed on the console: %s",
@@ -660,6 +671,9 @@ TEXT = {
         "col_kind": "Tipo",
         "col_status": "Estado",
         "dl_online": "Descargar online",
+        "dl_all": "Descargar todos",
+        "dl_all_start": "Descargando todos los assets de este juego...",
+        "dl_all_log": "Descargando todos los assets de %s (%s)...",
         "change_pc": "Cambiar... (PC)",
         "close": "Cerrar",
         "assets_hint": "Seleccione un tipo y use los botones.",
@@ -743,6 +757,7 @@ TEXT = {
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "show_debug_button": "Mostrar botón Debug DB",
+        "download_missing_only": "Descargar solo juegos sin portada",
         "m_search": "Buscar título...",
         "m_rename": "Renombrar juego",
         "rename_prompt": "Nuevo nombre para %s (%s):",
@@ -750,6 +765,7 @@ TEXT = {
         "ok": "Aceptar",
         "add_game": "Agregar juego...",
         "add_game_tid": "Title ID (8 dígitos hex):",
+        "add_game_xex": "Archivo .xex (detectar TID):",
         "add_game_name": "Nombre (opcional):",
         "add_game_mkdir": "Crear carpeta GameData en el disco",
         "add_game_bad_tid": "Title ID no válido (usa 8 dígitos hex, ej.: 5841120F).",
@@ -776,7 +792,7 @@ TEXT = {
         "db_filter": "Tipo:",
         "db_all": "Todos",
         "db_search": "Buscar nombre, TID o carpeta...",
-        "filter_games": "Filtrar juegos...",
+        "filter_games": "Buscar juegos: ",
         "db_need_name": "Introduce un nombre.",
         "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
@@ -883,6 +899,9 @@ TEXT = {
         "col_kind": "Type",
         "col_status": "État",
         "dl_online": "Télécharger en ligne",
+        "dl_all": "Tout télécharger",
+        "dl_all_start": "Téléchargement de tous les assets de ce jeu...",
+        "dl_all_log": "Téléchargement de tous les assets de %s (%s)...",
         "change_pc": "Changer... (PC)",
         "close": "Fermer",
         "assets_hint": "Sélectionnez un type et utilisez les boutons.",
@@ -966,6 +985,7 @@ TEXT = {
         "debug_db": "Debug DB",
         "auto_search_titles": "Recherche auto des titres (XboxUnity)",
         "show_debug_button": "Afficher bouton Debug DB",
+        "download_missing_only": "Télécharger uniquement les jeux sans jaquette",
         "m_search": "Rechercher titre...",
         "m_rename": "Renommer le jeu",
         "rename_prompt": "Nouveau nom pour %s (%s):",
@@ -973,6 +993,7 @@ TEXT = {
         "ok": "OK",
         "add_game": "Ajouter un jeu...",
         "add_game_tid": "Title ID (8 chiffres hex) :",
+        "add_game_xex": "Fichier .xex (détecter le TID) :",
         "add_game_name": "Nom (optionnel) :",
         "add_game_mkdir": "Créer le dossier GameData sur le disque",
         "add_game_bad_tid": "Title ID invalide (utilisez 8 chiffres hex, ex. : 5841120F).",
@@ -999,7 +1020,7 @@ TEXT = {
         "db_filter": "Type :",
         "db_all": "Tous",
         "db_search": "Rechercher nom, TID ou dossier...",
-        "filter_games": "Filtrer les jeux...",
+        "filter_games": "Rechercher des jeux : ",
         "db_need_name": "Entrez un nom.",
         "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
@@ -1106,6 +1127,9 @@ TEXT = {
         "col_kind": "種類",
         "col_status": "状態",
         "dl_online": "オンラインでダウンロード",
+        "dl_all": "すべてダウンロード",
+        "dl_all_start": "このゲームの全アセットをダウンロード中...",
+        "dl_all_log": "%s (%s) の全アセットをダウンロード中...",
         "change_pc": "変更... (PC)",
         "close": "閉じる",
         "assets_hint": "種類を選択してボタンを使用します。",
@@ -1189,6 +1213,7 @@ TEXT = {
         "debug_db": "DB デバッグ",
         "auto_search_titles": "タイトル自動検索 (XboxUnity)",
         "show_debug_button": "Debug DB ボタンを表示",
+        "download_missing_only": "カバーがないゲームのみダウンロード",
         "m_search": "タイトルを検索...",
         "m_rename": "ゲーム名を変更",
         "rename_prompt": "%s (%s) の新しい名前:",
@@ -1196,6 +1221,7 @@ TEXT = {
         "ok": "OK",
         "add_game": "ゲームを追加...",
         "add_game_tid": "Title ID（8桁の16進数）:",
+        "add_game_xex": ".xexファイル（TID自動検出）:",
         "add_game_name": "名前（任意）:",
         "add_game_mkdir": "HDにGameDataフォルダを作成",
         "add_game_bad_tid": "Title IDが無効です（8桁の16進数、例: 5841120F）。",
@@ -1222,7 +1248,7 @@ TEXT = {
         "db_filter": "種類:",
         "db_all": "すべて",
         "db_search": "名前・TID・フォルダを検索...",
-        "filter_games": "ゲームを絞り込む...",
+        "filter_games": "ゲームを検索: ",
         "db_need_name": "名前を入力してください。",
         "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
@@ -1329,6 +1355,9 @@ TEXT = {
         "col_kind": "Тип",
         "col_status": "Статус",
         "dl_online": "Скачать онлайн",
+        "dl_all": "Скачать всё",
+        "dl_all_start": "Скачивание всех ассетов этой игры...",
+        "dl_all_log": "Скачивание всех ассетов %s (%s)...",
         "change_pc": "Изменить... (ПК)",
         "close": "Закрыть",
         "assets_hint": "Выберите тип и используйте кнопки.",
@@ -1412,6 +1441,7 @@ TEXT = {
         "debug_db": "Отладка БД",
         "auto_search_titles": "Автопоиск названий (XboxUnity)",
         "show_debug_button": "Показать кнопку Debug DB",
+        "download_missing_only": "Скачивать только игры без обложки",
         "m_search": "Поиск названия...",
         "m_rename": "Переименовать игру",
         "rename_prompt": "Новое имя для %s (%s):",
@@ -1419,6 +1449,7 @@ TEXT = {
         "ok": "OK",
         "add_game": "Добавить игру...",
         "add_game_tid": "Title ID (8 шестнадцатеричных цифр):",
+        "add_game_xex": "Файл .xex (автоопределение TID):",
         "add_game_name": "Название (необязательно):",
         "add_game_mkdir": "Создать папку GameData на диске",
         "add_game_bad_tid": "Неверный Title ID (используйте 8 шестнадцатеричных цифр, напр. 5841120F).",
@@ -1445,7 +1476,7 @@ TEXT = {
         "db_filter": "Тип:",
         "db_all": "Все",
         "db_search": "Поиск по имени, TID или папке...",
-        "filter_games": "Фильтр игр...",
+        "filter_games": "Поиск игр: ",
         "db_need_name": "Введите название.",
         "rename_ftp_start": "Переименование папки на консоли по FTP...",
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
@@ -2559,8 +2590,105 @@ def db_update_title(conn, table, sc, rowid, newtitle):
     )
 
 
+def db_rename_by_tid(root, tid, newtitle):
+    """Atualiza o TitleName de um jogo diretamente no content.db pelo seu TID.
+    Retorna True se encontrou e atualizou."""
+    db_path = find_content_db(root)
+    if not db_path:
+        return False
+    try:
+        conn = sqlite3.connect(db_path)
+        table, sc = db_schema(conn)
+        if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
+            conn.close()
+            return False
+        target = ("%08X" % int(tid, 16)) if re.match(r"^[0-9A-F]{8}$", tid) else tid
+        conn.row_factory = sqlite3.Row
+        found = False
+        for row in conn.execute('SELECT "%s" FROM "%s"' % (sc["id"], table)):
+            rowid = row[0]
+            raw = None
+            try:
+                raw = conn.execute('SELECT "%s" FROM "%s" WHERE "%s" = ?' % (sc["tid"], table, sc["id"]), (rowid,)).fetchone()
+            except sqlite3.Error:
+                raw = None
+            if raw is None:
+                continue
+            rawv = raw[0]
+            if isinstance(rawv, int):
+                cur = "%08X" % rawv
+            else:
+                cur = (str(rawv) or "").strip().upper()
+            if cur in (target, tid):
+                conn.execute(
+                    'UPDATE "%s" SET "%s" = ? WHERE "%s" = ?' % (table, sc["title"], sc["id"]),
+                    (newtitle, rowid),
+                )
+                found = True
+                break
+        conn.commit()
+        conn.close()
+        return found
+    except sqlite3.Error:
+        return False
+
+
 def db_delete_row(conn, table, sc, rowid):
     conn.execute('DELETE FROM "%s" WHERE "%s" = ?' % (table, sc["id"]), (rowid,))
+
+
+def parse_xex2(filepath):
+    """Extrai o TitleID e MediaID de um executável XEX2 (Xbox 360) lendo o header.
+    Retorna dict com 'title_id','media_id' (None se for homebrew/sem Execution Info)."""
+    info = {"title_id": None, "media_id": None}
+    try:
+        with open(filepath, "rb") as f:
+            head = f.read(12)
+        if len(head) < 12 or head[0:4] != b"XEX2":
+            return info
+        if len(head) >= 12:
+            n_headers = int.from_bytes(head[8:12], "big")
+        else:
+            n_headers = 0
+        off = 12
+        with open(filepath, "rb") as f:
+            f.seek(off)
+            for _ in range(n_headers):
+                hs = f.read(4)
+                if len(hs) < 4:
+                    break
+                hsize = int.from_bytes(hs, "big")
+                ht = f.read(4)
+                if len(ht) < 4:
+                    break
+                htype = int.from_bytes(ht, "big")
+                data = f.read(hsize - 8)
+                if htype == 0x00010196:  # Execution Info
+                    if len(data) >= 0x14:
+                        media_id = int.from_bytes(data[0x04:0x08], "big")
+                        title_id = int.from_bytes(data[0x10:0x14], "big")
+                        info["media_id"] = media_id
+                        info["title_id"] = title_id
+                    break
+    except Exception:
+        pass
+    return info
+
+
+def locate_xex_in_folder(folder):
+    """Procura o .xex principal de um jogo (default.xex ou o único .xex na pasta)."""
+    if not folder or not os.path.isdir(folder):
+        return None
+    defxex = os.path.join(folder, "default.xex")
+    if os.path.isfile(defxex):
+        return defxex
+    try:
+        for fn in sorted(os.listdir(folder)):
+            if fn.lower().endswith(".xex") and os.path.isfile(os.path.join(folder, fn)):
+                return os.path.join(folder, fn)
+    except OSError:
+        pass
+    return None
 
 
 def scan_homebrew_xex(root, known_folders=None):
@@ -3037,6 +3165,7 @@ def selftest():
         "show_log": True,
         "auto_search_titles": True,
         "show_debug_button": False,
+        "download_missing_only": True,
         "ftp_host": "",
         "ftp_port": 21,
         "ftp_user": "xbox",
@@ -3110,6 +3239,7 @@ class App:
         self.opt_icon = tk.BooleanVar(value=True)
         self.opt_banner = tk.BooleanVar(value=True)
         self.opt_screenshots = tk.BooleanVar(value=True)
+        self.opt_missing_only = tk.BooleanVar(value=True)
         self.games = []
         self.hidden_tids = set(load_hidden_games())
         self.worker = None
@@ -3351,6 +3481,7 @@ class App:
             self.ftp_user = str(cfg.get("ftp_user", "xbox"))
             self.ftp_pass = str(cfg.get("ftp_pass", "xbox"))
             self.ftp_base = str(cfg.get("ftp_base", "Hdd:\\Aurora\\Data\\GameData"))
+            self.opt_missing_only.set(bool(cfg.get("download_missing_only", True)))
             self.queue.put("__config_loaded__")
         threading.Thread(target=_run, daemon=True).start()
 
@@ -3807,6 +3938,19 @@ class App:
         custom_names = load_custom_names()
         custom_names[g["tid"]] = clean
         save_custom_names(custom_names)
+        # Renomeia diretamente no content.db (TitleName), para refletir no Aurora
+        try:
+            db_path = find_content_db(self.aurora_path.get().strip().strip('"'))
+            if db_path:
+                # Cria backup uma única vez antes de escrever
+                if not os.path.exists(db_path + ".bak"):
+                    db_backup(db_path)
+            if db_rename_by_tid(self.aurora_path.get().strip().strip('"'), g["tid"], clean):
+                self.log("  content.db: TitleName atualizado para '%s'." % clean)
+            else:
+                self.log("  content.db: linha %s não encontrada (nome salvo só na configuração)." % g["tid"])
+        except Exception as exc:
+            self.log("  content.db: não foi possível renomear: %s" % exc)
         # Se o console estiver configurado (FTP), renomeia a pasta no Aurora também
         if self.ftp_host.strip():
             new_folder_name = "%s_%s" % (g["tid"], clean)
@@ -4203,26 +4347,61 @@ class App:
         dlg.resizable(False, False)
         frm = ttk.Frame(dlg, padding=12)
         frm.pack(fill=tk.BOTH, expand=True)
-        ttk.Label(frm, text=tr("add_game_tid")).grid(row=0, column=0, sticky="w", pady=(0, 6))
+
+        ttk.Label(frm, text=tr("add_game_xex")).grid(row=0, column=0, sticky="w", pady=(0, 6))
+        v_xex = tk.StringVar()
+        e_xex = ttk.Entry(frm, textvariable=v_xex, width=36)
+        e_xex.grid(row=0, column=1, sticky="w", pady=(0, 6), padx=(0, 4))
+
+        def _browse_xex():
+            fn = filedialog.askopenfilename(
+                title=tr("add_game_xex"),
+                filetypes=[("XEX", "*.xex"), ("Todos", "*.*")],
+            )
+            if fn:
+                v_xex.set(fn)
+                info = parse_xex2(fn)
+                if info["title_id"]:
+                    v_tid.set("%08X" % info["title_id"])
+                ts = e_name.get().strip()
+                if not ts:
+                    if info["title_id"]:
+                        nm = self.db.title_name("%08X" % info["title_id"])
+                        if not nm or nm == "%08X" % info["title_id"]:
+                            nm = self.unity.get_best_title("%08X" % info["title_id"]) or ""
+                        if nm:
+                            e_name.delete(0, tk.END)
+                            e_name.insert(0, nm)
+                    if not e_name.get().strip():
+                        base = os.path.basename(os.path.dirname(fn) or fn)
+                        if base.lower().endswith(".xex"):
+                            base = os.path.basename(fn)
+                        if base and not e_name.get().strip():
+                            e_name.insert(0, os.path.splitext(base)[0])
+
+        ttk.Button(frm, text=tr("browse"), command=_browse_xex).grid(row=0, column=2, sticky="w", pady=(0, 6))
+
+        ttk.Label(frm, text=tr("add_game_tid")).grid(row=1, column=0, sticky="w", pady=(0, 6))
         v_tid = tk.StringVar()
         e_tid = ttk.Entry(frm, textvariable=v_tid, width=16)
-        e_tid.grid(row=0, column=1, sticky="w", pady=(0, 6))
-        ttk.Label(frm, text=tr("add_game_name")).grid(row=1, column=0, sticky="w", pady=(0, 6))
+        e_tid.grid(row=1, column=1, sticky="w", pady=(0, 6))
+        ttk.Label(frm, text=tr("add_game_name")).grid(row=2, column=0, sticky="w", pady=(0, 6))
         v_name = tk.StringVar()
         e_name = ttk.Entry(frm, textvariable=v_name, width=24)
-        e_name.grid(row=1, column=1, sticky="w", pady=(0, 6))
+        e_name.grid(row=2, column=1, sticky="w", pady=(0, 6))
         v_mkdir = tk.BooleanVar(value=self.gamedata_dir() is not None)
         ttk.Checkbutton(frm, text=tr("add_game_mkdir"), variable=v_mkdir).grid(
-            row=2, column=0, columnspan=2, sticky="w", pady=(0, 10)
+            row=3, column=0, columnspan=2, sticky="w", pady=(0, 10)
         )
         btns = ttk.Frame(frm)
-        btns.grid(row=3, column=0, columnspan=2, sticky="e")
-        res = {"ok": False, "tid": None, "name": None, "mkdir": False}
+        btns.grid(row=4, column=0, columnspan=3, sticky="e")
+        res = {"ok": False, "tid": None, "name": None, "mkdir": False, "xex": None}
 
         def _ok(_event=None):
             res["tid"] = v_tid.get().strip().upper()
             res["name"] = v_name.get().strip()
             res["mkdir"] = v_mkdir.get()
+            res["xex"] = v_xex.get().strip()
             res["ok"] = True
             dlg.destroy()
 
@@ -4241,16 +4420,14 @@ class App:
         if any(g["tid"] == tid for g in self.games):
             messagebox.showwarning(tr("warn"), tr("add_game_exists"))
             return
-        name = res["name"]
+        name = res["name"] or tid
         g = {"folder": None, "tid": tid, "folder_name": tid, "dname": name, "has_cover": False}
         if res["mkdir"]:
-            if not name:
-                messagebox.showwarning(tr("warn"), tr("add_game_need_name"))
-                return
             gamedata = self.gamedata_dir()
             if not gamedata:
                 gamedata = os.path.join(self.aurora_path.get().strip().strip('"'), "Data", "GameData")
             try:
+                os.makedirs(gamedata, exist_ok=True)
                 fld = os.path.join(gamedata, "%s_%s" % (tid, name))
                 os.makedirs(fld, exist_ok=True)
                 g["folder"] = fld
@@ -4259,10 +4436,9 @@ class App:
             except OSError as exc:
                 messagebox.showerror(tr("error"), str(exc))
                 return
-        if name:
-            custom_names = load_custom_names()
-            custom_names[tid] = name
-            save_custom_names(custom_names)
+        custom_names = load_custom_names()
+        custom_names[tid] = name
+        save_custom_names(custom_names)
         extra = load_extra_games()
         if tid not in extra:
             extra.append(tid)
@@ -4447,9 +4623,31 @@ class App:
         finally:
             self.queue.put("__done__")
 
+    def _kind_exists(self, g, path, kind):
+        folder = g["folder"]
+        bases = ([folder] if folder else [])
+        for import_dir in import_dirs_existing(path):
+            bases.append(os.path.join(import_dir, g["tid"]))
+        if not bases:
+            bases.append(os.path.join(path, "User", "Import", g["tid"]))
+        def _has(name_ok):
+            return any(any(os.path.exists(os.path.join(b, f)) for f in name_ok) for b in bases)
+        if kind == "boxart":
+            return _has(["GC%s.asset" % g["tid"]] if folder else ["cover.png", "cover.jpg", "cover.jpeg", "cover.dds"])
+        if kind == "background":
+            return _has(["BK%s.asset" % g["tid"]] if folder else ["background.png"])
+        if kind in ("icon", "banner"):
+            return _has(["GL%s.asset" % g["tid"]] if folder else ["icon.png"])
+        if kind == "screenshots":
+            return _has(["SS%s.asset" % g["tid"]] if folder else ["screenshot1.png"])
+        return False
+
     def needs_download(self, g, path):
         if self.opt_force.get():
             return True
+        if self.opt_missing_only.get():
+            # Padrão: só joga sem CAPA. (Se uma capa existe, o jogo não é alvo.)
+            return not self._kind_exists(g, path, "boxart")
         folder = g["folder"]
         bases = ([folder] if folder else [])
         for import_dir in import_dirs_existing(path):
@@ -4471,16 +4669,20 @@ class App:
 
     def download_one(self, path, g):
         tid = g["tid"]
+        if self.opt_force.get():
+            skip = lambda kind: False
+        else:
+            skip = lambda kind: self._kind_exists(g, path, kind)
         got = False
-        if self.opt_boxart.get():
+        if self.opt_boxart.get() and not skip("boxart"):
             got = self.download_kind(path, g, "boxart") or got
-        if self.opt_background.get():
+        if self.opt_background.get() and not skip("background"):
             self.download_kind(path, g, "background")
-        if self.opt_icon.get():
+        if self.opt_icon.get() and not skip("icon"):
             self.download_kind(path, g, "icon")
-        if self.opt_banner.get():
+        if self.opt_banner.get() and not skip("banner"):
             self.download_kind(path, g, "banner")
-        if self.opt_screenshots.get():
+        if self.opt_screenshots.get() and not skip("screenshots"):
             self.download_kind(path, g, "screenshots")
         if got:
             g["has_cover"] = True
@@ -4870,6 +5072,9 @@ class App:
         show_debug_var = tk.BooleanVar(value=self.cfg.get("show_debug_button", False))
         add_row(tr("show_debug_button"), ttk.Checkbutton(outer, text=tr("show_debug_button"), variable=show_debug_var))
 
+        missing_only_var = tk.BooleanVar(value=self.opt_missing_only.get())
+        add_row(tr("download_missing_only"), ttk.Checkbutton(outer, text=tr("download_missing_only"), variable=missing_only_var))
+
         # FTP
         add_section(tr("set_ftp"))
 
@@ -4934,6 +5139,7 @@ class App:
                 self.ftp_user = ftp_user_ent.get().strip() or "xbox"
                 self.ftp_pass = ftp_pass_ent.get()
                 self.ftp_base = ftp_base_ent.get().strip() or "Hdd:\\Aurora\\Data\\GameData"
+                self.opt_missing_only.set(bool(missing_only_var.get()))
                 self.cfg.update(
                     theme=self.theme,
                     repo=self.repo,
@@ -4944,6 +5150,7 @@ class App:
                     show_log=self.show_log,
                     auto_search_titles=bool(auto_search_var.get()),
                     show_debug_button=bool(show_debug_var.get()),
+                    download_missing_only=bool(missing_only_var.get()),
                     ftp_host=self.ftp_host,
                     ftp_port=self.ftp_port,
                     ftp_user=self.ftp_user,
@@ -5042,6 +5249,7 @@ class App:
         bf = ttk.Frame(dlg)
         bf.pack(pady=(4, 0))
         ttk.Button(bf, text=tr("dl_online"), command=self.download_selected_kind).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("dl_all"), command=self.download_all_assets).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("change_pc"), command=self.pick_selected_kind).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("ftp_send"), command=self.ftp_send_assets).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("close"), command=self._close_assets_dlg).pack(side=tk.LEFT, padx=4)
@@ -5376,6 +5584,45 @@ class App:
                 self.log("  %s: %s" % (kind, "OK" if ok else "sem sucesso"))
             except Exception as exc:
                 self.log("  erro: %s" % exc)
+            finally:
+                self.queue.put("__assets_refresh__")
+                self.queue.put("__preview_refresh__")
+                self.queue.put("__refresh_tree__")
+                self.queue.put("__done__")
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def download_all_assets(self):
+        if self.busy:
+            return
+        g = self._assets_g
+        if g is None:
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("assets_pick"))
+            return
+        if self._assets_msg is not None:
+            self._assets_msg.configure(text=tr("dl_all_start"))
+        self.thread_download_all(self._assets_path, g)
+
+    def thread_download_all(self, path, g):
+        if self.busy:
+            return
+        self.set_busy(True)
+        self.log(tr("dl_all_log", self.db.title_name(g["tid"]), g["tid"]))
+        kinds = [k for k, *_ in ASSET_KINDS]
+
+        def _run():
+            try:
+                for kind in kinds:
+                    if self.cancel_event.is_set():
+                        break
+                    if self.opt_force.get() or not self._kind_exists(g, path, kind):
+                        try:
+                            self.download_kind(path, g, kind)
+                        except Exception as exc:
+                            self.log("  %s: erro: %s" % (kind, exc))
+                    else:
+                        self.log("  %s: já instalado (pulando)." % kind)
             finally:
                 self.queue.put("__assets_refresh__")
                 self.queue.put("__preview_refresh__")
