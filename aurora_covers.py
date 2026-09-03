@@ -388,6 +388,10 @@ TEXT = {
         "ftp_base_lbl": "Pasta remota (GameData):",
         "ftp_send": "Enviar por FTP",
         "ftp_sending": "Enviando para o console via FTP...",
+        "ftp_deploy_covers": "Enviar assets do game_covers",
+        "ftp_deploying": "Enviando assets do game_covers...",
+        "ftp_deploy_ok": "Assets enviados: %d arquivo(s) para %s",
+        "ftp_deploy_no_folder": "Nenhuma pasta game_covers encontrada para este jogo.",
         "ftp_sent": "Enviados %d arquivo(s) para %s.",
         "ftp_no_host": "Configure o IP do console em Configurações -> FTP primeiro.",
         "ftp_no_folder": "Este jogo não tem pasta local em Data\\GameData para enviar.",
@@ -707,6 +711,10 @@ TEXT = {
         "ftp_base_lbl": "Remote folder (GameData):",
         "ftp_send": "Send via FTP",
         "ftp_sending": "Sending to the console via FTP...",
+        "ftp_deploy_covers": "Deploy assets from game_covers",
+        "ftp_deploying": "Deploying game_covers assets...",
+        "ftp_deploy_ok": "Assets deployed: %d file(s) to %s",
+        "ftp_deploy_no_folder": "No game_covers folder found for this game.",
         "ftp_sent": "Sent %d file(s) to %s.",
         "ftp_no_host": "Set the console IP in Settings -> FTP first.",
         "ftp_no_folder": "This game has no local Data\\GameData folder to send.",
@@ -1026,6 +1034,10 @@ TEXT = {
         "ftp_base_lbl": "Carpeta remota (GameData):",
         "ftp_send": "Enviar por FTP",
         "ftp_sending": "Enviando a la consola por FTP...",
+        "ftp_deploy_covers": "Enviar assets de game_covers",
+        "ftp_deploying": "Enviando assets de game_covers...",
+        "ftp_deploy_ok": "Assets enviados: %d archivo(s) a %s",
+        "ftp_deploy_no_folder": "No se encontró carpeta game_covers para este juego.",
         "ftp_sent": "Enviados %d archivo(s) a %s.",
         "ftp_no_host": "Configure la IP de la consola en Configuración -> FTP primero.",
         "ftp_no_folder": "Este juego no tiene carpeta local en Data\\GameData para enviar.",
@@ -1345,6 +1357,10 @@ TEXT = {
         "ftp_base_lbl": "Dossier distant (GameData):",
         "ftp_send": "Envoyer par FTP",
         "ftp_sending": "Envoi vers la console par FTP...",
+        "ftp_deploy_covers": "Déployer assets de game_covers",
+        "ftp_deploying": "Déploiement des assets de game_covers...",
+        "ftp_deploy_ok": "Assets déployés: %d fichier(s) vers %s",
+        "ftp_deploy_no_folder": "Aucun dossier game_covers trouvé pour ce jeu.",
         "ftp_sent": "%d fichier(s) envoyé(s) à %s.",
         "ftp_no_host": "Définissez l'IP de la console dans Paramètres -> FTP d'abord.",
         "ftp_no_folder": "Ce jeu n'a pas de dossier local Data\\GameData à envoyer.",
@@ -1664,6 +1680,10 @@ TEXT = {
         "ftp_base_lbl": "リモートフォルダ (GameData):",
         "ftp_send": "FTPで送信",
         "ftp_sending": "コンソールにFTPで送信中...",
+        "ftp_deploy_covers": "game_coversのアセットを配布",
+        "ftp_deploying": "game_coversのアセットを配布中...",
+        "ftp_deploy_ok": "アセットを配布しました: %d 個のファイルを %s へ",
+        "ftp_deploy_no_folder": "このゲームの game_covers フォルダが見つかりません。",
         "ftp_sent": "%d ファイルを %s に送信しました。",
         "ftp_no_host": "設定 -> FTP でコンソールIPを設定してください。",
         "ftp_no_folder": "このゲームにローカルData\\GameDataフォルダがありません。",
@@ -1983,6 +2003,10 @@ TEXT = {
         "ftp_base_lbl": "Удаленная папка (GameData):",
         "ftp_send": "Отправить по FTP",
         "ftp_sending": "Отправка на консоль по FTP...",
+        "ftp_deploy_covers": "Развернуть ассеты из game_covers",
+        "ftp_deploying": "Развертывание ассетов из game_covers...",
+        "ftp_deploy_ok": "Ассеты развернуты: %d файл(ов) в %s",
+        "ftp_deploy_no_folder": "Папка game_covers для этой игры не найдена.",
         "ftp_sent": "Отправлено %d файл(ов) в %s.",
         "ftp_no_host": "Настройте IP консоли в Настройки -> FTP сначала.",
         "ftp_no_folder": "У этой игры нет локальной папки Data\\GameData для отправки.",
@@ -6678,6 +6702,7 @@ class App:
         ttk.Button(bf, text=tr("dl_all"), command=self.download_all_assets).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("change_pc"), command=self.pick_selected_kind).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("ftp_send"), command=self.ftp_send_assets).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("ftp_deploy_covers"), command=self.ftp_deploy_covers).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("close"), command=self._close_assets_dlg).pack(side=tk.LEFT, padx=4)
         msg = tk.Label(dlg, text=tr("assets_hint"), bg=th["bg"], fg=th["muted"])
         msg.pack(pady=(6, 8))
@@ -6914,6 +6939,96 @@ class App:
         if self._assets_msg is not None:
             self._assets_msg.configure(text=tr("ftp_sending"))
         threading.Thread(target=self._ftp_run, args=(g,), daemon=True).start()
+
+    def ftp_deploy_covers(self):
+        """Envia assets da pasta game_covers/<Nome>_<TID>/ para o console via FTP,
+        criando a estrutura de pastas necessária."""
+        if self.busy:
+            return
+        if not self.ftp_host.strip():
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("ftp_no_host"))
+            return
+        g = self._assets_g
+        if g is None:
+            return
+        tid = g.get("tid", "").upper()
+        name = self.game_title(g)
+        safe_name = re.sub(r'[\\/:*?"<>|]', "_", name)
+        folder_name = f"{safe_name}_{tid}"
+        local_dir = os.path.join(GAME_COVERS_DIR, folder_name)
+        if not os.path.isdir(local_dir):
+            if self._assets_msg is not None:
+                self._assets_msg.configure(text=tr("ftp_deploy_no_folder"))
+            self.log(tr("ftp_deploy_no_folder"))
+            return
+        self.set_busy(True)
+        if self._assets_msg is not None:
+            self._assets_msg.configure(text=tr("ftp_deploying"))
+        threading.Thread(target=self._ftp_deploy_run, args=(g, local_dir, folder_name), daemon=True).start()
+
+    def _ftp_deploy_run(self, g, local_dir, folder_name):
+        try:
+            # Coleta todos os arquivos recursivamente
+            files = []
+            for root, dirs, fnames in os.walk(local_dir):
+                for fname in fnames:
+                    full = os.path.join(root, fname)
+                    rel = os.path.relpath(full, local_dir).replace("\\", "/")
+                    files.append((full, rel))
+        except OSError:
+            files = []
+        if not files:
+            self.queue.put("__assets_msg__:0::")
+            self.log(tr("logs_no_assets_to_export", g.get("tid", "").upper()))
+            return
+        ftp = None
+        try:
+            ftp = ftplib.FTP()
+            ftp.connect(self.ftp_host, int(self.ftp_port), timeout=30)
+            ftp.login(self.ftp_user, self.ftp_pass)
+            remote = self._ftp_ensure_dir(ftp, self.ftp_base)
+            target = remote + "\\" + folder_name
+            try:
+                ftp.mkd(target)
+            except ftplib.error_perm:
+                pass
+            ftp.cwd(target)
+            n = 0
+            for full, rel in files:
+                # Cria subpastas se necessário
+                rel_dir = os.path.dirname(rel)
+                if rel_dir:
+                    parts = rel_dir.split("/")
+                    current = target
+                    for part in parts:
+                        current = current + "\\" + part
+                        try:
+                            ftp.mkd(current)
+                        except ftplib.error_perm:
+                            pass
+                    ftp.cwd(target)
+                    for part in parts:
+                        try:
+                            ftp.cwd(part)
+                        except ftplib.error_perm:
+                            pass
+                with open(full, "rb") as f:
+                    ftp.storbinary("STOR " + os.path.basename(rel), f)
+                n += 1
+            ftp.quit()
+            self.queue.put("__assets_msg__:%d::%s" % (n, target))
+            self.log(tr("ftp_deploy_ok", n, target))
+        except Exception as exc:
+            try:
+                if ftp is not None:
+                    ftp.close()
+            except Exception:
+                pass
+            self.log(tr("logs_ftp_err", exc))
+            self.queue.put("__assets_msg__:e:%s" % exc)
+        finally:
+            self.queue.put("__done__")
 
     def _ftp_run(self, g):
         try:
