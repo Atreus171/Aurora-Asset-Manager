@@ -6133,44 +6133,50 @@ class App:
         os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
 
         exported = []
-        # Para cada tipo de asset, tenta ler do local instalado (GC asset, import, etc.)
-        # Cover
-        cover_path = self._find_installed_asset(g, "cover")
-        if cover_path and os.path.isfile(cover_path):
-            dst = os.path.join(target_dir, "cover.png")
-            shutil.copy2(cover_path, dst)
-            exported.append("cover.png")
-        # Background
-        bg_path = self._find_installed_asset(g, "background")
-        if bg_path and os.path.isfile(bg_path):
-            dst = os.path.join(target_dir, "background.png")
-            shutil.copy2(bg_path, dst)
-            exported.append("background.png")
-        # Banner
-        banner_path = self._find_installed_asset(g, "banner")
-        if banner_path and os.path.isfile(banner_path):
-            dst = os.path.join(target_dir, "banner.png")
-            shutil.copy2(banner_path, dst)
-            exported.append("banner.png")
-        # Tile
-        tile_path = self._find_installed_asset(g, "tile")
-        if tile_path and os.path.isfile(tile_path):
-            dst = os.path.join(target_dir, "tile.png")
-            shutil.copy2(tile_path, dst)
-            exported.append("tile.png")
-        # Icon
-        icon_path = self._find_installed_asset(g, "icon")
-        if icon_path and os.path.isfile(icon_path):
-            dst = os.path.join(target_dir, "icon.png")
-            shutil.copy2(icon_path, dst)
-            exported.append("icon.png")
-        # Screenshots
-        ss_paths = self._find_installed_screenshots(g)
-        for i, ss_path in enumerate(ss_paths):
-            if os.path.isfile(ss_path):
-                dst = os.path.join(target_dir, "screenshots", f"screenshot{i+1}.png")
-                shutil.copy2(ss_path, dst)
-                exported.append(f"screenshots/screenshot{i+1}.png")
+        path = self.aurora_path.get().strip().strip('"')
+        import_dir = os.path.join(path, "Import", tid)
+
+        # Helper para copiar arquivo se existir
+        def copy_if_exists(src, dst_name):
+            if os.path.isfile(src):
+                dst = os.path.join(target_dir, dst_name)
+                shutil.copy2(src, dst)
+                exported.append(dst_name)
+                return True
+            return False
+
+        # 1) Import folder (arquivos PNG individuais)
+        copy_if_exists(os.path.join(import_dir, "cover.png"), "cover.png")
+        copy_if_exists(os.path.join(import_dir, "background.png"), "background.png")
+        copy_if_exists(os.path.join(import_dir, "banner.png"), "banner.png")
+        copy_if_exists(os.path.join(import_dir, "tile.png"), "tile.png")
+        copy_if_exists(os.path.join(import_dir, "icon.png"), "icon.png")
+
+        # 2) Preview cache - renderiza e salva se não tiver no Import
+        # O preview_cache armazena PIL.Image com chave "tid|folder" ou "tid|import"
+        for cache_key in (f"{tid}|{g.get('folder') or 'import'}", f"{tid}|import"):
+            if cache_key in self.preview_cache:
+                img = self.preview_cache[cache_key]
+                if isinstance(img, Image.Image):
+                    # Tenta salvar cover se não exportou ainda
+                    if "cover.png" not in exported:
+                        img.save(os.path.join(target_dir, "cover.png"), "PNG")
+                        exported.append("cover.png")
+                    break
+
+        # 3) Screenshots do Import
+        ss_dir = import_dir
+        if os.path.isdir(ss_dir):
+            try:
+                for fname in sorted(os.listdir(ss_dir)):
+                    if fname.lower().startswith("screenshot") and fname.lower().endswith((".png", ".jpg", ".jpeg")):
+                        src = os.path.join(ss_dir, fname)
+                        dst_name = f"screenshots/{fname}"
+                        dst = os.path.join(target_dir, dst_name)
+                        shutil.copy2(src, dst)
+                        exported.append(dst_name)
+            except OSError:
+                pass
 
         if exported:
             self.log(tr("logs_assets_exported", folder_name, ", ".join(exported)))
@@ -6178,63 +6184,6 @@ class App:
         else:
             self.log(tr("logs_no_assets_to_export", tid))
             messagebox.showwarning(tr("warn"), tr("no_assets_to_export"))
-
-    def _find_installed_asset(self, g, kind):
-        """Tenta localizar o asset instalado do tipo kind (cover, background, banner, tile, icon).
-        Procura em: pasta do jogo (GC*.asset), Import, e cache de preview."""
-        tid = g.get("tid", "").upper()
-        if not tid:
-            return None
-        path = self.aurora_path.get().strip().strip('"')
-        folder = g.get("folder")
-        # 1) Pasta do jogo (GC<TID>.asset)
-        if folder and os.path.isdir(folder):
-            try:
-                for fname in os.listdir(folder):
-                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
-                        # Para extrair o asset específico, precisaríamos ler o container.
-                        # Como fallback, usamos o arquivo de import ou preview.
-                        pass
-            except OSError:
-                pass
-        # 2) Import folder
-        import_dir = os.path.join(path, "Import")
-        kind_map = {
-            "cover": "cover.png",
-            "background": "background.png",
-            "banner": "banner.png",
-            "tile": "tile.png",
-            "icon": "icon.png",
-        }
-        fname = kind_map.get(kind)
-        if fname:
-            fpath = os.path.join(import_dir, tid, fname)
-            if os.path.isfile(fpath):
-                return fpath
-        # 3) Preview cache (já tem a imagem processada)
-        # O preview_cache usa chave "tid|folder_or_import"
-        for cache_key in (f"{tid}|{folder or 'import'}", f"{tid}|import"):
-            if cache_key in self.preview_cache:
-                return self.preview_cache[cache_key]
-        return None
-
-    def _find_installed_screenshots(self, g):
-        """Retorna lista de caminhos de screenshots instalados."""
-        tid = g.get("tid", "").upper()
-        if not tid:
-            return []
-        path = self.aurora_path.get().strip().strip('"')
-        import_dir = os.path.join(path, "Import")
-        ss_dir = os.path.join(import_dir, tid)
-        shots = []
-        if os.path.isdir(ss_dir):
-            try:
-                for fname in sorted(os.listdir(ss_dir)):
-                    if fname.lower().startswith("screenshot") and fname.lower().endswith((".png", ".jpg", ".jpeg")):
-                        shots.append(os.path.join(ss_dir, fname))
-            except OSError:
-                pass
-        return shots
 
     def on_tree_menu(self, event):
         if self.busy:
