@@ -6197,16 +6197,47 @@ class App:
                 except OSError:
                     pass
 
-        # 4) Tenta também a pasta do jogo (GameData) se existir - para GC*.asset
-        # (não extrai do container, só loga se encontrou)
+        # 4) Tenta também a pasta do jogo (GameData) - copia assets se existirem como arquivos soltos
         folder = g.get("folder")
         if folder and os.path.isdir(folder):
             try:
                 for fname in os.listdir(folder):
-                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
-                        self.log(f"[EXPORT] Encontrado container GC na pasta do jogo: {fname} (não extraído)")
+                    full = os.path.join(folder, fname)
+                    up = fname.upper()
+                    if up.startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
+                        self.log(f"[EXPORT] Container GC na pasta do jogo: {fname} (não extraído)")
+                    # Tenta copiar assets soltos na pasta do jogo
+                    if up == "COVER.PNG" or up == "COVER.JPG":
+                        shutil.copy2(full, os.path.join(target_dir, "cover.png"))
+                        exported.append("cover.png")
+                        self.log(f"[EXPORT] Cover copiado da pasta do jogo: {fname}")
+                    elif up == "BACKGROUND.PNG" or up == "BACKGROUND.JPG":
+                        shutil.copy2(full, os.path.join(target_dir, "background.png"))
+                        exported.append("background.png")
+                        self.log(f"[EXPORT] Background copiado da pasta do jogo: {fname}")
+                    elif up == "BANNER.PNG" or up == "BANNER.JPG":
+                        shutil.copy2(full, os.path.join(target_dir, "banner.png"))
+                        exported.append("banner.png")
+                        self.log(f"[EXPORT] Banner copiado da pasta do jogo: {fname}")
+                    elif up == "TILE.PNG" or up == "TILE.JPG":
+                        shutil.copy2(full, os.path.join(target_dir, "tile.png"))
+                        exported.append("tile.png")
+                        self.log(f"[EXPORT] Tile copiado da pasta do jogo: {fname}")
+                    elif up == "ICON.PNG" or up == "ICON.JPG":
+                        shutil.copy2(full, os.path.join(target_dir, "icon.png"))
+                        exported.append("icon.png")
+                        self.log(f"[EXPORT] Icon copiado da pasta do jogo: {fname}")
             except OSError:
                 pass
+
+        # 5) DEBUG: lista o que tem no Import para diagnóstico
+        for base in import_candidates:
+            if os.path.isdir(base):
+                try:
+                    files = os.listdir(base)
+                    self.log(f"[EXPORT DEBUG] Import folder {base}: {files}")
+                except OSError:
+                    pass
 
         # SEMPRE mostra resultado - pasta foi criada
         if exported:
