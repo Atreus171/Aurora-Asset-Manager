@@ -6151,6 +6151,8 @@ class App:
         import_candidates = [
             os.path.join(aurora_root, "Import", tid),           # Padrão: Aurora/Import/TID/
             os.path.join(aurora_root, "..", "Import", tid),     # Se aurora_root for subpasta
+            os.path.join(aurora_root, "Data", "Import", tid),   # Aurora/Data/Import/TID/
+            os.path.join(aurora_root, "..", "Data", "Import", tid),
         ]
         
         def find_and_copy(filename, dst_name):
@@ -6164,12 +6166,31 @@ class App:
                     return True
             return False
 
-        # 1) Arquivos principais do Import
-        find_and_copy("cover.png", "cover.png")
-        find_and_copy("background.png", "background.png")
-        find_and_copy("banner.png", "banner.png")
-        find_and_copy("tile.png", "tile.png")
-        find_and_copy("icon.png", "icon.png")
+        # 1) Arquivos principais do Import - tenta vários nomes possíveis
+        def find_and_copy_multi(patterns, dst_name):
+            for base in import_candidates:
+                if not os.path.isdir(base):
+                    continue
+                try:
+                    for fname in os.listdir(base):
+                        low = fname.lower()
+                        for pat in patterns:
+                            if low == pat or low.startswith(pat.rstrip("*")):
+                                src = os.path.join(base, fname)
+                                dst = os.path.join(target_dir, dst_name)
+                                shutil.copy2(src, dst)
+                                exported.append(dst_name)
+                                self.log(f"[EXPORT] Copiado: {src} -> {dst}")
+                                return True
+                except OSError:
+                    pass
+            return False
+
+        find_and_copy_multi(["cover.png", "cover.jpg", "cover.jpeg", "boxart.png", "boxart.jpg"], "cover.png")
+        find_and_copy_multi(["background.png", "background.jpg", "background.jpeg", "bg.png"], "background.png")
+        find_and_copy_multi(["banner.png", "banner.jpg", "banner.jpeg"], "banner.png")
+        find_and_copy_multi(["tile.png", "tile.jpg", "tile.jpeg"], "tile.png")
+        find_and_copy_multi(["icon.png", "icon.jpg", "icon.jpeg", "icon.ico"], "icon.png")
 
         # 2) Preview cache (PIL.Image) - salva cover se não exportou
         if "cover.png" not in exported:
@@ -6204,29 +6225,35 @@ class App:
                 for fname in os.listdir(folder):
                     full = os.path.join(folder, fname)
                     up = fname.upper()
-                    if up.startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
+                    low = fname.lower()
+                    if up.startswith(f"GC{tid}") and low.endswith(".asset"):
                         self.log(f"[EXPORT] Container GC na pasta do jogo: {fname} (não extraído)")
-                    # Tenta copiar assets soltos na pasta do jogo
-                    if up == "COVER.PNG" or up == "COVER.JPG":
+                    # Tenta copiar assets soltos na pasta do jogo (qualquer extensão de imagem)
+                    if low.startswith("cover") and low.endswith((".png", ".jpg", ".jpeg")):
                         shutil.copy2(full, os.path.join(target_dir, "cover.png"))
                         exported.append("cover.png")
                         self.log(f"[EXPORT] Cover copiado da pasta do jogo: {fname}")
-                    elif up == "BACKGROUND.PNG" or up == "BACKGROUND.JPG":
+                    elif low.startswith("background") and low.endswith((".png", ".jpg", ".jpeg")):
                         shutil.copy2(full, os.path.join(target_dir, "background.png"))
                         exported.append("background.png")
                         self.log(f"[EXPORT] Background copiado da pasta do jogo: {fname}")
-                    elif up == "BANNER.PNG" or up == "BANNER.JPG":
+                    elif low.startswith("banner") and low.endswith((".png", ".jpg", ".jpeg")):
                         shutil.copy2(full, os.path.join(target_dir, "banner.png"))
                         exported.append("banner.png")
                         self.log(f"[EXPORT] Banner copiado da pasta do jogo: {fname}")
-                    elif up == "TILE.PNG" or up == "TILE.JPG":
+                    elif low.startswith("tile") and low.endswith((".png", ".jpg", ".jpeg")):
                         shutil.copy2(full, os.path.join(target_dir, "tile.png"))
                         exported.append("tile.png")
                         self.log(f"[EXPORT] Tile copiado da pasta do jogo: {fname}")
-                    elif up == "ICON.PNG" or up == "ICON.JPG":
+                    elif low.startswith("icon") and low.endswith((".png", ".jpg", ".jpeg")):
                         shutil.copy2(full, os.path.join(target_dir, "icon.png"))
                         exported.append("icon.png")
                         self.log(f"[EXPORT] Icon copiado da pasta do jogo: {fname}")
+                    elif low.startswith("screenshot") and low.endswith((".png", ".jpg", ".jpeg")):
+                        dst = os.path.join(target_dir, "screenshots", fname)
+                        shutil.copy2(full, dst)
+                        exported.append(f"screenshots/{fname}")
+                        self.log(f"[EXPORT] Screenshot copiado da pasta do jogo: {fname}")
             except OSError:
                 pass
 
