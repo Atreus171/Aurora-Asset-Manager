@@ -39,6 +39,12 @@ GAMES_INDEX_URL = X360DB_RAW + "games.json"
 GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
 # 360-Game-Art (Element18592): capas ordenadas por TitleID em Games/<tid>/cover.jpg
 GAME_ART_RAW = "https://raw.githubusercontent.com/Element18592/360-Game-Art/main/Games/"
+# Pasta local de assets de jogos, DENTRO deste repositório (NÃO distribuída no exe).
+# Funciona ao rodar por código (python aurora_covers.py). Estrutura:
+#   game_covers/<tid>/cover.jpg | banner.png | tile.png | icon.png | background.jpg | \
+# screenshots/x.jpg   (por TID)
+#   game_covers/<nome>.jpg      (por nome do jogo, só para capa)
+GAME_COVERS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "game_covers")
 USER_AGENT = {"User-Agent": "Mozilla/5.0 (aurora-covers-x360db)"}
 
 MIN_ASSET_SIZE = 24 * 1024
@@ -302,6 +308,7 @@ TEXT = {
         "set_log": "Mostrar log (caixa de texto)",
         "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity.",
         "gameart_cover_ok": "  capa da 360-Game-Art para %s.",
+        "game_cover_ok": "  capa local (game_covers) para %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Pesquisar título...",
@@ -613,6 +620,7 @@ TEXT = {
         "set_log": "Show log (text box)",
         "cover_missing_both": "  cover not found on x360db or XboxUnity.",
         "gameart_cover_ok": "  360-Game-Art cover for %s.",
+        "game_cover_ok": "  local cover (game_covers) for %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Search title...",
@@ -924,6 +932,7 @@ TEXT = {
         "set_log": "Mostrar registro (cuadro de texto)",
         "cover_missing_both": "  portada no encontrada en x360db ni XboxUnity.",
         "gameart_cover_ok": "  portada de 360-Game-Art para %s.",
+        "game_cover_ok": "  portada local (game_covers) para %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Buscar título...",
@@ -1235,6 +1244,7 @@ TEXT = {
         "set_log": "Afficher le journal (zone de texte)",
         "cover_missing_both": "  jaquette non trouvée sur x360db ni XboxUnity.",
         "gameart_cover_ok": "  jaquette 360-Game-Art pour %s.",
+        "game_cover_ok": "  jaquette locale (game_covers) pour %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Rechercher titre...",
@@ -1546,6 +1556,7 @@ TEXT = {
         "set_log": "ログを表示 (テキストボックス)",
         "cover_missing_both": "  x360dbおよびXboxUnityでカバーが見つかりません。",
         "gameart_cover_ok": "  360-Game-Artのカバー %s。",
+        "game_cover_ok": "  ローカルカバー (game_covers) で %s。",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "タイトルを検索...",
@@ -1857,6 +1868,7 @@ TEXT = {
         "set_log": "Показать лог (текстовое поле)",
         "cover_missing_both": "  обложка не найдена ни в x360db, ни в XboxUnity.",
         "gameart_cover_ok": "  обложка 360-Game-Art для %s.",
+        "game_cover_ok": "  локальная обложка (game_covers) для %s.",
         "sort_asc": "А-Я",
         "sort_desc": "Я-А",
         "search_title": "Поиск названия...",
@@ -5716,6 +5728,12 @@ class App:
 
     def get_cover_blob(self, tid, g=None):
         try:
+            # Capa personalizada local (pasta game_covers/ neste repo, não distribuída)
+            # tem a maior prioridade: é o asset explícito do usuário para esse jogo.
+            if g:
+                b = self._local_asset(tid, g)
+                if b:
+                    return b
             # Na COVER, o x360db NUNCA vem primeiro (ele só tem a arte da frente), mesmo que
             # seja o repositório selecionado. A seleção (self.repo) apenas decide se a Unity
             # (caixa completa 900x600) ou a 360-Game-Art (capa frontal por TitleID) tenta
@@ -5748,6 +5766,64 @@ class App:
         except Exception as exc:
             self.log(tr("logs_cover_fetch_err", exc))
             return None
+
+    def _local_asset(self, tid, g=None):
+        """Busca asset na pasta local `game_covers/` deste repositório (não distribuída).
+        Casa por TID (`<tid>/cover.jpg`, `<tid>/banner.png`, `<tid>.jpg`...) e, para a capa,
+        também por nome do jogo (`<nome>.jpg`). Retorna os bytes do arquivo encontrado."""
+        base = GAME_COVERS_DIR
+        if not os.path.isdir(base):
+            return None
+        ok = (".jpg", ".jpeg", ".png", ".dds", ".webp")
+        tid = (tid or "").upper()
+
+        def _try(path):
+            try:
+                if os.path.isfile(path):
+                    self.log(tr("game_cover_ok", os.path.basename(path)))
+                    return open(path, "rb").read()
+            except (OSError, IOError):
+                pass
+            return None
+
+        # 1) Por TID: pasta <tid>/ (qualquer imagem) ou arquivo <tid>.<ext>
+        for sub in (os.path.join(base, tid), os.path.join(base, tid.lower())):
+            if os.path.isdir(sub):
+                try:
+                    for name in sorted(os.listdir(sub)):
+                        if name.lower().endswith(ok):
+                            b = _try(os.path.join(sub, name))
+                            if b:
+                                return b
+                except OSError:
+                    pass
+        for ext in ok:
+            b = _try(os.path.join(base, tid + ext))
+            if b:
+                return b
+
+        # 2) Por nome do jogo (só capa): arquivo cuja base (sem extensão e sem
+        #    pontos/underlines/espaços) case com o nome do jogo.
+        if g:
+            names = {}
+            for key in ("dname", "folder_name", "title"):
+                raw = str(g.get(key) or "").strip()
+                if raw and raw.lower() != tid.lower():
+                    slug = re.sub(r"[^a-z0-9]", "", raw.lower())
+                    if slug:
+                        names[slug] = raw
+            if names:
+                try:
+                    for name in os.listdir(base):
+                        if not name.lower().endswith(ok):
+                            continue
+                        slug = re.sub(r"[^a-z0-9]", "", os.path.splitext(name)[0].lower())
+                        if slug in names:
+                            self.log(tr("game_cover_ok", name))
+                            return open(os.path.join(base, name), "rb").read()
+                except OSError:
+                    pass
+        return None
 
     def _unity_cover(self, tid, g=None):
         items = self.unity.covers(tid)
@@ -5798,7 +5874,9 @@ class App:
                 self.log(tr("cover_not_found_repo"))
                 return False
             if kind == "background":
-                blob = self.db.download_artwork(tid, "background")
+                blob = self._local_asset(tid, g)
+                if not blob:
+                    blob = self.db.download_artwork(tid, "background")
                 if blob:
                     img = cover_fill(Image.open(io.BytesIO(blob)), BG_W, BG_H)
                     if g["folder"]:
@@ -5812,7 +5890,9 @@ class App:
                 slot = ASSET_TYPE_ICON if kind == "icon" else ASSET_TYPE_BANNER
                 size = (ICON_W, ICON_H) if kind == "icon" else (BANNER_W, BANNER_H)
                 name = "icon" if kind == "icon" else "banner"
-                blob = self.db.download_artwork(tid, kind)
+                blob = self._local_asset(tid, g)
+                if not blob:
+                    blob = self.db.download_artwork(tid, kind)
                 if not blob:
                     self.log(tr("kind_not_found", name))
                     return False
@@ -5822,15 +5902,28 @@ class App:
                     mark_installed(tid, kind)
                 return ok
             if kind == "screenshots":
+                # Local screenshots: pasta game_covers/<tid>/screenshots/ com arquivos *.jpg/*.png
                 grabs = []
-                for url in self.db.gallery_urls(tid)[: self.ss_max]:
-                    data = fetch_bytes(url)
-                    if not data:
-                        continue
-                    try:
-                        grabs.append(cover_fill(Image.open(io.BytesIO(data)), SS_W, SS_H))
-                    except Exception:
-                        continue
+                local_ss_dir = os.path.join(GAME_COVERS_DIR, tid, "screenshots")
+                if os.path.isdir(local_ss_dir):
+                    for fname in sorted(os.listdir(local_ss_dir)):
+                        if fname.lower().endswith((".jpg", ".jpeg", ".png")):
+                            try:
+                                img = cover_fill(Image.open(os.path.join(local_ss_dir, fname)), SS_W, SS_H)
+                                grabs.append(img)
+                                if len(grabs) >= self.ss_max:
+                                    break
+                            except Exception:
+                                pass
+                if not grabs:
+                    for url in self.db.gallery_urls(tid)[: self.ss_max]:
+                        data = fetch_bytes(url)
+                        if not data:
+                            continue
+                        try:
+                            grabs.append(cover_fill(Image.open(io.BytesIO(data)), SS_W, SS_H))
+                        except Exception:
+                            continue
                 if not grabs:
                     self.log(tr("no_screenshots"))
                     return False
