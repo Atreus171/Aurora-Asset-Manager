@@ -434,6 +434,7 @@ TEXT = {
         "logs_custom_installed": "Capa personalizada instalada para %s (%s)",
         "logs_assets_exported": "Assets exportados para %s: %s",
         "assets_exported_ok": "Assets exportados para game_covers/%s\n%d arquivo(s) copiado(s).",
+        "assets_folder_created_empty": "Pasta criada: game_covers/%s\n%s\n(Nenhum asset instalado encontrado — adicione seus arquivos manualmente).",
         "logs_no_assets_to_export": "Nenhum asset instalado para exportar: %s",
         "no_assets_to_export": "Nenhum asset instalado encontrado para exportar.",
         "logs_ftp_sent": "FTP: %d arquivo(s) enviado(s) para %s.",
@@ -752,6 +753,7 @@ TEXT = {
         "logs_custom_installed": "Custom cover installed for %s (%s)",
         "logs_assets_exported": "Assets exported to %s: %s",
         "assets_exported_ok": "Assets exported to game_covers/%s\n%d file(s) copied.",
+        "assets_folder_created_empty": "Folder created: game_covers/%s\n%s\n(No installed assets found — add your files manually).",
         "logs_no_assets_to_export": "No installed assets to export: %s",
         "no_assets_to_export": "No installed assets found to export.",
         "logs_ftp_sent": "FTP: %d file(s) sent to %s.",
@@ -1070,6 +1072,7 @@ TEXT = {
         "logs_custom_installed": "Portada personalizada instalada para %s (%s)",
         "logs_assets_exported": "Assets exportados a %s: %s",
         "assets_exported_ok": "Assets exportados a game_covers/%s\n%d archivo(s) copiado(s).",
+        "assets_folder_created_empty": "Carpeta creada: game_covers/%s\n%s\n(No se encontraron assets instalados — agregue sus archivos manualmente).",
         "logs_no_assets_to_export": "No hay assets instalados para exportar: %s",
         "no_assets_to_export": "No se encontraron assets instalados para exportar.",
         "logs_ftp_sent": "FTP: %d archivo(s) enviado(s) a %s.",
@@ -1388,6 +1391,7 @@ TEXT = {
         "logs_custom_installed": "Jaquette personnalisée installée pour %s (%s)",
         "logs_assets_exported": "Assets exportés vers %s: %s",
         "assets_exported_ok": "Assets exportés vers game_covers/%s\n%d fichier(s) copié(s).",
+        "assets_folder_created_empty": "Dossier créé: game_covers/%s\n%s\n(Aucun asset installé trouvé — ajoutez vos fichiers manuellement).",
         "logs_no_assets_to_export": "Aucun asset installé à exporter: %s",
         "no_assets_to_export": "Aucun asset installé trouvé à exporter.",
         "logs_ftp_sent": "FTP : %d fichier(s) envoyé(s) vers %s.",
@@ -1706,6 +1710,7 @@ TEXT = {
         "logs_custom_installed": "%s (%s) にカスタムカバーをインストールしました",
         "logs_assets_exported": "%s にアセットをエクスポートしました: %s",
         "assets_exported_ok": "game_covers/%s にアセットをエクスポートしました\n%d 個のファイルをコピーしました。",
+        "assets_folder_created_empty": "フォルダを作成しました: game_covers/%s\n%s\n(インストール済みアセットが見つかりません — 手動でファイルを追加してください)。",
         "logs_no_assets_to_export": "エクスポートするインストール済みアセットがありません: %s",
         "no_assets_to_export": "エクスポートするインストール済みアセットが見つかりません。",
         "logs_ftp_sent": "FTP: %d 個のファイルを %s に送信しました。",
@@ -2024,6 +2029,7 @@ TEXT = {
         "logs_custom_installed": "Пользовательская обложка установлена для %s (%s)",
         "logs_assets_exported": "Ассеты экспортированы в %s: %s",
         "assets_exported_ok": "Ассеты экспортированы в game_covers/%s\n%d файл(ов) скопировано.",
+        "assets_folder_created_empty": "Папка создана: game_covers/%s\n%s\n(Установленные ассеты не найдены — добавьте файлы вручную).",
         "logs_no_assets_to_export": "Нет установленных ассетов для экспорта: %s",
         "no_assets_to_export": "Не найдено установленных ассетов для экспорта.",
         "logs_ftp_sent": "FTP: %d файл(ов) отправлено в %s.",
@@ -6120,7 +6126,8 @@ class App:
         self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
 
     def export_assets(self, g):
-        """Exporta assets instalados do jogo para a pasta game_covers/<Nome>_<TID>/"""
+        """Exporta assets instalados do jogo para a pasta game_covers/<Nome>_<TID>/.
+        Cria a pasta mesmo se não houver assets (para o usuário adicionar manualmente)."""
         tid = g.get("tid", "").upper()
         if not tid:
             return
@@ -6133,57 +6140,77 @@ class App:
         os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
 
         exported = []
-        path = self.aurora_path.get().strip().strip('"')
-        import_dir = os.path.join(path, "Import", tid)
-
-        # Helper para copiar arquivo se existir
-        def copy_if_exists(src, dst_name):
-            if os.path.isfile(src):
-                dst = os.path.join(target_dir, dst_name)
-                shutil.copy2(src, dst)
-                exported.append(dst_name)
-                return True
+        aurora_root = self.aurora_path.get().strip().strip('"')
+        
+        # Tenta múltiplas localizações do Import
+        import_candidates = [
+            os.path.join(aurora_root, "Import", tid),           # Padrão: Aurora/Import/TID/
+            os.path.join(aurora_root, "..", "Import", tid),     # Se aurora_root for subpasta
+        ]
+        
+        def find_and_copy(filename, dst_name):
+            for base in import_candidates:
+                src = os.path.join(base, filename)
+                if os.path.isfile(src):
+                    dst = os.path.join(target_dir, dst_name)
+                    shutil.copy2(src, dst)
+                    exported.append(dst_name)
+                    self.log(f"[EXPORT] Copiado: {src} -> {dst}")
+                    return True
             return False
 
-        # 1) Import folder (arquivos PNG individuais)
-        copy_if_exists(os.path.join(import_dir, "cover.png"), "cover.png")
-        copy_if_exists(os.path.join(import_dir, "background.png"), "background.png")
-        copy_if_exists(os.path.join(import_dir, "banner.png"), "banner.png")
-        copy_if_exists(os.path.join(import_dir, "tile.png"), "tile.png")
-        copy_if_exists(os.path.join(import_dir, "icon.png"), "icon.png")
+        # 1) Arquivos principais do Import
+        find_and_copy("cover.png", "cover.png")
+        find_and_copy("background.png", "background.png")
+        find_and_copy("banner.png", "banner.png")
+        find_and_copy("tile.png", "tile.png")
+        find_and_copy("icon.png", "icon.png")
 
-        # 2) Preview cache - renderiza e salva se não tiver no Import
-        # O preview_cache armazena PIL.Image com chave "tid|folder" ou "tid|import"
-        for cache_key in (f"{tid}|{g.get('folder') or 'import'}", f"{tid}|import"):
-            if cache_key in self.preview_cache:
-                img = self.preview_cache[cache_key]
-                if isinstance(img, Image.Image):
-                    # Tenta salvar cover se não exportou ainda
-                    if "cover.png" not in exported:
+        # 2) Preview cache (PIL.Image) - salva cover se não exportou
+        if "cover.png" not in exported:
+            for cache_key in (f"{tid}|{g.get('folder') or 'import'}", f"{tid}|import"):
+                if cache_key in self.preview_cache:
+                    img = self.preview_cache[cache_key]
+                    if isinstance(img, Image.Image):
                         img.save(os.path.join(target_dir, "cover.png"), "PNG")
                         exported.append("cover.png")
-                    break
+                        self.log(f"[EXPORT] Cover salvo do preview_cache: {cache_key}")
+                        break
 
-        # 3) Screenshots do Import
-        ss_dir = import_dir
-        if os.path.isdir(ss_dir):
+        # 3) Screenshots - procura em todos os Import candidatos
+        for base in import_candidates:
+            if os.path.isdir(base):
+                try:
+                    for fname in sorted(os.listdir(base)):
+                        if fname.lower().startswith("screenshot") and fname.lower().endswith((".png", ".jpg", ".jpeg")):
+                            src = os.path.join(base, fname)
+                            dst_name = f"screenshots/{fname}"
+                            dst = os.path.join(target_dir, dst_name)
+                            shutil.copy2(src, dst)
+                            exported.append(dst_name)
+                            self.log(f"[EXPORT] Screenshot copiado: {src} -> {dst}")
+                except OSError:
+                    pass
+
+        # 4) Tenta também a pasta do jogo (GameData) se existir - para GC*.asset
+        # (não extrai do container, só loga se encontrou)
+        folder = g.get("folder")
+        if folder and os.path.isdir(folder):
             try:
-                for fname in sorted(os.listdir(ss_dir)):
-                    if fname.lower().startswith("screenshot") and fname.lower().endswith((".png", ".jpg", ".jpeg")):
-                        src = os.path.join(ss_dir, fname)
-                        dst_name = f"screenshots/{fname}"
-                        dst = os.path.join(target_dir, dst_name)
-                        shutil.copy2(src, dst)
-                        exported.append(dst_name)
+                for fname in os.listdir(folder):
+                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
+                        self.log(f"[EXPORT] Encontrado container GC na pasta do jogo: {fname} (não extraído)")
             except OSError:
                 pass
 
+        # SEMPRE mostra resultado - pasta foi criada
         if exported:
             self.log(tr("logs_assets_exported", folder_name, ", ".join(exported)))
             messagebox.showinfo(tr("info"), tr("assets_exported_ok", folder_name, len(exported)))
         else:
             self.log(tr("logs_no_assets_to_export", tid))
-            messagebox.showwarning(tr("warn"), tr("no_assets_to_export"))
+            # A pasta foi criada vazia - avisa o usuário
+            messagebox.showinfo(tr("info"), tr("assets_folder_created_empty", folder_name, target_dir))
 
     def on_tree_menu(self, event):
         if self.busy:
