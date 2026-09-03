@@ -37,6 +37,8 @@ def set_window_icon(root):
 X360DB_RAW = "https://raw.githubusercontent.com/xenia-manager/x360db/main/"
 GAMES_INDEX_URL = X360DB_RAW + "games.json"
 GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
+# 360-Game-Art (Element18592): capas ordenadas por TitleID em Games/<tid>/cover.jpg
+GAME_ART_RAW = "https://raw.githubusercontent.com/Element18592/360-Game-Art/main/Games/"
 USER_AGENT = {"User-Agent": "Mozilla/5.0 (aurora-covers-x360db)"}
 
 MIN_ASSET_SIZE = 24 * 1024
@@ -111,6 +113,7 @@ DEFAULT_CONFIG = {
     "show_status": True,
     "show_log": True,
     "auto_search_titles": True,
+    "show_game_info": True,
     "show_debug_button": False,
     "download_missing_only": True,
     "ftp_host": "",
@@ -302,6 +305,9 @@ TEXT = {
         "search_title": "Pesquisar título...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
+        "auto_search_on": "Busca automática de títulos LIGADA.",
+        "auto_search_off": "Busca automática de títulos DESLIGADA.",
+        "show_game_info": "Mostrar diretor e data de lançamento",
         "show_debug_button": "Mostrar botão Debug DB",
         "download_missing_only": "Baixar só jogos sem capa",
         "m_search": "Pesquisar título...",
@@ -608,6 +614,9 @@ TEXT = {
         "search_title": "Search title...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Auto-search titles (XboxUnity)",
+        "auto_search_on": "Auto title search ENABLED.",
+        "auto_search_off": "Auto title search DISABLED.",
+        "show_game_info": "Show director and release date",
         "show_debug_button": "Show Debug DB button",
         "download_missing_only": "Download only games without a cover",
         "m_search": "Search title...",
@@ -914,6 +923,9 @@ TEXT = {
         "search_title": "Buscar título...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
+        "auto_search_on": "Busca automática de títulos LIGADA.",
+        "auto_search_off": "Busca automática de títulos DESLIGADA.",
+        "show_game_info": "Mostrar director y fecha de lanzamiento",
         "show_debug_button": "Mostrar botón Debug DB",
         "download_missing_only": "Descargar solo juegos sin portada",
         "m_search": "Buscar título...",
@@ -1220,6 +1232,9 @@ TEXT = {
         "search_title": "Rechercher titre...",
         "debug_db": "Debug DB",
         "auto_search_titles": "Recherche auto des titres (XboxUnity)",
+        "auto_search_on": "Recherche auto des titres ACTIVÉE.",
+        "auto_search_off": "Recherche auto des titres DÉSACTIVÉE.",
+        "show_game_info": "Afficher le développeur et la date de sortie",
         "show_debug_button": "Afficher bouton Debug DB",
         "download_missing_only": "Télécharger uniquement les jeux sans jaquette",
         "m_search": "Rechercher titre...",
@@ -1526,6 +1541,9 @@ TEXT = {
         "search_title": "タイトルを検索...",
         "debug_db": "DB デバッグ",
         "auto_search_titles": "タイトル自動検索 (XboxUnity)",
+        "auto_search_on": "タイトル自動検索: オン。",
+        "auto_search_off": "タイトル自動検索: オフ。",
+        "show_game_info": "開発者と発売日を表示",
         "show_debug_button": "Debug DB ボタンを表示",
         "download_missing_only": "カバーがないゲームのみダウンロード",
         "m_search": "タイトルを検索...",
@@ -1832,6 +1850,9 @@ TEXT = {
         "search_title": "Поиск названия...",
         "debug_db": "Отладка БД",
         "auto_search_titles": "Автопоиск названий (XboxUnity)",
+        "auto_search_on": "Автопоиск названий: ВКЛ.",
+        "auto_search_off": "Автопоиск названий: ВЫКЛ.",
+        "show_game_info": "Показывать разработчика и дату релиза",
         "show_debug_button": "Показать кнопку Debug DB",
         "download_missing_only": "Скачивать только игры без обложки",
         "m_search": "Поиск названия...",
@@ -3346,7 +3367,9 @@ def scan_aurora(root):
     gamedata = os.path.join(root, "Data", "GameData")
     if os.path.isdir(gamedata):
         folder_games = []
-        pattern = re.compile(r"^([0-9A-Fa-f]{8})_(.+)")
+        # Suporta pastas "<TID>_<Nome>" e também "<TID>" sozinho (sem underline),
+        # pra pegar mais jogos (GOD/XDLC/pastas só com o TitleID).
+        pattern = re.compile(r"^([0-9A-Fa-f]{8})(?:_(.+))?$")
         for name in sorted(os.listdir(gamedata)):
             m = pattern.match(name)
             if not m:
@@ -3354,7 +3377,7 @@ def scan_aurora(root):
             tid = m.group(1).upper()
             if tid == "00000000":
                 continue
-            dname = m.group(2).strip()
+            dname = (m.group(2) or "").strip() or tid
             # Aplica nome customizado se existir
             if tid in custom_names:
                 dname = custom_names[tid]
@@ -3719,6 +3742,7 @@ def selftest():
         "show_status": True,
         "show_log": True,
         "auto_search_titles": True,
+        "show_game_info": True,
         "show_debug_button": False,
         "download_missing_only": True,
         "ftp_host": "",
@@ -3805,6 +3829,7 @@ class App:
         self.opt_banner = tk.BooleanVar(value=True)
         self.opt_screenshots = tk.BooleanVar(value=True)
         self.opt_missing_only = tk.BooleanVar(value=True)
+        self.opt_auto_search = tk.BooleanVar(value=True)
         self.games = []
         self.hidden_tids = set(load_hidden_games())
         self.worker = None
@@ -4068,6 +4093,7 @@ class App:
         self.apply_show_status()
         self.apply_show_log()
         self._paint_status()
+        self.opt_auto_search.set(bool(self.cfg.get("auto_search_titles", True)))
         self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
         if self.cfg.get("show_debug_button", False):
             self.btn_debug_db.pack(side=tk.LEFT, padx=(8, 0))
@@ -4323,15 +4349,16 @@ class App:
                     _g["has_cover"] = True
             
             # Busca nomes faltando/no XboxUnity em background (se habilitado)
-            # Homebrews com nome "fraco" (nome de pasta, tudo minúsculo, contém caminhos)
-            # também devem tentar buscar no Unity
+            # Só procura quando o nome está vazio, é um TitleID (8 hex) ou parece
+            # caminho de pasta — NÃO para todo nome "minúsculo", pra não varrer
+            # todos os jogos e queimar performance em busca desnecessária.
             def _weak_name(dname):
                 if not dname:
                     return True
                 d = dname.strip()
-                # Nome parece caminho de pasta (tem separadores) ou é tudo minúsculo
-                # ou é TID hex (8 chars) -> provável nome sintético
-                if "\\" in d or "/" in d or d.lower() == d or re.fullmatch(r"[0-9A-F]{8}", d.upper()):
+                if "\\" in d or "/" in d:
+                    return True
+                if re.fullmatch(r"[0-9A-F]{8}", d.upper()) and d == d.upper():
                     return True
                 return False
             
@@ -4393,13 +4420,13 @@ class App:
 
     def _looks_like_id(self, dname):
         """Nome que é um TID/pasta (não um nome humano): vazio, com separadores,
-        tudo minúsculo, ou exatamente 8 hex."""
+        ou exatamente 8 hex (TitleID) no lugar do título."""
         if not dname:
             return True
         d = dname.strip()
         if d == d.upper() and re.fullmatch(r"[0-9A-F]{8}", d):
             return True
-        return "\\" in d or "/" in d or d.lower() == d
+        return "\\" in d or "/" in d
 
     def _best_title_for(self, g):
         tid = g["tid"]
@@ -4468,11 +4495,11 @@ class App:
             path = self.aurora_path.get().strip().strip('"')
             if not path or not os.path.isdir(path):
                 return
-            db_path = self.find_content_db(path)
+            db_path = find_content_db(path)
             if not db_path:
                 return
             self.log(tr("logs_updating_db", tid, new_name))
-            db_rename_by_tid(db_path, tid, new_name)
+            db_rename_by_tid(path, tid, new_name)
         except Exception as e:
             self.log(tr("logs_db_err", e))
 
@@ -4683,7 +4710,7 @@ class App:
             try:
                 path = self.aurora_path.get().strip().strip('"')
                 if path and os.path.isdir(path):
-                    db_path = self.find_content_db(path)
+                    db_path = find_content_db(path)
                     if db_path:
                         import sqlite3
                         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
@@ -5489,7 +5516,8 @@ class App:
         if len(desc) > 180:
             desc = desc[:177] + "..."
         parts = []
-        if info.get("release_date"):
+        show_info = self.cfg.get("show_game_info", True)
+        if show_info and info.get("release_date"):
             rd = info["release_date"]
             if CURRENT_LANG in ("pt", "es"):
                 # Formato dia/mês/ano para PT e ES
@@ -5505,7 +5533,7 @@ class App:
                 except Exception:
                     pass
             parts.append(tr("release_date") + ": " + str(rd))
-        if dev:
+        if show_info and dev:
             parts.append(tr("developer") + ": " + dev)
         if genres:
             parts.append(tr("genres") + ": " + genres)
@@ -5672,10 +5700,15 @@ class App:
             b = self._unity_cover(tid, g)
             if b:
                 return b
-            if self.repo == "x360db":
-                b = self.db.download_artwork(tid, "boxart")
-                if b:
-                    return b
+            # 360-Game-Art (pasta por TitleID, cover.jpg).
+            b = fetch_bytes(GAME_ART_RAW + tid.lower() + "/cover.jpg")
+            if b:
+                return b
+            # Fallback universal: o boxart do x360db (mesmo só a frente) cobre
+            # jogos que a Unity não tem, independente do repositório selecionado.
+            b = self.db.download_artwork(tid, "boxart")
+            if b:
+                return b
             self.log(tr("cover_missing_both"))
             return None
         except Exception as exc:
@@ -6044,6 +6077,9 @@ class App:
         auto_search_var = tk.BooleanVar(value=self.cfg.get("auto_search_titles", True))
         add_row(tr("auto_search_titles"), ttk.Checkbutton(outer, text=tr("auto_search_titles"), variable=auto_search_var))
 
+        show_game_info_var = tk.BooleanVar(value=self.cfg.get("show_game_info", True))
+        add_row(tr("show_game_info"), ttk.Checkbutton(outer, text=tr("show_game_info"), variable=show_game_info_var))
+
         show_debug_var = tk.BooleanVar(value=self.cfg.get("show_debug_button", False))
         add_row(tr("show_debug_button"), ttk.Checkbutton(outer, text=tr("show_debug_button"), variable=show_debug_var))
 
@@ -6124,6 +6160,7 @@ class App:
                     show_status=self.show_status,
                     show_log=self.show_log,
                     auto_search_titles=bool(auto_search_var.get()),
+                    show_game_info=bool(show_game_info_var.get()),
                     show_debug_button=bool(show_debug_var.get()),
                     download_missing_only=bool(missing_only_var.get()),
                     ftp_host=self.ftp_host,
