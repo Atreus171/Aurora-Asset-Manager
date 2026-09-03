@@ -181,6 +181,7 @@ TEXT = {
         "index_loaded": "Índice do x360db carregado: %d jogos.",
         "index_fail": "Não foi possível baixar o índice (modo offline: usará o TitleID direto).",
         "warn": "Aviso",
+        "info": "Informações",
         "scan_first": "Digitalize os jogos primeiro.",
         "pick_art": "Marque pelo menos um tipo de arte (capa, background, ícone, banner ou screenshots).",
         "pick_aurora": "Escolha a pasta raiz do Aurora primeiro.",
@@ -375,6 +376,76 @@ TEXT = {
         "release_date": "Lançamento",
         "developer": "Desenvolvedora",
         "genres": "Gêneros",
+        "settings_title": "Configurações",
+        "db_notfound": "content.db não encontrado",
+        "err_generic": "Erro: %s",
+        "no_folders": "Nenhuma pasta adicionada ainda.",
+        "folders_header": "Pastas adicionadas (via 'Adicionar pasta para procurar jogos'):",
+        "col_folder": "Pasta",
+        "col_added": "Adicionada em",
+        "col_count": "Jogos",
+        "col_type": "Tipo",
+        "remove_folders_confirm": "Remover %d pasta(s) selecionada(s)?",
+        "open_folder": "Abrir pasta",
+        "remove_selected": "Remover selecionadas",
+        "schema_unknown": "Schema desconhecido (tabela=%s)",
+        "folder_not_found": "Pasta não encontrada: %s",
+        "folder_open_err": "Erro ao abrir pasta: %s",
+        "alt_no_preview": "Sem preview",
+        "alt_pick_first": "Selecione uma capa primeiro.",
+        "downloading": "Baixando...",
+        "no_success": "sem sucesso",
+        "logs_unity_names": "Nomes atualizados via XboxUnity.",
+        "logs_scanning": "Escaneando: %s",
+        "logs_no_index": "Aviso: índice do x360db não carregou; sem filtro de DLC/updates.",
+        "logs_ignored_dlc": "Ignorados %d TitleIDs de DLC/update (não constam no índice de jogos).",
+        "logs_god_xdlc": "Jogos GOD/XDLC no HD sem pasta GameData: %d (serão tratados via Import)",
+        "logs_fetch_names": "Buscando %d nomes no XboxUnity...",
+        "logs_title_x360db": "Título encontrado no x360db: %s",
+        "logs_title_unity": "Título encontrado no XboxUnity: %s",
+        "logs_title_folder": "Usando nome da pasta: %s",
+        "logs_title_not_found": "Título não encontrado para %s",
+        "logs_updating_db": "Atualizando content.db: TID=%s -> %s",
+        "logs_db_err": "Erro ao atualizar content.db: %s",
+        "logs_renamed_folder": "Pasta renomeada: %s -> %s",
+        "logs_folder_open_err": "Erro ao abrir pasta: %s",
+        "logs_gamedata_created": "Pasta GameData criada: %s",
+        "logs_queue_started": "Iniciando fila: %d jogo(s)",
+        "logs_custom_installed": "Capa personalizada instalada para %s (%s)",
+        "logs_ftp_sent": "FTP: %d arquivo(s) enviado(s) para %s.",
+        "logs_ftp_err": "Erro no FTP: %s",
+        "ftp_inaccessible": "FTP: impossível acessar %s (%s)",
+        "logs_downloading": "Baixando %s para %s (%s)...",
+        "logs_rename_folder_err": "Não foi possível renomear a pasta: %s",
+        "logs_no_dedicated_gamedata": "Sem pasta GameData dedicada para %s; renomeação salva apenas na lista.",
+        "logs_db_titlename_ok": "content.db: TitleName atualizado para '%s'.",
+        "logs_db_row_not_found": "content.db: linha %s não encontrada (nome salvo só na configuração).",
+        "logs_db_rename_err": "content.db: não foi possível renomear: %s",
+        "logs_folders_removed": "%d pasta(s) removida(s)",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "Erro neste jogo: %s",
+        "logs_cover_fetch_err": "Erro ao buscar capa: %s",
+        "logs_hb_tid_by_name": "Homebrew: TID do XboxUnity por nome '%s' = %s",
+        "logs_hb_no_cover_by_name": "Homebrew: nenhuma capa por nome no XboxUnity (%s)",
+        "logs_unity_offline": "XboxUnity fora do ar (%s)",
+        "unity_no_cover": "XboxUnity sem capas para %s",
+        "unity_black_cover": "Capa vazia/preta ignorada (bugada) no XboxUnity.",
+        "unity_no_usable": "XboxUnity sem capa utilizável (%s)",
+        "cover_not_found_repo": "Capa não encontrada no repositório.",
+        "background_not_found": "Background não encontrado no x360db.",
+        "kind_not_found": "%s não encontrado no x360db.",
+        "no_screenshots": "Sem screenshots disponíveis no x360db.",
+        "logs_ss_installed": "%d screenshots instaladas.",
+        "logs_dl_kind_err": "Erro ao baixar %s: %s",
+        "logs_saved": "Gravado %s",
+        "logs_alt_import": "Import alternativo em %s",
+        "logs_kind_result": "%s: %s",
+        "logs_kind_err": "Erro: %s",
+        "logs_kind_err_with": "%s: erro: %s",
+        "logs_kind_skip": "%s: já instalado (pulando).",
+        "unity_fetch_fail": "Falha ao baixar a capa do XboxUnity.",
+        "logs_alt_installed": "Capa alternativa instalada para %s (%s).",
+        "logs_alt_err": "Erro: %s",
     },
     "en": {
         "title": "Aurora Asset Manager",
@@ -412,6 +483,7 @@ TEXT = {
         "index_loaded": "x360db index loaded: %d games.",
         "index_fail": "Could not download the index (offline mode: will use TitleID directly).",
         "warn": "Warning",
+        "info": "Info",
         "scan_first": "Scan the games first.",
         "pick_art": "Check at least one art type (cover, background, icon, banner or screenshots).",
         "pick_aurora": "Choose the Aurora root folder first.",
@@ -607,6 +679,76 @@ TEXT = {
         "release_date": "Release",
         "developer": "Developer",
         "genres": "Genres",
+        "settings_title": "Settings",
+        "db_notfound": "content.db not found",
+        "err_generic": "Error: %s",
+        "no_folders": "No folders added yet.",
+        "folders_header": "Added folders (via 'Folder to search for games'):",
+        "col_folder": "Folder",
+        "col_added": "Added on",
+        "col_count": "Games",
+        "col_type": "Type",
+        "remove_folders_confirm": "Remove %d selected folder(s)?",
+        "open_folder": "Open folder",
+        "remove_selected": "Remove selected",
+        "schema_unknown": "Unknown schema (table=%s)",
+        "folder_not_found": "Folder not found: %s",
+        "folder_open_err": "Error opening folder: %s",
+        "alt_no_preview": "No preview",
+        "alt_pick_first": "Select a cover first.",
+        "downloading": "Downloading...",
+        "no_success": "no success",
+        "logs_unity_names": "Names updated via XboxUnity.",
+        "logs_scanning": "Scanning: %s",
+        "logs_no_index": "Warning: x360db index did not load; no DLC/update filter.",
+        "logs_ignored_dlc": "Ignored %d DLC/update TitleIDs (not in the games index).",
+        "logs_god_xdlc": "GOD/XDLC games on HDD without a GameData folder: %d (will be handled via Import)",
+        "logs_fetch_names": "Fetching %d names from XboxUnity...",
+        "logs_title_x360db": "Title found on x360db: %s",
+        "logs_title_unity": "Title found on XboxUnity: %s",
+        "logs_title_folder": "Using folder name: %s",
+        "logs_title_not_found": "No title found for %s",
+        "logs_updating_db": "Updating content.db: TID=%s -> %s",
+        "logs_db_err": "Error updating content.db: %s",
+        "logs_renamed_folder": "Folder renamed: %s -> %s",
+        "logs_folder_open_err": "Error opening folder: %s",
+        "logs_gamedata_created": "GameData folder created: %s",
+        "logs_queue_started": "Starting queue: %d game(s)",
+        "logs_custom_installed": "Custom cover installed for %s (%s)",
+        "logs_ftp_sent": "FTP: %d file(s) sent to %s.",
+        "logs_ftp_err": "FTP error: %s",
+        "ftp_inaccessible": "FTP: cannot access %s (%s)",
+        "logs_downloading": "Downloading %s for %s (%s)...",
+        "logs_rename_folder_err": "Could not rename the folder: %s",
+        "logs_no_dedicated_gamedata": "No dedicated GameData folder for %s; rename saved only in the list.",
+        "logs_db_titlename_ok": "content.db: TitleName updated to '%s'.",
+        "logs_db_row_not_found": "content.db: row %s not found (name saved only in config).",
+        "logs_db_rename_err": "content.db: could not rename: %s",
+        "logs_folders_removed": "%d folder(s) removed",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "Error in this game: %s",
+        "logs_cover_fetch_err": "Error fetching cover: %s",
+        "logs_hb_tid_by_name": "Homebrew: XboxUnity TID by name '%s' = %s",
+        "logs_hb_no_cover_by_name": "Homebrew: no cover by name on XboxUnity (%s)",
+        "logs_unity_offline": "XboxUnity is offline (%s)",
+        "unity_no_cover": "XboxUnity has no covers for %s",
+        "unity_black_cover": "Empty/black cover ignored (buggy) on XboxUnity.",
+        "unity_no_usable": "XboxUnity has no usable cover (%s)",
+        "cover_not_found_repo": "Cover not found in the repository.",
+        "background_not_found": "Background not found on x360db.",
+        "kind_not_found": "%s not found on x360db.",
+        "no_screenshots": "No screenshots available on x360db.",
+        "logs_ss_installed": "%d screenshot(s) installed.",
+        "logs_dl_kind_err": "Error downloading %s: %s",
+        "logs_saved": "Saved %s",
+        "logs_alt_import": "Alternative import at %s",
+        "logs_kind_result": "%s: %s",
+        "logs_kind_err": "Error: %s",
+        "logs_kind_err_with": "%s: error: %s",
+        "logs_kind_skip": "%s: already installed (skipping).",
+        "unity_fetch_fail": "Failed to download the cover from XboxUnity.",
+        "logs_alt_installed": "Alternative cover installed for %s (%s).",
+        "logs_alt_err": "Error: %s",
     },
     "es": {
         "title": "Aurora Asset Manager",
@@ -644,6 +786,7 @@ TEXT = {
         "index_loaded": "Índice de x360db cargado: %d juegos.",
         "index_fail": "No se pudo descargar el índice (modo offline: usará TitleID directamente).",
         "warn": "Advertencia",
+        "info": "Información",
         "scan_first": "Escanee los juegos primero.",
         "pick_art": "Marque al menos un tipo de arte (portada, fondo, icono, banner o screenshots).",
         "pick_aurora": "Elija la carpeta raíz de Aurora primero.",
@@ -839,6 +982,76 @@ TEXT = {
         "release_date": "Lanzamiento",
         "developer": "Desarrolladora",
         "genres": "Géneros",
+        "settings_title": "Configuración",
+        "db_notfound": "content.db no encontrado",
+        "err_generic": "Error: %s",
+        "no_folders": "Aún no hay carpetas añadidas.",
+        "folders_header": "Carpetas añadidas (vía 'Carpeta para buscar juegos'):",
+        "col_folder": "Carpeta",
+        "col_added": "Añadida el",
+        "col_count": "Juegos",
+        "col_type": "Tipo",
+        "remove_folders_confirm": "¿Eliminar %d carpeta(s) seleccionada(s)?",
+        "open_folder": "Abrir carpeta",
+        "remove_selected": "Eliminar seleccionadas",
+        "schema_unknown": "Esquema desconocido (tabla=%s)",
+        "folder_not_found": "Carpeta no encontrada: %s",
+        "folder_open_err": "Error al abrir carpeta: %s",
+        "alt_no_preview": "Sin vista previa",
+        "alt_pick_first": "Seleccione una portada primero.",
+        "downloading": "Descargando...",
+        "no_success": "sin éxito",
+        "logs_unity_names": "Nombres actualizados vía XboxUnity.",
+        "logs_scanning": "Escaneando: %s",
+        "logs_no_index": "Aviso: el índice de x360db no cargó; sin filtro de DLC/updates.",
+        "logs_ignored_dlc": "Ignorados %d TitleIDs de DLC/update (no constan en el índice de juegos).",
+        "logs_god_xdlc": "Juegos GOD/XDLC en HDD sin carpeta GameData: %d (se tratarán vía Import)",
+        "logs_fetch_names": "Buscando %d nombres en XboxUnity...",
+        "logs_title_x360db": "Título encontrado en x360db: %s",
+        "logs_title_unity": "Título encontrado en XboxUnity: %s",
+        "logs_title_folder": "Usando nombre de carpeta: %s",
+        "logs_title_not_found": "Título no encontrado para %s",
+        "logs_updating_db": "Actualizando content.db: TID=%s -> %s",
+        "logs_db_err": "Error al actualizar content.db: %s",
+        "logs_renamed_folder": "Carpeta renombrada: %s -> %s",
+        "logs_folder_open_err": "Error al abrir carpeta: %s",
+        "logs_gamedata_created": "Carpeta GameData creada: %s",
+        "logs_queue_started": "Iniciando cola: %d juego(s)",
+        "logs_custom_installed": "Portada personalizada instalada para %s (%s)",
+        "logs_ftp_sent": "FTP: %d archivo(s) enviado(s) a %s.",
+        "logs_ftp_err": "Error de FTP: %s",
+        "ftp_inaccessible": "FTP: no se puede acceder a %s (%s)",
+        "logs_downloading": "Descargando %s para %s (%s)...",
+        "logs_rename_folder_err": "No se pudo renombrar la carpeta: %s",
+        "logs_no_dedicated_gamedata": "Sin carpeta GameData dedicada para %s; el renombrado se guarda solo en la lista.",
+        "logs_db_titlename_ok": "content.db: TitleName actualizado a '%s'.",
+        "logs_db_row_not_found": "content.db: fila %s no encontrada (nombre guardado solo en configuración).",
+        "logs_db_rename_err": "content.db: no se pudo renombrar: %s",
+        "logs_folders_removed": "%d carpeta(s) eliminada(s)",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "Error en este juego: %s",
+        "logs_cover_fetch_err": "Error al buscar portada: %s",
+        "logs_hb_tid_by_name": "Homebrew: TID de XboxUnity por nombre '%s' = %s",
+        "logs_hb_no_cover_by_name": "Homebrew: sin portada por nombre en XboxUnity (%s)",
+        "logs_unity_offline": "XboxUnity fuera de línea (%s)",
+        "unity_no_cover": "XboxUnity sin portadas para %s",
+        "unity_black_cover": "Portada vacía/negra ignorada (defectuosa) en XboxUnity.",
+        "unity_no_usable": "XboxUnity sin portada utilizable (%s)",
+        "cover_not_found_repo": "Portada no encontrada en el repositorio.",
+        "background_not_found": "Fondo no encontrado en x360db.",
+        "kind_not_found": "%s no encontrado en x360db.",
+        "no_screenshots": "Sin capturas disponibles en x360db.",
+        "logs_ss_installed": "%d captura(s) instalada(s).",
+        "logs_dl_kind_err": "Error al descargar %s: %s",
+        "logs_saved": "Guardado %s",
+        "logs_alt_import": "Importación alternativa en %s",
+        "logs_kind_result": "%s: %s",
+        "logs_kind_err": "Error: %s",
+        "logs_kind_err_with": "%s: error: %s",
+        "logs_kind_skip": "%s: ya instalado (saltando).",
+        "unity_fetch_fail": "Fallo al descargar la portada de XboxUnity.",
+        "logs_alt_installed": "Portada alternativa instalada para %s (%s).",
+        "logs_alt_err": "Error: %s",
     },
     "fr": {
         "title": "Aurora Asset Manager",
@@ -876,6 +1089,7 @@ TEXT = {
         "index_loaded": "Index x360db chargé: %d jeux.",
         "index_fail": "Impossible de télécharger l'index (mode hors ligne: utilisera le TitleID).",
         "warn": "Avertissement",
+        "info": "Informations",
         "scan_first": "Scannez les jeux d'abord.",
         "pick_art": "Cochez au moins un type d'art (jaquette, fond, icône, bannière ou captures).",
         "pick_aurora": "Choisissez le dossier racine d'Aurora d'abord.",
@@ -1071,6 +1285,76 @@ TEXT = {
         "release_date": "Sortie",
         "developer": "Développeur",
         "genres": "Genres",
+        "settings_title": "Paramètres",
+        "db_notfound": "content.db introuvable",
+        "err_generic": "Erreur : %s",
+        "no_folders": "Aucun dossier ajouté pour l'instant.",
+        "folders_header": "Dossiers ajoutés (via 'Dossier pour chercher des jeux') :",
+        "col_folder": "Dossier",
+        "col_added": "Ajouté le",
+        "col_count": "Jeux",
+        "col_type": "Type",
+        "remove_folders_confirm": "Supprimer %d dossier(s) sélectionné(s) ?",
+        "open_folder": "Ouvrir le dossier",
+        "remove_selected": "Supprimer la sélection",
+        "schema_unknown": "Schéma inconnu (table=%s)",
+        "folder_not_found": "Dossier introuvable : %s",
+        "folder_open_err": "Erreur lors de l'ouverture du dossier : %s",
+        "alt_no_preview": "Aucun aperçu",
+        "alt_pick_first": "Sélectionnez d'abord une jaquette.",
+        "downloading": "Téléchargement...",
+        "no_success": "sans succès",
+        "logs_unity_names": "Noms mis à jour via XboxUnity.",
+        "logs_scanning": "Analyse : %s",
+        "logs_no_index": "Attention : l'index x360db n'a pas chargé ; pas de filtre DLC/updates.",
+        "logs_ignored_dlc": "%d TitleIDs de DLC/update ignorés (absents de l'index des jeux).",
+        "logs_god_xdlc": "Jeux GOD/XDLC sur HDD sans dossier GameData : %d (traités via Import)",
+        "logs_fetch_names": "Récupération de %d noms depuis XboxUnity...",
+        "logs_title_x360db": "Titre trouvé sur x360db : %s",
+        "logs_title_unity": "Titre trouvé sur XboxUnity : %s",
+        "logs_title_folder": "Utilisation du nom de dossier : %s",
+        "logs_title_not_found": "Aucun titre trouvé pour %s",
+        "logs_updating_db": "Mise à jour de content.db : TID=%s -> %s",
+        "logs_db_err": "Erreur de mise à jour de content.db : %s",
+        "logs_renamed_folder": "Dossier renommé : %s -> %s",
+        "logs_folder_open_err": "Erreur lors de l'ouverture du dossier : %s",
+        "logs_gamedata_created": "Dossier GameData créé : %s",
+        "logs_queue_started": "Démarrage de la file : %d jeu(x)",
+        "logs_custom_installed": "Jaquette personnalisée installée pour %s (%s)",
+        "logs_ftp_sent": "FTP : %d fichier(s) envoyé(s) vers %s.",
+        "logs_ftp_err": "Erreur FTP : %s",
+        "ftp_inaccessible": "FTP : impossible d'accéder à %s (%s)",
+        "logs_downloading": "Téléchargement de %s pour %s (%s)...",
+        "logs_rename_folder_err": "Impossible de renommer le dossier : %s",
+        "logs_no_dedicated_gamedata": "Pas de dossier GameData dédié pour %s ; le renommage n'est enregistré que dans la liste.",
+        "logs_db_titlename_ok": "content.db : TitleName mis à jour vers '%s'.",
+        "logs_db_row_not_found": "content.db : ligne %s introuvable (nom enregistré uniquement dans la config).",
+        "logs_db_rename_err": "content.db : impossible de renommer : %s",
+        "logs_folders_removed": "%d dossier(s) supprimé(s)",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "Erreur dans ce jeu : %s",
+        "logs_cover_fetch_err": "Erreur lors de la recherche de la jaquette : %s",
+        "logs_hb_tid_by_name": "Homebrew : TID XboxUnity par nom '%s' = %s",
+        "logs_hb_no_cover_by_name": "Homebrew : aucune jaquette par nom sur XboxUnity (%s)",
+        "logs_unity_offline": "XboxUnity hors ligne (%s)",
+        "unity_no_cover": "XboxUnity n'a pas de jaquette pour %s",
+        "unity_black_cover": "Jaquette vide/noire ignorée (défectueuse) sur XboxUnity.",
+        "unity_no_usable": "XboxUnity n'a pas de jaquette utilisable (%s)",
+        "cover_not_found_repo": "Jaquette introuvable dans le dépôt.",
+        "background_not_found": "Arrière-plan introuvable sur x360db.",
+        "kind_not_found": "%s introuvable sur x360db.",
+        "no_screenshots": "Aucune capture disponible sur x360db.",
+        "logs_ss_installed": "%d capture(s) installée(s).",
+        "logs_dl_kind_err": "Erreur de téléchargement de %s : %s",
+        "logs_saved": "Enregistré %s",
+        "logs_alt_import": "Import alternatif à %s",
+        "logs_kind_result": "%s : %s",
+        "logs_kind_err": "Erreur : %s",
+        "logs_kind_err_with": "%s : erreur : %s",
+        "logs_kind_skip": "%s : déjà installé (ignoré).",
+        "unity_fetch_fail": "Échec du téléchargement de la jaquette depuis XboxUnity.",
+        "logs_alt_installed": "Jaquette alternative installée pour %s (%s).",
+        "logs_alt_err": "Erreur : %s",
     },
     "ja": {
         "title": "Aurora Asset Manager",
@@ -1108,6 +1392,7 @@ TEXT = {
         "index_loaded": "x360dbインデックス読み込み完了: %d ゲーム。",
         "index_fail": "インデックスをダウンロードできませんでした (オフラインモード: TitleIDを直接使用)。",
         "warn": "警告",
+        "info": "情報",
         "scan_first": "まずゲームをスキャンしてください。",
         "pick_art": "アートタイプを少なくとも1つ選択してください (カバー, 背景, アイコン, バナー, スクリーンショット)。",
         "pick_aurora": "まずAuroraのルートフォルダを選択してください。",
@@ -1303,6 +1588,76 @@ TEXT = {
         "release_date": "発売日",
         "developer": "開発元",
         "genres": "ジャンル",
+        "settings_title": "設定",
+        "db_notfound": "content.db が見つかりません",
+        "err_generic": "エラー: %s",
+        "no_folders": "まだフォルダが追加されていません。",
+        "folders_header": "追加済みフォルダ（「ゲームを探すフォルダ」経由）:",
+        "col_folder": "フォルダ",
+        "col_added": "追加日",
+        "col_count": "ゲーム数",
+        "col_type": "種類",
+        "remove_folders_confirm": "選択した %d 個のフォルダを削除しますか？",
+        "open_folder": "フォルダを開く",
+        "remove_selected": "選択を削除",
+        "schema_unknown": "不明なスキーマ (table=%s)",
+        "folder_not_found": "フォルダが見つかりません: %s",
+        "folder_open_err": "フォルダを開けません: %s",
+        "alt_no_preview": "プレビューなし",
+        "alt_pick_first": "先にカバーを選択してください。",
+        "downloading": "ダウンロード中...",
+        "no_success": "失敗",
+        "logs_unity_names": "XboxUnity から名前を更新しました。",
+        "logs_scanning": "スキャン中: %s",
+        "logs_no_index": "警告: x360db のインデックスが読み込めませんでした。DLC/アップデートのフィルタなし。",
+        "logs_ignored_dlc": "%d 個の DLC/アップデート TitleID を無視しました（ゲーム索引にありません）。",
+        "logs_god_xdlc": "GameData フォルダのない GOD/XDLC ゲーム: %d（Import で処理されます）",
+        "logs_fetch_names": "XboxUnity から %d 個の名前を取得中...",
+        "logs_title_x360db": "x360db でタイトルが見つかりました: %s",
+        "logs_title_unity": "XboxUnity でタイトルが見つかりました: %s",
+        "logs_title_folder": "フォルダ名を使用: %s",
+        "logs_title_not_found": "%s のタイトルが見つかりません",
+        "logs_updating_db": "content.db を更新: TID=%s -> %s",
+        "logs_db_err": "content.db の更新に失敗: %s",
+        "logs_renamed_folder": "フォルダ名を変更: %s -> %s",
+        "logs_folder_open_err": "フォルダを開けません: %s",
+        "logs_gamedata_created": "GameData フォルダを作成: %s",
+        "logs_queue_started": "キューを開始: %d ゲーム",
+        "logs_custom_installed": "%s (%s) にカスタムカバーをインストールしました",
+        "logs_ftp_sent": "FTP: %d 個のファイルを %s に送信しました。",
+        "logs_ftp_err": "FTP エラー: %s",
+        "ftp_inaccessible": "FTP: %s にアクセスできません (%s)",
+        "logs_downloading": "%s を %s (%s) にダウンロード中...",
+        "logs_rename_folder_err": "フォルダ名を変更できません: %s",
+        "logs_no_dedicated_gamedata": "%s に専用の GameData フォルダがありません。リスト内のみで名前を保存します。",
+        "logs_db_titlename_ok": "content.db: TitleName を '%s' に更新しました。",
+        "logs_db_row_not_found": "content.db: 行 %s が見つかりません（設定のみに保存）。",
+        "logs_db_rename_err": "content.db: 名前を変更できません: %s",
+        "logs_folders_removed": "%d 個のフォルダを削除しました",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "このゲームでエラー: %s",
+        "logs_cover_fetch_err": "カバーの取得に失敗: %s",
+        "logs_hb_tid_by_name": "ホームブルー: 名前 '%s' の XboxUnity TID = %s",
+        "logs_hb_no_cover_by_name": "ホームブルー: XboxUnity に名前のカバーなし (%s)",
+        "logs_unity_offline": "XboxUnity がオフラインです (%s)",
+        "unity_no_cover": "XboxUnity に %s のカバーがありません",
+        "unity_black_cover": "XboxUnity で空/黒のカバーを無視しました（不良）。",
+        "unity_no_usable": "XboxUnity に使用できるカバーがありません (%s)",
+        "cover_not_found_repo": "リポジトリにカバーが見つかりません。",
+        "background_not_found": "x360db に背景が見つかりません。",
+        "kind_not_found": "x360db に %s が見つかりません。",
+        "no_screenshots": "x360db にスクリーンショットがありません。",
+        "logs_ss_installed": "%d 枚のスクリーンショットをインストールしました。",
+        "logs_dl_kind_err": "%s のダウンロードに失敗: %s",
+        "logs_saved": "%s を保存しました",
+        "logs_alt_import": "%s への代替インポート",
+        "logs_kind_result": "%s: %s",
+        "logs_kind_err": "エラー: %s",
+        "logs_kind_err_with": "%s: エラー: %s",
+        "logs_kind_skip": "%s: インストール済み（スキップ）。",
+        "unity_fetch_fail": "XboxUnity からカバーのダウンロードに失敗しました。",
+        "logs_alt_installed": "%s (%s) に代替カバーをインストールしました。",
+        "logs_alt_err": "エラー: %s",
     },
     "ru": {
         "title": "Aurora Asset Manager",
@@ -1340,6 +1695,7 @@ TEXT = {
         "index_loaded": "Индекс x360db загружен: %d игр.",
         "index_fail": "Не удалось скачать индекс (офлайн-режим: будет использоваться TitleID).",
         "warn": "Предупреждение",
+        "info": "Информация",
         "scan_first": "Сначала отсканируйте игры.",
         "pick_art": "Выберите хотя бы один тип арта (обложка, фон, иконка, баннер или скриншоты).",
         "pick_aurora": "Сначала выберите корневую папку Aurora.",
@@ -1535,6 +1891,76 @@ TEXT = {
         "release_date": "Релиз",
         "developer": "Разработчик",
         "genres": "Жанры",
+        "settings_title": "Настройки",
+        "db_notfound": "content.db не найден",
+        "err_generic": "Ошибка: %s",
+        "no_folders": "Папки ещё не добавлены.",
+        "folders_header": "Добавленные папки (через «Папка для поиска игр»):",
+        "col_folder": "Папка",
+        "col_added": "Добавлена",
+        "col_count": "Игры",
+        "col_type": "Тип",
+        "remove_folders_confirm": "Удалить %d выбранную(ых) папку(и)?",
+        "open_folder": "Открыть папку",
+        "remove_selected": "Удалить выбранные",
+        "schema_unknown": "Неизвестная схема (table=%s)",
+        "folder_not_found": "Папка не найдена: %s",
+        "folder_open_err": "Ошибка открытия папки: %s",
+        "alt_no_preview": "Нет предпросмотра",
+        "alt_pick_first": "Сначала выберите обложку.",
+        "downloading": "Загрузка...",
+        "no_success": "неудачно",
+        "logs_unity_names": "Названия обновлены через XboxUnity.",
+        "logs_scanning": "Сканирование: %s",
+        "logs_no_index": "Внимание: индекс x360db не загрузился; без фильтра DLC/обновлений.",
+        "logs_ignored_dlc": "Пропущено %d TitleID DLC/обновлений (нет в индексе игр).",
+        "logs_god_xdlc": "Игры GOD/XDLC на HDD без папки GameData: %d (будут обработаны через Import)",
+        "logs_fetch_names": "Получение %d названий из XboxUnity...",
+        "logs_title_x360db": "Название найдено в x360db: %s",
+        "logs_title_unity": "Название найдено в XboxUnity: %s",
+        "logs_title_folder": "Используется имя папки: %s",
+        "logs_title_not_found": "Название не найдено для %s",
+        "logs_updating_db": "Обновление content.db: TID=%s -> %s",
+        "logs_db_err": "Ошибка обновления content.db: %s",
+        "logs_renamed_folder": "Папка переименована: %s -> %s",
+        "logs_folder_open_err": "Ошибка открытия папки: %s",
+        "logs_gamedata_created": "Папка GameData создана: %s",
+        "logs_queue_started": "Запуск очереди: %d игра(ы)",
+        "logs_custom_installed": "Пользовательская обложка установлена для %s (%s)",
+        "logs_ftp_sent": "FTP: %d файл(ов) отправлено в %s.",
+        "logs_ftp_err": "Ошибка FTP: %s",
+        "ftp_inaccessible": "FTP: невозможно получить доступ к %s (%s)",
+        "logs_downloading": "Загрузка %s для %s (%s)...",
+        "logs_rename_folder_err": "Не удалось переименовать папку: %s",
+        "logs_no_dedicated_gamedata": "Нет выделенной папки GameData для %s; переименование сохранено только в списке.",
+        "logs_db_titlename_ok": "content.db: TitleName обновлён на '%s'.",
+        "logs_db_row_not_found": "content.db: строка %s не найдена (имя сохранено только в конфигурации).",
+        "logs_db_rename_err": "content.db: не удалось переименовать: %s",
+        "logs_folders_removed": "%d папка(и) удалена(ы)",
+        "logs_progress_game": "[%d/%d] %s (%s)",
+        "logs_game_err": "Ошибка в этой игре: %s",
+        "logs_cover_fetch_err": "Ошибка получения обложки: %s",
+        "logs_hb_tid_by_name": "Хоумбрю: TID XboxUnity по имени '%s' = %s",
+        "logs_hb_no_cover_by_name": "Хоумбрю: нет обложки по имени на XboxUnity (%s)",
+        "logs_unity_offline": "XboxUnity недоступен (%s)",
+        "unity_no_cover": "На XboxUnity нет обложек для %s",
+        "unity_black_cover": "Пустая/чёрная обложка проигнорирована (бракованная) на XboxUnity.",
+        "unity_no_usable": "На XboxUnity нет подходящей обложки (%s)",
+        "cover_not_found_repo": "Обложка не найдена в репозитории.",
+        "background_not_found": "Фон не найден в x360db.",
+        "kind_not_found": "%s не найден в x360db.",
+        "no_screenshots": "Нет скриншотов в x360db.",
+        "logs_ss_installed": "Установлено скриншотов: %d.",
+        "logs_dl_kind_err": "Ошибка загрузки %s: %s",
+        "logs_saved": "Сохранено %s",
+        "logs_alt_import": "Альтернативный импорт в %s",
+        "logs_kind_result": "%s: %s",
+        "logs_kind_err": "Ошибка: %s",
+        "logs_kind_err_with": "%s: ошибка: %s",
+        "logs_kind_skip": "%s: уже установлено (пропуск).",
+        "unity_fetch_fail": "Не удалось загрузить обложку с XboxUnity.",
+        "logs_alt_installed": "Альтернативная обложка установлена для %s (%s).",
+        "logs_alt_err": "Ошибка: %s",
     },
 }
 
@@ -3719,7 +4145,7 @@ class App:
                 updated = True
         if updated:
             self.queue.put("__refresh_tree__")
-            self.log("Nomes atualizados via XboxUnity.")
+            self.log(tr("logs_unity_names"))
 
     def _paint_status(self):
         th = THEMES.get(detect_system_theme() if self.theme == "sistema" else self.theme, THEMES["escuro"])
@@ -3814,9 +4240,9 @@ class App:
 
     def scan_worker(self, path):
         try:
-            self.log("Escaneando: %s" % path)
+            self.log(tr("logs_scanning", path))
             if not self.db.ready.wait(timeout=30):
-                self.log("Aviso: índice do x360db não carregou; sem filtro de DLC/updates.")
+                self.log(tr("logs_no_index"))
             if self.cancel_event.is_set():
                 self.log(tr("canceled"))
                 return
@@ -3830,12 +4256,9 @@ class App:
                 for t in sorted(extra):
                     (game_ids if (t in known_games or not known_games) else dlc_ids).append(t)
                 if dlc_ids:
-                    self.log("Ignorados %d TitleIDs de DLC/update (não constam no índice de jogos)." % len(dlc_ids))
+                    self.log(tr("logs_ignored_dlc", len(dlc_ids)))
                 if game_ids:
-                    self.log(
-                        "Jogos GOD/XDLC no HD sem pasta GameData: %d (serão tratados via Import)"
-                        % len(game_ids)
-                    )
+                    self.log(tr("logs_god_xdlc", len(game_ids)))
                     for t in game_ids:
                         self.games.append(
                             {
@@ -3885,7 +4308,7 @@ class App:
             if self.cfg.get("auto_search_titles", True):
                 missing = [g for g in self.games if _weak_name(g.get("dname"))]
                 if missing:
-                    self.log("Buscando %d nomes no XboxUnity..." % len(missing))
+                    self.log(tr("logs_fetch_names", len(missing)))
                     threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
             self.queue.put("__refresh_tree__")
         except Exception as exc:
@@ -3947,7 +4370,7 @@ class App:
         name = self.db.title_name(tid)
         if name != tid:
             g["dname"] = name
-            self.log("Título encontrado no x360db: %s" % name)
+            self.log(tr("logs_title_x360db", name))
             self._update_content_db_name(tid, name)
             self.refresh_tree()
             return
@@ -3955,16 +4378,16 @@ class App:
         unity_name = self.unity.get_best_title(tid)
         if unity_name:
             g["dname"] = unity_name
-            self.log("Título encontrado no XboxUnity: %s" % unity_name)
+            self.log(tr("logs_title_unity", unity_name))
             self._update_content_db_name(tid, unity_name)
             self.refresh_tree()
             return
         # Fallback: dname
         if g.get("dname"):
-            self.log("Usando nome da pasta: %s" % g["dname"])
+            self.log(tr("logs_title_folder", g["dname"]))
             self.refresh_tree()
             return
-        self.log("Título não encontrado para %s" % tid)
+        self.log(tr("logs_title_not_found", tid))
 
     def _update_content_db_name(self, tid, new_name):
         """Atualiza o TitleName no content.db para o TID informado."""
@@ -3975,10 +4398,10 @@ class App:
             db_path = self.find_content_db(path)
             if not db_path:
                 return
-            self.log("Atualizando content.db: TID=%s -> %s" % (tid, new_name))
+            self.log(tr("logs_updating_db", tid, new_name))
             db_rename_by_tid(db_path, tid, new_name)
         except Exception as e:
-            self.log("Erro ao atualizar content.db: %s" % e)
+            self.log(tr("logs_db_err", e))
 
     def debug_database(self):
         path = self.aurora_path.get().strip().strip('"')
@@ -3997,7 +4420,7 @@ class App:
                 db_path = p
                 break
         if not db_path:
-            messagebox.showerror(tr("debug_db"), "content.db não encontrado")
+            messagebox.showerror(tr("debug_db"), tr("db_notfound"))
             return
         try:
             conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
@@ -4026,7 +4449,7 @@ class App:
             sb.pack(side=tk.RIGHT, fill=tk.Y)
             txt.configure(yscrollcommand=sb.set)
         except Exception as e:
-            messagebox.showerror(tr("debug_db"), f"Erro: {e}")
+            messagebox.showerror(tr("debug_db"), tr("err_generic", e))
 
     def find_gamedata_folder(self, tid):
         path = self.aurora_path.get().strip().strip('"')
@@ -4086,11 +4509,11 @@ class App:
                     g["folder"] = new_folder
                     g["folder_name"] = os.path.basename(new_folder)
                     renamed_any = True
-                    self.log("Renamed folder: %s -> %s" % (os.path.basename(folder), os.path.basename(new_folder)))
+                    self.log(tr("logs_renamed_folder", os.path.basename(folder), os.path.basename(new_folder)))
                 except OSError as exc:
-                    self.log("  não foi possível renomear a pasta: %s" % exc)
+                    self.log(tr("logs_rename_folder_err", exc))
         if not renamed_any:
-            self.log("  sem pasta GameData dedicada para %s; renomeação salva apenas na lista." % g["tid"])
+            self.log(tr("logs_no_dedicated_gamedata", g["tid"]))
         g["dname"] = clean
         # Salva nome customizado permanentemente
         custom_names = load_custom_names()
@@ -4104,11 +4527,11 @@ class App:
                 if not os.path.exists(db_path + ".bak"):
                     db_backup(db_path)
             if db_rename_by_tid(self.aurora_path.get().strip().strip('"'), g["tid"], clean):
-                self.log("  content.db: TitleName atualizado para '%s'." % clean)
+                self.log(tr("logs_db_titlename_ok", clean))
             else:
-                self.log("  content.db: linha %s não encontrada (nome salvo só na configuração)." % g["tid"])
+                self.log(tr("logs_db_row_not_found", g["tid"]))
         except Exception as exc:
-            self.log("  content.db: não foi possível renomear: %s" % exc)
+            self.log(tr("logs_db_rename_err", exc))
         # Se o console estiver configurado (FTP), renomeia a pasta no Aurora também
         if self.ftp_host.strip():
             new_folder_name = "%s_%s" % (g["tid"], clean)
@@ -4259,7 +4682,7 @@ class App:
             try:
                 os.startfile(path)
             except Exception as e:
-                self.log("Erro ao abrir pasta: %s" % e)
+                self.log(tr("logs_folder_open_err", e))
 
     def remove_cover(self, g):
         if self.busy:
@@ -4349,7 +4772,7 @@ class App:
         """Dialog para ver e remover pastas adicionadas via 'Adicionar pasta para procurar jogos'."""
         folders = load_added_folders()
         if not folders:
-            messagebox.showinfo(tr("info"), "Nenhuma pasta adicionada ainda.")
+            messagebox.showinfo(tr("info"), tr("no_folders"))
             return
 
         dlg = tk.Toplevel(self.root)
@@ -4361,14 +4784,14 @@ class App:
         frm = ttk.Frame(dlg, padding=12)
         frm.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(frm, text="Pastas adicionadas (via 'Adicionar pasta para procurar jogos'):").pack(anchor="w", pady=(0, 6))
+        ttk.Label(frm, text=tr("folders_header")).pack(anchor="w", pady=(0, 6))
 
         # Treeview
         cols = ("folder", "added", "count")
         tree = ttk.Treeview(frm, columns=cols, show="headings", selectmode="extended")
-        tree.heading("folder", text="Pasta")
-        tree.heading("added", text="Adicionada em")
-        tree.heading("count", text="Jogos")
+        tree.heading("folder", text=tr("col_folder"))
+        tree.heading("added", text=tr("col_added"))
+        tree.heading("count", text=tr("col_count"))
         tree.column("folder", width=400, stretch=True)
         tree.column("added", width=150, stretch=False)
         tree.column("count", width=60, stretch=False)
@@ -4388,7 +4811,7 @@ class App:
             sel = tree.selection()
             if not sel:
                 return
-            if not messagebox.askyesno(tr("warn"), "Remover %d pasta(s) selecionada(s)?" % len(sel)):
+            if not messagebox.askyesno(tr("warn"), tr("remove_folders_confirm", len(sel))):
                 return
             folders_set = {tree.item(item, "values")[0] for item in sel}
             remaining = [f for f in folders if f.get("folder") not in folders_set]
@@ -4400,7 +4823,7 @@ class App:
             # Atualiza tree
             for item in sel:
                 tree.delete(item)
-            self.log("%d pasta(s) removida(s)" % len(sel))
+            self.log(tr("logs_folders_removed", len(sel)))
 
         def open_selected():
             sel = tree.selection()
@@ -4411,10 +4834,10 @@ class App:
                 try:
                     os.startfile(folder)
                 except Exception as e:
-                    self.log("Erro ao abrir pasta: %s" % e)
+                    self.log(tr("folder_open_err", e))
 
-        ttk.Button(btn_row, text="Abrir pasta", command=open_selected).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(btn_row, text="Remover selecionadas", command=remove_selected).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btn_row, text=tr("open_folder"), command=open_selected).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btn_row, text=tr("remove_selected"), command=remove_selected).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(btn_row, text=tr("ok"), command=dlg.destroy).pack(side=tk.RIGHT)
 
         dlg.grab_set()
@@ -4434,7 +4857,7 @@ class App:
         table, sc = db_schema(conn)
         if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
             conn.close()
-            messagebox.showerror(tr("error"), "Schema desconhecido (tabela=%s)" % table)
+            messagebox.showerror(tr("error"), tr("schema_unknown", table))
             return
         backed_up = [False]
 
@@ -4517,8 +4940,8 @@ class App:
         tree.heading("id", text="ID")
         tree.heading("tid", text="TID")
         tree.heading("title", text=tr("db_new_name"))
-        tree.heading("dir", text="Pasta")
-        tree.heading("type", text="Tipo")
+        tree.heading("dir", text=tr("col_folder"))
+        tree.heading("type", text=tr("col_type"))
         tree.column("id", width=50, anchor="center")
         tree.column("tid", width=90, anchor="center")
         tree.column("title", width=270)
@@ -4762,7 +5185,7 @@ class App:
                 messagebox.showwarning(tr("warn"), tr("add_game_bad_tid"))
                 return
             if not os.path.isdir(raw):
-                messagebox.showerror(tr("warn"), "Pasta não encontrada: %s" % raw)
+                messagebox.showerror(tr("warn"), tr("folder_not_found", raw))
                 return
             folder = os.path.normpath(raw)
             games_found = self.probe_folder_games(folder)
@@ -4848,7 +5271,7 @@ class App:
                 os.makedirs(fld, exist_ok=True)
                 g["folder"] = fld
                 g["folder_name"] = os.path.basename(fld)
-                self.log("Pasta GameData criada: %s" % g["folder_name"])
+                self.log(tr("logs_gamedata_created", g["folder_name"]))
             except OSError as exc:
                 messagebox.showerror(tr("error"), str(exc))
                 return
@@ -5078,7 +5501,7 @@ class App:
                 if total == 0:
                     self.log(tr("no_games_notice"))
                 else:
-                    self.log("Iniciando fila: %d jogo(s)" % total)
+                    self.log(tr("logs_queue_started", total))
                 done = 0
                 for g in targets:
                     if self.cancel_event.is_set():
@@ -5087,16 +5510,16 @@ class App:
                     done += 1
                     remaining = self.download_queue.qsize()
                     self.queue.put("__progress__:%d:%d" % (done, total))
-                    self.log("[%d/%d] %s (%s)" % (done, total, self.db.title_name(g["tid"]), g["tid"]))
+                    self.log(tr("logs_progress_game", done, total, self.db.title_name(g["tid"]), g["tid"]))
                     try:
                         self.download_one(path, g, kinds)
                     except Exception as exc:
-                        self.log("  erro neste jogo: %s" % exc)
+                        self.log(tr("logs_game_err", exc))
                     time.sleep(0.3)
                 self.log(tr("done_notice"))
                 self.queue.put("__refresh_tree__")
             except Exception as exc:
-                self.queue.put("Erro: %s" % exc)
+                self.queue.put(tr("err_generic", exc))
             finally:
                 self.current_download_job = None
                 self.queue.put("__done__")
@@ -5183,7 +5606,7 @@ class App:
             self.log(tr("cover_missing_both"))
             return None
         except Exception as exc:
-            self.log("  erro ao buscar capa: %s" % exc)
+            self.log(tr("logs_cover_fetch_err", exc))
             return None
 
     def _unity_cover(self, tid, g=None):
@@ -5194,17 +5617,17 @@ class App:
             for q in homebrew_search_queries(g):
                 real = self.unity.resolve_title_tid(q)
                 if real and real.upper() != tid.upper():
-                    self.log("  Homebrew: TID do XboxUnity por nome '%s' = %s" % (q, real))
+                    self.log(tr("logs_hb_tid_by_name", q, real))
                     items = self.unity.covers(real, force=True)
                     if items:
                         break
             if not items:
-                self.log("  Homebrew: nenhuma capa por nome no XboxUnity (%s)" % self.game_title(g))
+                self.log(tr("logs_hb_no_cover_by_name", self.game_title(g)))
         if not items:
             if self.unity._down_until > time.time():
-                self.log("XboxUnity fora do ar (%s)" % tid)
+                self.log(tr("logs_unity_offline", tid))
             else:
-                self.log("XboxUnity sem capas para %s" % tid)
+                self.log(tr("unity_no_cover", tid))
             return None
         ordered = sorted(
             items,
@@ -5214,10 +5637,10 @@ class App:
             b = self.unity.cover_bytes(item)
             if b:
                 if is_black_cover(b):
-                    self.log("  Capa vazia/preta ignorada (bugada) no XboxUnity.")
+                    self.log(tr("unity_black_cover"))
                     continue
                 return b
-        self.log("XboxUnity sem capa utilizável (%s)" % tid)
+        self.log(tr("unity_no_usable", tid))
         return None
 
     def download_kind(self, path, g, kind):
@@ -5232,7 +5655,7 @@ class App:
                     self.write_import(path, tid, "cover.png", img)
                     mark_installed(tid, "boxart")
                     return True
-                self.log("  capa não encontrada no repositório.")
+                self.log(tr("cover_not_found_repo"))
                 return False
             if kind == "background":
                 blob = self.db.download_artwork(tid, "background")
@@ -5243,7 +5666,7 @@ class App:
                     self.write_import(path, tid, "background.png", img)
                     mark_installed(tid, "background")
                     return True
-                self.log("  background não encontrado no x360db.")
+                self.log(tr("background_not_found"))
                 return False
             if kind in ("icon", "banner"):
                 slot = ASSET_TYPE_ICON if kind == "icon" else ASSET_TYPE_BANNER
@@ -5251,7 +5674,7 @@ class App:
                 name = "icon" if kind == "icon" else "banner"
                 blob = self.db.download_artwork(tid, kind)
                 if not blob:
-                    self.log("  %s não encontrado no x360db." % name)
+                    self.log(tr("kind_not_found", name))
                     return False
                 new_img = cover_fill(Image.open(io.BytesIO(blob)), *size)
                 ok = self.apply_gl_slot(path, g, slot, new_img, name + ".png")
@@ -5269,7 +5692,7 @@ class App:
                     except Exception:
                         continue
                 if not grabs:
-                    self.log("  sem screenshots disponíveis no x360db.")
+                    self.log(tr("no_screenshots"))
                     return False
                 textures = [(ASSET_TYPE_SCREENSHOT + i, s) for i, s in enumerate(grabs[: self.ss_max])]
                 if g["folder"]:
@@ -5277,10 +5700,10 @@ class App:
                 for i, s in enumerate(textures):
                     self.write_import(path, tid, "screenshot%d.png" % (i + 1), s[1])
                 mark_installed(tid, "screenshots")
-                self.log("  %d screenshots instaladas." % len(textures))
+                self.log(tr("logs_ss_installed", len(textures)))
                 return True
         except Exception as exc:
-            self.log("  erro ao baixar %s: %s" % (kind, exc))
+            self.log(tr("logs_dl_kind_err", kind, exc))
             return False
 
     def apply_gl_slot(self, path, g, slot, new_img, import_name):
@@ -5318,7 +5741,7 @@ class App:
         blob = make_multi_asset_bytes(textures)
         with open(target, "wb") as f:
             f.write(blob)
-        self.log("  gravado %s" % display_path(target))
+        self.log(tr("logs_saved", display_path(target)))
 
     def write_import(self, root, tid, name, img):
         # Grava na raiz do drive (\\User\\Import, onde o Aurora lê) e também na
@@ -5340,7 +5763,7 @@ class App:
                 img.save(target, "PNG")
             except OSError:
                 continue
-            self.log("  import alternativo em %s" % display_path(target))
+            self.log(tr("logs_alt_import", display_path(target)))
 
     def install_custom(self, g=None):
         if self.busy:
@@ -5368,7 +5791,7 @@ class App:
         except Exception as exc:
             messagebox.showerror(tr("warn"), tr("img_write_fail", exc))
             return
-        self.log("Capa personalizada instalada para %s (%s)" % (self.db.title_name(g["tid"]), g["tid"]))
+        self.log(tr("logs_custom_installed", self.db.title_name(g["tid"]), g["tid"]))
         self.show_preview(g)
         self.update_tree_row(g)
 
@@ -5470,7 +5893,7 @@ class App:
 
     def open_settings(self):
         dlg = tk.Toplevel(self.root)
-        dlg.title("Configurações")
+        dlg.title(tr("settings_title"))
         dlg.transient(self.root)
         dlg.resizable(False, False)
         dlg.minsize(520, 0)
@@ -5999,14 +6422,14 @@ class App:
                 n += 1
             ftp.quit()
             self.queue.put("__assets_msg__:%d::%s" % (n, target))
-            self.log("FTP: %d arquivo(s) enviado(s) para %s." % (n, target))
+            self.log(tr("logs_ftp_sent", n, target))
         except Exception as exc:
             try:
                 if ftp is not None:
                     ftp.close()
             except Exception:
                 pass
-            self.log("  erro FTP: %s" % exc)
+            self.log(tr("logs_ftp_err", exc))
             self.queue.put("__assets_msg__:e:%s" % exc)
         finally:
             self.queue.put("__done__")
@@ -6026,7 +6449,7 @@ class App:
             try:
                 ftp.cwd(path)
             except ftplib.error_perm as exc:
-                raise OSError("FTP: impossível acessar %s (%s)" % (path, exc))
+                raise OSError(tr("ftp_inaccessible", path, exc))
         return "\\".join(current)
 
     def _assets_msg_show(self, payload):
@@ -6055,14 +6478,14 @@ class App:
         if self.busy:
             return
         self.set_busy(True)
-        self.log("Baixando %s para %s (%s)..." % (kind, self.db.title_name(g["tid"]), g["tid"]))
+        self.log(tr("logs_downloading", kind, self.db.title_name(g["tid"]), g["tid"]))
 
         def _run():
             try:
                 ok = self.download_kind(path, g, kind)
-                self.log("  %s: %s" % (kind, "OK" if ok else "sem sucesso"))
+                self.log(tr("logs_kind_result", kind, "OK" if ok else tr("no_success")))
             except Exception as exc:
-                self.log("  erro: %s" % exc)
+                self.log(tr("logs_kind_err", exc))
             finally:
                 self.queue.put("__assets_refresh__")
                 self.queue.put("__preview_refresh__")
@@ -6099,9 +6522,9 @@ class App:
                         try:
                             self.download_kind(path, g, kind)
                         except Exception as exc:
-                            self.log("  %s: erro: %s" % (kind, exc))
+                            self.log(tr("logs_kind_err_with", kind, exc))
                     else:
-                        self.log("  %s: já instalado (pulando)." % kind)
+                        self.log(tr("logs_kind_skip", kind))
             finally:
                 self.queue.put("__assets_refresh__")
                 self.queue.put("__preview_refresh__")
@@ -6315,7 +6738,7 @@ class App:
             if self._alt_msg is not None:
                 self._alt_msg.configure(text=tr("alt_loaded"))
         except Exception:
-            self._alt_preview.configure(image="", text="Sem preview")
+            self._alt_preview.configure(image="", text=tr("alt_no_preview"))
 
     def _alt_install_sel(self):
         if self.busy or self._alt_lb is None or self._alt_g is None:
@@ -6323,13 +6746,13 @@ class App:
         sel = self._alt_lb.curselection()
         if not sel:
             if self._alt_msg is not None:
-                self._alt_msg.configure(text="Selecione uma capa primeiro.")
+                self._alt_msg.configure(text=tr("alt_pick_first"))
             return
         item = self._alt_items[sel[0]]
         g = self._alt_g
         path = self.aurora_path.get().strip().strip('"')
         if self._alt_msg is not None:
-            self._alt_msg.configure(text="Baixando...")
+            self._alt_msg.configure(text=tr("downloading"))
         self.set_busy(True)
 
         def _run():
@@ -6339,22 +6762,21 @@ class App:
                 else:
                     b = self.unity.cover_bytes(item)
                 if not b:
-                    self.log("  falha ao baixar a capa do XboxUnity.")
+                    self.log(tr("unity_fetch_fail"))
                     self.queue.put("__alt_installed__:f")
                     return
                 if is_black_cover(b):
-                    self.log("  Capa vazia/preta ignorada (bugada) no XboxUnity.")
+                    self.log(tr("unity_black_cover"))
                     self.queue.put("__alt_installed__:f")
                     return
                 img = box_render(Image.open(io.BytesIO(b)), self.cover_format)
                 self.install_cover_img(path, g, img)
                 self.log(
-                    "Capa alternativa instalada para %s (%s)."
-                    % (self.db.title_name(g["tid"]), g["tid"])
+                    tr("logs_alt_installed", self.db.title_name(g["tid"]), g["tid"])
                 )
                 self.queue.put("__alt_installed__:t")
             except Exception as exc:
-                self.log("  erro: %s" % exc)
+                self.log(tr("logs_alt_err", exc))
                 self.queue.put("__alt_installed__:f")
 
         threading.Thread(target=_run, daemon=True).start()
