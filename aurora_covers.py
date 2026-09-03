@@ -6257,7 +6257,53 @@ class App:
             except OSError:
                 pass
 
-        # 5) DEBUG: lista o que tem no Import para diagnóstico
+        # 5) DEEP SCAN: encontra TODAS as imagens nos diretórios relevantes e classifica por tamanho/nome
+        # Isso pega assets mesmo com nomes não padrão
+        scan_dirs = import_candidates + ([folder] if folder and os.path.isdir(folder) else [])
+        for base in scan_dirs:
+            if not os.path.isdir(base):
+                continue
+            try:
+                for fname in os.listdir(base):
+                    full = os.path.join(base, fname)
+                    if not os.path.isfile(full):
+                        continue
+                    low = fname.lower()
+                    if not low.endswith((".png", ".jpg", ".jpeg")):
+                        continue
+                    # Tenta abrir e classificar por dimensões
+                    try:
+                        with Image.open(full) as im:
+                            w, h = im.size
+                        # Classifica por proporção/tamanho
+                        if low.startswith("screenshot") or (w >= 1000 and h >= 500 and w/h > 1.5):
+                            # Screenshot ou banner largo
+                            if w/h > 2.0:
+                                dst_name = f"screenshots/{fname}"
+                            else:
+                                dst_name = "banner.png"
+                        elif h > w * 1.3:  # Retrato alto = cover
+                            dst_name = "cover.png"
+                        elif w == h and w <= 256:  # Quadrado pequeno = icon/tile
+                            dst_name = "icon.png"
+                        elif w >= h * 1.5:  # Paisagem = background
+                            dst_name = "background.png"
+                        else:
+                            dst_name = fname  # mantém nome original
+                        
+                        dst = os.path.join(target_dir, dst_name) if not dst_name.startswith("screenshots/") else os.path.join(target_dir, dst_name)
+                        if dst_name.startswith("screenshots/"):
+                            os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
+                        shutil.copy2(full, dst)
+                        if dst_name not in exported:
+                            exported.append(dst_name)
+                        self.log(f"[EXPORT DEEP] {fname} ({w}x{h}) -> {dst_name}")
+                    except Exception:
+                        pass
+            except OSError:
+                pass
+
+        # 6) DEBUG: lista o que tem no Import para diagnóstico
         for base in import_candidates:
             if os.path.isdir(base):
                 try:
