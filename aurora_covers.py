@@ -39,12 +39,17 @@ GAMES_INDEX_URL = X360DB_RAW + "games.json"
 GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
 # 360-Game-Art (Element18592): capas ordenadas por TitleID em Games/<tid>/cover.jpg
 GAME_ART_RAW = "https://raw.githubusercontent.com/Element18592/360-Game-Art/main/Games/"
-# Pasta local de assets de jogos, DENTRO deste repositório (NÃO distribuída no exe).
-# Funciona ao rodar por código (python aurora_covers.py). Estrutura:
-#   game_covers/<tid>/cover.jpg | banner.png | tile.png | icon.png | background.jpg | \
-# screenshots/x.jpg   (por TID)
-#   game_covers/<nome>.jpg      (por nome do jogo, só para capa)
-GAME_COVERS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "game_covers")
+# Pasta de assets locais (game_covers).
+# - Rodando por código (python aurora_covers.py): usa a pasta do repo.
+# - Rodando compilado (.exe): usa pasta "game_covers" ao lado do executável.
+def _get_game_covers_dir():
+    if getattr(sys, "frozen", False):  # PyInstaller
+        base = os.path.dirname(sys.executable)
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, "game_covers")
+
+GAME_COVERS_DIR = _get_game_covers_dir()
 USER_AGENT = {"User-Agent": "Mozilla/5.0 (aurora-covers-x360db)"}
 
 MIN_ASSET_SIZE = 24 * 1024
