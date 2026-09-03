@@ -5799,6 +5799,15 @@ class App:
 
     def get_cover_blob(self, tid, g=None):
         try:
+            # Se repo for gamecovers, usa APENAS a pasta local game_covers
+            if self.repo == "gamecovers":
+                if g:
+                    b = self._local_asset(tid, g)
+                    if b:
+                        return b
+                self.log(tr("cover_missing_both"))
+                return None
+
             # Capa personalizada local (pasta game_covers/ neste repo, não distribuída)
             # tem a maior prioridade: é o asset explícito do usuário para esse jogo.
             if g:
@@ -6533,6 +6542,7 @@ class App:
         ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
         ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
         ttk.Radiobutton(rf, text="360-Game-Art", variable=repo_var, value="gameart").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(rf, text="game_covers (local)", variable=repo_var, value="gamecovers").pack(side=tk.LEFT, padx=6)
         add_row(tr("set_repo"), rf)
 
         f_var = tk.StringVar(value=self.cover_format)
