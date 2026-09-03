@@ -405,6 +405,9 @@ TEXT = {
         "logs_title_unity": "Título encontrado no XboxUnity: %s",
         "logs_title_folder": "Usando nome da pasta: %s",
         "logs_title_not_found": "Título não encontrado para %s",
+        "logs_title_none_idlike": "Nenhum jogo com nome de TitleID para corrigir.",
+        "logs_titles_updated": "Nomes corrigidos: %d.",
+        "logs_title_nochange": "Nomes já estão corretos.",
         "logs_updating_db": "Atualizando content.db: TID=%s -> %s",
         "logs_db_err": "Erro ao atualizar content.db: %s",
         "logs_renamed_folder": "Pasta renomeada: %s -> %s",
@@ -708,6 +711,9 @@ TEXT = {
         "logs_title_unity": "Title found on XboxUnity: %s",
         "logs_title_folder": "Using folder name: %s",
         "logs_title_not_found": "No title found for %s",
+        "logs_title_none_idlike": "No games with a TitleID-like name to fix.",
+        "logs_titles_updated": "Names fixed: %d.",
+        "logs_title_nochange": "Names are already correct.",
         "logs_updating_db": "Updating content.db: TID=%s -> %s",
         "logs_db_err": "Error updating content.db: %s",
         "logs_renamed_folder": "Folder renamed: %s -> %s",
@@ -1011,6 +1017,9 @@ TEXT = {
         "logs_title_unity": "Título encontrado en XboxUnity: %s",
         "logs_title_folder": "Usando nombre de carpeta: %s",
         "logs_title_not_found": "Título no encontrado para %s",
+        "logs_title_none_idlike": "Ningún juego con nombre tipo TitleID que corregir.",
+        "logs_titles_updated": "Nombres corregidos: %d.",
+        "logs_title_nochange": "Los nombres ya son correctos.",
         "logs_updating_db": "Actualizando content.db: TID=%s -> %s",
         "logs_db_err": "Error al actualizar content.db: %s",
         "logs_renamed_folder": "Carpeta renombrada: %s -> %s",
@@ -1314,6 +1323,9 @@ TEXT = {
         "logs_title_unity": "Titre trouvé sur XboxUnity : %s",
         "logs_title_folder": "Utilisation du nom de dossier : %s",
         "logs_title_not_found": "Aucun titre trouvé pour %s",
+        "logs_title_none_idlike": "Aucun jeu avec un nom type TitleID à corriger.",
+        "logs_titles_updated": "Noms corrigés : %d.",
+        "logs_title_nochange": "Les noms sont déjà corrects.",
         "logs_updating_db": "Mise à jour de content.db : TID=%s -> %s",
         "logs_db_err": "Erreur de mise à jour de content.db : %s",
         "logs_renamed_folder": "Dossier renommé : %s -> %s",
@@ -1617,6 +1629,9 @@ TEXT = {
         "logs_title_unity": "XboxUnity でタイトルが見つかりました: %s",
         "logs_title_folder": "フォルダ名を使用: %s",
         "logs_title_not_found": "%s のタイトルが見つかりません",
+        "logs_title_none_idlike": "修正対象の TitleID 形式の名前を持つゲームはありません。",
+        "logs_titles_updated": "修正した名前: %d 件。",
+        "logs_title_nochange": "名前はすでに正しいです。",
         "logs_updating_db": "content.db を更新: TID=%s -> %s",
         "logs_db_err": "content.db の更新に失敗: %s",
         "logs_renamed_folder": "フォルダ名を変更: %s -> %s",
@@ -1920,6 +1935,9 @@ TEXT = {
         "logs_title_unity": "Название найдено в XboxUnity: %s",
         "logs_title_folder": "Используется имя папки: %s",
         "logs_title_not_found": "Название не найдено для %s",
+        "logs_title_none_idlike": "Нет игр с именем в виде TitleID для исправления.",
+        "logs_titles_updated": "Исправлено имён: %d.",
+        "logs_title_nochange": "Имена уже корректны.",
         "logs_updating_db": "Обновление content.db: TID=%s -> %s",
         "logs_db_err": "Ошибка обновления content.db: %s",
         "logs_renamed_folder": "Папка переименована: %s -> %s",
@@ -3426,9 +3444,11 @@ def scan_aurora(root):
         log(f"  [SCAN] Homebrews encontrados por .xex: {len(homebrew)}")
         games.extend(homebrew)
 
-    # Aplica nomes customizados aos jogos do DB que não têm dname
+    # Aplica nomes customizados aos jogos (rename do usuário tem prioridade
+    # sobre o nome do DB/auto-detetado; se não aplicar, o nome volta ao antigo
+    # no próximo scan quando o content.db não foi alterado).
     for g in games:
-        if g["tid"] in custom_names and not g.get("dname"):
+        if g["tid"] in custom_names:
             g["dname"] = custom_names[g["tid"]]
 
     # Deduplicação — por TID e também por pasta (case-insensitive), para evitar
@@ -3754,6 +3774,16 @@ class App:
         self.lang = "pt"
         global CURRENT_LANG
         CURRENT_LANG = "pt"
+        # Aplica o idioma salvo ANTES de construir a interface, senão os textos
+        # são criados com o idioma do sistema e a interface fica em português mesmo
+        # com outro idioma configurado.
+        try:
+            _early_cfg = load_config()
+            if _early_cfg.get("lang") in TEXT:
+                self.lang = _early_cfg["lang"]
+                CURRENT_LANG = self.lang
+        except Exception:
+            pass
         self.show_status = True
         self.show_log = True
         self.ftp_host = ""
@@ -4361,33 +4391,76 @@ class App:
             pass
         self.refresh_tree()
 
-    def search_title(self):
-        g = self.selected_game()
-        if not g:
-            return
+    def _looks_like_id(self, dname):
+        """Nome que é um TID/pasta (não um nome humano): vazio, com separadores,
+        tudo minúsculo, ou exatamente 8 hex."""
+        if not dname:
+            return True
+        d = dname.strip()
+        if d == d.upper() and re.fullmatch(r"[0-9A-F]{8}", d):
+            return True
+        return "\\" in d or "/" in d or d.lower() == d
+
+    def _best_title_for(self, g):
         tid = g["tid"]
-        # Busca no x360db
-        name = self.db.title_name(tid)
-        if name != tid:
-            g["dname"] = name
-            self.log(tr("logs_title_x360db", name))
-            self._update_content_db_name(tid, name)
-            self.refresh_tree()
+        try:
+            name = self.db.title_name(tid)
+            if name and name != tid:
+                return ("db", name)
+            unity_name = self.unity.get_best_title(tid)
+            if unity_name:
+                return ("unity", unity_name)
+        except Exception:
+            pass
+        return (None, None)
+
+    def search_title(self):
+        # Como vários jogos podem ter nomes "fracos" (TID/pasta) ao mesmo tempo,
+        # este botão percorre TODOS (não só o selecionado) e tenta renomear os que
+        # estão salvos como TitleID em vez de nome. Roda em thread p/ não travar a UI.
+        if not self.games:
             return
-        # Busca no XboxUnity
-        unity_name = self.unity.get_best_title(tid)
-        if unity_name:
-            g["dname"] = unity_name
-            self.log(tr("logs_title_unity", unity_name))
-            self._update_content_db_name(tid, unity_name)
-            self.refresh_tree()
+        targets = [g for g in self.games if self._looks_like_id(g.get("dname"))]
+        if not targets:
+            sel = self.selected_game()
+            targets = [sel] if sel else []
+        if not targets:
+            self.log(tr("logs_title_none_idlike"))
             return
-        # Fallback: dname
-        if g.get("dname"):
-            self.log(tr("logs_title_folder", g["dname"]))
-            self.refresh_tree()
-            return
-        self.log(tr("logs_title_not_found", tid))
+        self.set_busy(True)
+
+        def _run(items):
+            changed = 0
+            try:
+                for g in items:
+                    if self.cancel_event.is_set():
+                        break
+                    tid = g["tid"]
+                    src, name = self._best_title_for(g)
+                    if not name:
+                        self.log(tr("logs_title_not_found", tid))
+                        continue
+                    if g.get("dname") == name:
+                        continue
+                    g["dname"] = name
+                    self._update_content_db_name(tid, name)
+                    custom_names = load_custom_names()
+                    custom_names[tid] = name
+                    save_custom_names(custom_names)
+                    changed += 1
+                    if src == "db":
+                        self.log(tr("logs_title_x360db", name))
+                    else:
+                        self.log(tr("logs_title_unity", name))
+            finally:
+                if changed:
+                    self.log(tr("logs_titles_updated", changed))
+                else:
+                    self.log(tr("logs_title_nochange"))
+                self.queue.put("__refresh_tree__")
+                self.queue.put("__done__")
+
+        threading.Thread(target=_run, args=(targets,), daemon=True).start()
 
     def _update_content_db_name(self, tid, new_name):
         """Atualiza o TitleName no content.db para o TID informado."""
