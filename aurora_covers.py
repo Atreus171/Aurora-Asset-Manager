@@ -152,6 +152,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "verificando...",
         "connected": "conectado",
         "disconnected": "desconectado",
@@ -300,6 +301,7 @@ TEXT = {
         "done_notice": "Concluído! No Xbox: boot Aurora e aperte Y -> Refresh no jogo (ou use Import).",
         "set_log": "Mostrar log (caixa de texto)",
         "cover_missing_both": "  capa não encontrada em x360db nem XboxUnity.",
+        "gameart_cover_ok": "  capa da 360-Game-Art para %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Pesquisar título...",
@@ -460,6 +462,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "checking...",
         "connected": "connected",
         "disconnected": "disconnected",
@@ -609,6 +612,7 @@ TEXT = {
         "done_notice": "Done! On the Xbox: boot Aurora and press Y -> Refresh on the game (or use Import).",
         "set_log": "Show log (text box)",
         "cover_missing_both": "  cover not found on x360db or XboxUnity.",
+        "gameart_cover_ok": "  360-Game-Art cover for %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Search title...",
@@ -769,6 +773,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "verificando...",
         "connected": "conectado",
         "disconnected": "desconectado",
@@ -918,6 +923,7 @@ TEXT = {
         "done_notice": "¡Hecho! En Xbox: inicie Aurora y pulse Y -> Refresh en el juego (o use Import).",
         "set_log": "Mostrar registro (cuadro de texto)",
         "cover_missing_both": "  portada no encontrada en x360db ni XboxUnity.",
+        "gameart_cover_ok": "  portada de 360-Game-Art para %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Buscar título...",
@@ -1078,6 +1084,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "vérification...",
         "connected": "connecté",
         "disconnected": "déconnecté",
@@ -1227,6 +1234,7 @@ TEXT = {
         "done_notice": "Terminé! Sur Xbox: démarrez Aurora et appuyez Y -> Refresh sur le jeu (ou utilisez Import).",
         "set_log": "Afficher le journal (zone de texte)",
         "cover_missing_both": "  jaquette non trouvée sur x360db ni XboxUnity.",
+        "gameart_cover_ok": "  jaquette 360-Game-Art pour %s.",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "Rechercher titre...",
@@ -1387,6 +1395,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "確認中...",
         "connected": "接続済み",
         "disconnected": "未接続",
@@ -1536,6 +1545,7 @@ TEXT = {
         "done_notice": "完了! Xboxで: Auroraを起動し Y -> Refreshを押す (またはImportを使用)。",
         "set_log": "ログを表示 (テキストボックス)",
         "cover_missing_both": "  x360dbおよびXboxUnityでカバーが見つかりません。",
+        "gameart_cover_ok": "  360-Game-Artのカバー %s。",
         "sort_asc": "A-Z",
         "sort_desc": "Z-A",
         "search_title": "タイトルを検索...",
@@ -1696,6 +1706,7 @@ TEXT = {
         "title": "Aurora Asset Manager",
         "unity_status": "XboxUnity:",
         "x360db_status": "x360db:",
+        "gameart_status": "360-Game-Art:",
         "checking": "проверка...",
         "connected": "подключено",
         "disconnected": "отключено",
@@ -1845,6 +1856,7 @@ TEXT = {
         "done_notice": "Готово! На Xbox: запустите Aurora и нажмите Y -> Refresh в игре (или используйте Import).",
         "set_log": "Показать лог (текстовое поле)",
         "cover_missing_both": "  обложка не найдена ни в x360db, ни в XboxUnity.",
+        "gameart_cover_ok": "  обложка 360-Game-Art для %s.",
         "sort_asc": "А-Я",
         "sort_desc": "Я-А",
         "search_title": "Поиск названия...",
@@ -3819,6 +3831,7 @@ class App:
         self.cancel_event = threading.Event()
         self.unity_status = "checking"
         self.x360db_status = "checking"
+        self.gameart_status = "checking"
         self._applied_theme = ""
         self.aurora_path = tk.StringVar()
         self.opt_boxart = tk.BooleanVar(value=True)
@@ -3913,6 +3926,11 @@ class App:
         self.x360db_dot.pack(side=tk.LEFT, padx=(4, 2))
         self.x360db_lbl = ttk.Label(self.status_row, text=tr("checking"))
         self.x360db_lbl.pack(side=tk.LEFT)
+        ttk.Label(self.status_row, text=tr("gameart_status")).pack(side=tk.LEFT, padx=(16, 0))
+        self.gameart_dot = tk.Label(self.status_row, text="●", width=1, fg=UNITY_WAIT)
+        self.gameart_dot.pack(side=tk.LEFT, padx=(4, 2))
+        self.gameart_lbl = ttk.Label(self.status_row, text=tr("checking"))
+        self.gameart_lbl.pack(side=tk.LEFT)
 
         self.path_row = ttk.Frame(frm)
         self.path_row.pack(fill=tk.X)
@@ -4131,6 +4149,9 @@ class App:
                 elif isinstance(msg, str) and msg.startswith("__x360db_status__:"):
                     self.x360db_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
                     self._paint_status()
+                elif isinstance(msg, str) and msg.startswith("__gameart_status__:"):
+                    self.gameart_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+                    self._paint_status()
                 elif isinstance(msg, str) and msg.startswith("__preview_info__:"):
                     self._preview_info_show(msg.split(":", 1)[1])
                 elif msg == "__alt_preview__":
@@ -4208,6 +4229,7 @@ class App:
         for status, dot, lbl in (
             (self.unity_status, self.unity_dot, self.unity_lbl),
             (self.x360db_status, self.x360db_dot, self.x360db_lbl),
+            (self.gameart_status, self.gameart_dot, self.gameart_lbl),
         ):
             color = {"ok": UNITY_OK, "down": UNITY_DOWN}.get(status, UNITY_WAIT)
             text = tr("connected") if status == "ok" else (
@@ -4233,6 +4255,8 @@ class App:
             if self.show_status:
                 self.queue.put("__unity_status__:" + ("ok" if poke_url(XBOXUNITY_ROOT) else "down"))
                 self.queue.put("__x360db_status__:" + ("ok" if poke_url(X360DB_PING_URL, method="HEAD") else "down"))
+                # Ping numa capa real conhecida do 360-Game-Art (valida conexão e estrutura).
+                self.queue.put("__gameart_status__:" + ("ok" if poke_url(GAME_ART_RAW + "315a07d2/cover.jpg") else "down"))
             time.sleep(PING_INTERVAL)
 
     def theme_loop(self):
@@ -5692,23 +5716,33 @@ class App:
 
     def get_cover_blob(self, tid, g=None):
         try:
-            # A capa (boxart) deve ser a CAIXA COMPLETA (frente + lombada com o nome + traseira),
-            # formato 900x600 que o Aurora exibe. Só o XboxUnity entrega esse formato; o "boxart"
-            # do x360db (boxartlg, ex. 219x300) traz apenas a arte da FRENTE, sem lombada/traseira.
-            # Logo a Unity é sempre tentada primeiro; o boxart do x360db vira fallback apenas quando
-            # o repositório selecionado é o x360db.
-            b = self._unity_cover(tid, g)
-            if b:
+            # Na COVER, o x360db NUNCA vem primeiro (ele só tem a arte da frente), mesmo que
+            # seja o repositório selecionado. A seleção (self.repo) apenas decide se a Unity
+            # (caixa completa 900x600) ou a 360-Game-Art (capa frontal por TitleID) tenta
+            # primeiro; o x360db fica sempre como último fallback.
+            def _unity():
+                return self._unity_cover(tid, g)
+
+            def _gameart():
+                b = fetch_bytes(GAME_ART_RAW + tid.lower() + "/cover.jpg")
+                if b:
+                    self.log(tr("gameart_cover_ok", tid))
                 return b
-            # 360-Game-Art (pasta por TitleID, cover.jpg).
-            b = fetch_bytes(GAME_ART_RAW + tid.lower() + "/cover.jpg")
-            if b:
-                return b
-            # Fallback universal: o boxart do x360db (mesmo só a frente) cobre
-            # jogos que a Unity não tem, independente do repositório selecionado.
-            b = self.db.download_artwork(tid, "boxart")
-            if b:
-                return b
+
+            def _x360():
+                return self.db.download_artwork(tid, "boxart")
+
+            primary = self.repo if self.repo in ("xboxunity", "gameart") else "xboxunity"
+            order = [primary]
+            if primary == "xboxunity":
+                order.append("gameart")
+            else:
+                order.insert(0, "xboxunity")
+            order.append("x360db")
+            for src in order:
+                b = {"xboxunity": _unity, "gameart": _gameart, "x360db": _x360}[src]()
+                if b:
+                    return b
             self.log(tr("cover_missing_both"))
             return None
         except Exception as exc:
@@ -6060,6 +6094,7 @@ class App:
         rf = ttk.Frame(outer)
         ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
         ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
+        ttk.Radiobutton(rf, text="360-Game-Art", variable=repo_var, value="gameart").pack(side=tk.LEFT, padx=6)
         add_row(tr("set_repo"), rf)
 
         f_var = tk.StringVar(value=self.cover_format)
