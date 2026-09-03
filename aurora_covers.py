@@ -206,6 +206,7 @@ TEXT = {
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
         "m_custom": "Capa personalizada...",
+        "m_export_assets": "Exportar assets para game_covers...",
         "set_theme": "Tema:",
         "theme_dark": "Escuro",
         "theme_light": "Claro",
@@ -249,6 +250,7 @@ TEXT = {
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
         "m_custom": "Capa personalizada...",
+        "m_export_assets": "Exportar assets para game_covers...",
         "set_title": "Configurações",
         "set_theme": "Tema:",
         "theme_dark": "Escuro",
@@ -430,6 +432,10 @@ TEXT = {
         "logs_gamedata_created": "Pasta GameData criada: %s",
         "logs_queue_started": "Iniciando fila: %d jogo(s)",
         "logs_custom_installed": "Capa personalizada instalada para %s (%s)",
+        "logs_assets_exported": "Assets exportados para %s: %s",
+        "assets_exported_ok": "Assets exportados para game_covers/%s\n%d arquivo(s) copiado(s).",
+        "logs_no_assets_to_export": "Nenhum asset instalado para exportar: %s",
+        "no_assets_to_export": "Nenhum asset instalado encontrado para exportar.",
         "logs_ftp_sent": "FTP: %d arquivo(s) enviado(s) para %s.",
         "logs_ftp_err": "Erro no FTP: %s",
         "ftp_inaccessible": "FTP: impossível acessar %s (%s)",
@@ -517,6 +523,7 @@ TEXT = {
         "m_assets": "View/change this game's assets...",
         "m_alt": "Alternative covers online...",
         "m_custom": "Custom cover...",
+        "m_export_assets": "Export assets to game_covers...",
         "set_theme": "Theme:",
         "theme_dark": "Dark",
         "theme_light": "Light",
@@ -560,6 +567,7 @@ TEXT = {
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
         "m_custom": "Custom cover...",
+        "m_export_assets": "Export assets to game_covers...",
         "set_title": "Settings",
         "set_theme": "Theme:",
         "theme_dark": "Dark",
@@ -742,6 +750,10 @@ TEXT = {
         "logs_gamedata_created": "GameData folder created: %s",
         "logs_queue_started": "Starting queue: %d game(s)",
         "logs_custom_installed": "Custom cover installed for %s (%s)",
+        "logs_assets_exported": "Assets exported to %s: %s",
+        "assets_exported_ok": "Assets exported to game_covers/%s\n%d file(s) copied.",
+        "logs_no_assets_to_export": "No installed assets to export: %s",
+        "no_assets_to_export": "No installed assets found to export.",
         "logs_ftp_sent": "FTP: %d file(s) sent to %s.",
         "logs_ftp_err": "FTP error: %s",
         "ftp_inaccessible": "FTP: cannot access %s (%s)",
@@ -829,6 +841,7 @@ TEXT = {
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
         "m_custom": "Portada personalizada...",
+        "m_export_assets": "Exportar assets a game_covers...",
         "set_theme": "Tema:",
         "theme_dark": "Oscuro",
         "theme_light": "Claro",
@@ -872,6 +885,7 @@ TEXT = {
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
         "m_custom": "Portada personalizada...",
+        "m_export_assets": "Exportar assets a game_covers...",
         "set_title": "Configuración",
         "set_theme": "Tema:",
         "theme_dark": "Oscuro",
@@ -1054,6 +1068,10 @@ TEXT = {
         "logs_gamedata_created": "Carpeta GameData creada: %s",
         "logs_queue_started": "Iniciando cola: %d juego(s)",
         "logs_custom_installed": "Portada personalizada instalada para %s (%s)",
+        "logs_assets_exported": "Assets exportados a %s: %s",
+        "assets_exported_ok": "Assets exportados a game_covers/%s\n%d archivo(s) copiado(s).",
+        "logs_no_assets_to_export": "No hay assets instalados para exportar: %s",
+        "no_assets_to_export": "No se encontraron assets instalados para exportar.",
         "logs_ftp_sent": "FTP: %d archivo(s) enviado(s) a %s.",
         "logs_ftp_err": "Error de FTP: %s",
         "ftp_inaccessible": "FTP: no se puede acceder a %s (%s)",
@@ -1141,6 +1159,7 @@ TEXT = {
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
         "m_custom": "Jaquette personnalisée...",
+        "m_export_assets": "Exporter les assets vers game_covers...",
         "set_theme": "Thème:",
         "theme_dark": "Sombre",
         "theme_light": "Clair",
@@ -1184,6 +1203,7 @@ TEXT = {
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
         "m_custom": "Jaquette personnalisée...",
+        "m_export_assets": "Exporter les assets vers game_covers...",
         "set_title": "Paramètres",
         "set_theme": "Thème:",
         "theme_dark": "Sombre",
@@ -1366,6 +1386,10 @@ TEXT = {
         "logs_gamedata_created": "Dossier GameData créé : %s",
         "logs_queue_started": "Démarrage de la file : %d jeu(x)",
         "logs_custom_installed": "Jaquette personnalisée installée pour %s (%s)",
+        "logs_assets_exported": "Assets exportés vers %s: %s",
+        "assets_exported_ok": "Assets exportés vers game_covers/%s\n%d fichier(s) copié(s).",
+        "logs_no_assets_to_export": "Aucun asset installé à exporter: %s",
+        "no_assets_to_export": "Aucun asset installé trouvé à exporter.",
         "logs_ftp_sent": "FTP : %d fichier(s) envoyé(s) vers %s.",
         "logs_ftp_err": "Erreur FTP : %s",
         "ftp_inaccessible": "FTP : impossible d'accéder à %s (%s)",
@@ -1453,6 +1477,7 @@ TEXT = {
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
         "m_custom": "カスタムカバー...",
+        "m_export_assets": "game_coversにアセットをエクスポート...",
         "set_theme": "テーマ:",
         "theme_dark": "ダーク",
         "theme_light": "ライト",
@@ -1496,6 +1521,7 @@ TEXT = {
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
         "m_custom": "カスタムカバー...",
+        "m_export_assets": "game_coversにアセットをエクスポート...",
         "set_title": "設定",
         "set_theme": "テーマ:",
         "theme_dark": "ダーク",
@@ -1678,6 +1704,10 @@ TEXT = {
         "logs_gamedata_created": "GameData フォルダを作成: %s",
         "logs_queue_started": "キューを開始: %d ゲーム",
         "logs_custom_installed": "%s (%s) にカスタムカバーをインストールしました",
+        "logs_assets_exported": "%s にアセットをエクスポートしました: %s",
+        "assets_exported_ok": "game_covers/%s にアセットをエクスポートしました\n%d 個のファイルをコピーしました。",
+        "logs_no_assets_to_export": "エクスポートするインストール済みアセットがありません: %s",
+        "no_assets_to_export": "エクスポートするインストール済みアセットが見つかりません。",
         "logs_ftp_sent": "FTP: %d 個のファイルを %s に送信しました。",
         "logs_ftp_err": "FTP エラー: %s",
         "ftp_inaccessible": "FTP: %s にアクセスできません (%s)",
@@ -1765,6 +1795,7 @@ TEXT = {
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
         "m_custom": "Пользовательская обложка...",
+        "m_export_assets": "Экспортировать ассеты в game_covers...",
         "set_theme": "Тема:",
         "theme_dark": "Тёмная",
         "theme_light": "Светлая",
@@ -1808,6 +1839,7 @@ TEXT = {
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
         "m_custom": "Пользовательская обложка...",
+        "m_export_assets": "Экспортировать ассеты в game_covers...",
         "set_title": "Настройки",
         "set_theme": "Тема:",
         "theme_dark": "Тёмная",
@@ -1990,6 +2022,10 @@ TEXT = {
         "logs_gamedata_created": "Папка GameData создана: %s",
         "logs_queue_started": "Запуск очереди: %d игра(ы)",
         "logs_custom_installed": "Пользовательская обложка установлена для %s (%s)",
+        "logs_assets_exported": "Ассеты экспортированы в %s: %s",
+        "assets_exported_ok": "Ассеты экспортированы в game_covers/%s\n%d файл(ов) скопировано.",
+        "logs_no_assets_to_export": "Нет установленных ассетов для экспорта: %s",
+        "no_assets_to_export": "Не найдено установленных ассетов для экспорта.",
         "logs_ftp_sent": "FTP: %d файл(ов) отправлено в %s.",
         "logs_ftp_err": "Ошибка FTP: %s",
         "ftp_inaccessible": "FTP: невозможно получить доступ к %s (%s)",
@@ -5769,8 +5805,11 @@ class App:
 
     def _local_asset(self, tid, g=None):
         """Busca asset na pasta local `game_covers/` deste repositório (não distribuída).
-        Casa por TID (`<tid>/cover.jpg`, `<tid>/banner.png`, `<tid>.jpg`...) e, para a capa,
-        também por nome do jogo (`<nome>.jpg`). Retorna os bytes do arquivo encontrado."""
+        Estrutura suportada:
+          game_covers/<Nome do Jogo>_<TID>/cover.png | background.png | banner.png | tile.png | icon.png | screenshots/
+          game_covers/<TID>/...
+          game_covers/<HomebrewID>/...  (TID sintético SHA1 do nome)
+        Prioridade: pasta com padrão <Nome>_<TID> > pasta por TID > pasta por HomebrewID > arquivo solto por TID > arquivo solto por nome."""
         base = GAME_COVERS_DIR
         if not os.path.isdir(base):
             return None
@@ -5786,24 +5825,68 @@ class App:
                 pass
             return None
 
-        # 1) Por TID: pasta <tid>/ (qualquer imagem) ou arquivo <tid>.<ext>
+        def _scan_folder(folder):
+            if not os.path.isdir(folder):
+                return None
+            try:
+                for name in sorted(os.listdir(folder)):
+                    if name.lower().endswith(ok):
+                        b = _try(os.path.join(folder, name))
+                        if b:
+                            return b
+            except OSError:
+                pass
+            return None
+
+        # 1) Pasta com padrão <Nome>_<TID> (case-insensitive no TID)
+        if g:
+            for key in ("dname", "folder_name", "title"):
+                raw = str(g.get(key) or "").strip()
+                if raw and raw.lower() != tid.lower():
+                    # normaliza o nome para uso em pasta (remove caracteres problemáticos)
+                    safe_name = re.sub(r'[\\/:*?"<>|]', "_", raw)
+                    # procura pasta <safe_name>_<tid> ou <safe_name>_<tid_lower>
+                    for suffix in (tid, tid.lower()):
+                        folder_name = f"{safe_name}_{suffix}"
+                        folder = os.path.join(base, folder_name)
+                        b = _scan_folder(folder)
+                        if b:
+                            return b
+                        # também tenta case-insensitive listando o diretório
+                        try:
+                            for entry in os.listdir(base):
+                                if os.path.isdir(os.path.join(base, entry)) and entry.lower() == folder_name.lower():
+                                    b = _scan_folder(os.path.join(base, entry))
+                                    if b:
+                                        return b
+                        except OSError:
+                            pass
+
+        # 2) Pasta por TID (case-insensitive)
         for sub in (os.path.join(base, tid), os.path.join(base, tid.lower())):
-            if os.path.isdir(sub):
-                try:
-                    for name in sorted(os.listdir(sub)):
-                        if name.lower().endswith(ok):
-                            b = _try(os.path.join(sub, name))
+            b = _scan_folder(sub)
+            if b:
+                return b
+
+        # 3) Pasta por HomebrewID (TID sintético SHA1 do nome)
+        if g:
+            for key in ("dname", "folder_name", "title"):
+                raw = str(g.get(key) or "").strip()
+                if raw and raw.lower() != tid.lower():
+                    hb_tid = legacy_tid_for(raw)
+                    if hb_tid:
+                        for sub in (os.path.join(base, hb_tid), os.path.join(base, hb_tid.lower())):
+                            b = _scan_folder(sub)
                             if b:
                                 return b
-                except OSError:
-                    pass
+
+        # 4) Arquivo solto por TID
         for ext in ok:
             b = _try(os.path.join(base, tid + ext))
             if b:
                 return b
 
-        # 2) Por nome do jogo (só capa): arquivo cuja base (sem extensão e sem
-        #    pontos/underlines/espaços) case com o nome do jogo.
+        # 5) Arquivo solto por nome (só capa)
         if g:
             names = {}
             for key in ("dname", "folder_name", "title"):
@@ -6036,6 +6119,123 @@ class App:
         g["has_cover"] = True
         self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
 
+    def export_assets(self, g):
+        """Exporta assets instalados do jogo para a pasta game_covers/<Nome>_<TID>/"""
+        tid = g.get("tid", "").upper()
+        if not tid:
+            return
+        # Determina o nome da pasta: <Nome>_<TID>
+        name = self.game_title(g)
+        safe_name = re.sub(r'[\\/:*?"<>|]', "_", name)
+        folder_name = f"{safe_name}_{tid}"
+        target_dir = os.path.join(GAME_COVERS_DIR, folder_name)
+        os.makedirs(target_dir, exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
+
+        exported = []
+        # Para cada tipo de asset, tenta ler do local instalado (GC asset, import, etc.)
+        # Cover
+        cover_path = self._find_installed_asset(g, "cover")
+        if cover_path and os.path.isfile(cover_path):
+            dst = os.path.join(target_dir, "cover.png")
+            shutil.copy2(cover_path, dst)
+            exported.append("cover.png")
+        # Background
+        bg_path = self._find_installed_asset(g, "background")
+        if bg_path and os.path.isfile(bg_path):
+            dst = os.path.join(target_dir, "background.png")
+            shutil.copy2(bg_path, dst)
+            exported.append("background.png")
+        # Banner
+        banner_path = self._find_installed_asset(g, "banner")
+        if banner_path and os.path.isfile(banner_path):
+            dst = os.path.join(target_dir, "banner.png")
+            shutil.copy2(banner_path, dst)
+            exported.append("banner.png")
+        # Tile
+        tile_path = self._find_installed_asset(g, "tile")
+        if tile_path and os.path.isfile(tile_path):
+            dst = os.path.join(target_dir, "tile.png")
+            shutil.copy2(tile_path, dst)
+            exported.append("tile.png")
+        # Icon
+        icon_path = self._find_installed_asset(g, "icon")
+        if icon_path and os.path.isfile(icon_path):
+            dst = os.path.join(target_dir, "icon.png")
+            shutil.copy2(icon_path, dst)
+            exported.append("icon.png")
+        # Screenshots
+        ss_paths = self._find_installed_screenshots(g)
+        for i, ss_path in enumerate(ss_paths):
+            if os.path.isfile(ss_path):
+                dst = os.path.join(target_dir, "screenshots", f"screenshot{i+1}.png")
+                shutil.copy2(ss_path, dst)
+                exported.append(f"screenshots/screenshot{i+1}.png")
+
+        if exported:
+            self.log(tr("logs_assets_exported", folder_name, ", ".join(exported)))
+            messagebox.showinfo(tr("info"), tr("assets_exported_ok", folder_name, len(exported)))
+        else:
+            self.log(tr("logs_no_assets_to_export", tid))
+            messagebox.showwarning(tr("warn"), tr("no_assets_to_export"))
+
+    def _find_installed_asset(self, g, kind):
+        """Tenta localizar o asset instalado do tipo kind (cover, background, banner, tile, icon).
+        Procura em: pasta do jogo (GC*.asset), Import, e cache de preview."""
+        tid = g.get("tid", "").upper()
+        if not tid:
+            return None
+        path = self.aurora_path.get().strip().strip('"')
+        folder = g.get("folder")
+        # 1) Pasta do jogo (GC<TID>.asset)
+        if folder and os.path.isdir(folder):
+            try:
+                for fname in os.listdir(folder):
+                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
+                        # Para extrair o asset específico, precisaríamos ler o container.
+                        # Como fallback, usamos o arquivo de import ou preview.
+                        pass
+            except OSError:
+                pass
+        # 2) Import folder
+        import_dir = os.path.join(path, "Import")
+        kind_map = {
+            "cover": "cover.png",
+            "background": "background.png",
+            "banner": "banner.png",
+            "tile": "tile.png",
+            "icon": "icon.png",
+        }
+        fname = kind_map.get(kind)
+        if fname:
+            fpath = os.path.join(import_dir, tid, fname)
+            if os.path.isfile(fpath):
+                return fpath
+        # 3) Preview cache (já tem a imagem processada)
+        # O preview_cache usa chave "tid|folder_or_import"
+        for cache_key in (f"{tid}|{folder or 'import'}", f"{tid}|import"):
+            if cache_key in self.preview_cache:
+                return self.preview_cache[cache_key]
+        return None
+
+    def _find_installed_screenshots(self, g):
+        """Retorna lista de caminhos de screenshots instalados."""
+        tid = g.get("tid", "").upper()
+        if not tid:
+            return []
+        path = self.aurora_path.get().strip().strip('"')
+        import_dir = os.path.join(path, "Import")
+        ss_dir = os.path.join(import_dir, tid)
+        shots = []
+        if os.path.isdir(ss_dir):
+            try:
+                for fname in sorted(os.listdir(ss_dir)):
+                    if fname.lower().startswith("screenshot") and fname.lower().endswith((".png", ".jpg", ".jpeg")):
+                        shots.append(os.path.join(ss_dir, fname))
+            except OSError:
+                pass
+        return shots
+
     def on_tree_menu(self, event):
         if self.busy:
             return
@@ -6053,6 +6253,7 @@ class App:
         menu.add_command(label=tr("m_assets"), command=lambda: self.open_assets(g))
         menu.add_command(label=tr("m_alt"), command=lambda: self.alt_covers(g))
         menu.add_command(label=tr("m_custom"), command=lambda: self.install_custom(g))
+        menu.add_command(label=tr("m_export_assets"), command=lambda: self.export_assets(g))
         menu.add_separator()
         menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
         if g.get("folder"):
