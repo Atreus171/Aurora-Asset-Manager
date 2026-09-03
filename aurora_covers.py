@@ -6281,7 +6281,39 @@ class App:
             except OSError:
                 pass
 
-        # 5) DEEP SCAN: encontra TODAS as imagens nos diretórios relevantes e classifica por tamanho/nome
+        # 5) EXTRAI DO CONTAINER GC (RXEA) - contém TODOS os assets: boxart, background, icon, banner, screenshots
+        gc_asset_types = [
+            (ASSET_TYPE_BOXART, "cover.png"),
+            (ASSET_TYPE_BACKGROUND, "background.png"),
+            (ASSET_TYPE_ICON, "icon.png"),
+            (ASSET_TYPE_BANNER, "banner.png"),
+            (ASSET_TYPE_SCREENSHOT, "screenshots/screenshot1.png"),
+        ]
+        for base in scan_dirs:
+            if not os.path.isdir(base):
+                continue
+            try:
+                for fname in os.listdir(base):
+                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
+                        gc_path = os.path.join(base, fname)
+                        self.log(f"[EXPORT] Lendo container GC: {fname}")
+                        blob = _read_file(gc_path)
+                        if blob and blob[:4] == b"RXEA":
+                            for atype, dst_name in gc_asset_types:
+                                if dst_name in exported:
+                                    continue
+                                img = decode_asset(blob, atype)
+                                if img is not None:
+                                    dst = os.path.join(target_dir, dst_name)
+                                    if dst_name.startswith("screenshots/"):
+                                        os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
+                                    img.save(dst, "PNG")
+                                    exported.append(dst_name)
+                                    self.log(f"[EXPORT GC] Extraído {dst_name} ({img.size[0]}x{img.size[1]}) do container")
+            except OSError:
+                pass
+
+        # 6) DEEP SCAN: encontra TODAS as imagens nos diretórios relevantes e classifica por tamanho/nome
         # Isso pega assets mesmo com nomes não padrão
         scan_dirs = import_candidates + ([folder] if folder and os.path.isdir(folder) else [])
         for base in scan_dirs:
@@ -6299,6 +6331,8 @@ class App:
                     try:
                         with Image.open(full) as im:
                             w, h = im.size
+                        # DEBUG log every image found
+                        self.log(f"[EXPORT DEEP SCAN] {fname} ({w}x{h}) in {base}")
                         # Classifica por proporção/tamanho
                         if low.startswith("screenshot") or (w >= 1000 and h >= 500 and w/h > 1.5):
                             # Screenshot ou banner largo
@@ -6322,7 +6356,8 @@ class App:
                         if dst_name not in exported:
                             exported.append(dst_name)
                         self.log(f"[EXPORT DEEP] {fname} ({w}x{h}) -> {dst_name}")
-                    except Exception:
+                    except Exception as e:
+                        self.log(f"[EXPORT DEEP ERR] {fname}: {e}")
                         pass
             except OSError:
                 pass
