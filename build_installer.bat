@@ -22,5 +22,5 @@ if %errorlevel% neq 0 (
 )
 
 echo Installer built successfully!
-echo Output: dist\AuroraAssetManager_Setup_v1.5.2.exe
+echo Output: dist\AuroraAssetManager_Setup_v1.5.4.exe
 pause
