@@ -82,7 +82,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.4"
+CURRENT_VERSION = "1.5.5"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -286,6 +286,11 @@ TEXT = {
         "dlc_loading": "Carregando DLCs...",
         "dlc_empty": "Nenhuma DLC encontrada em msx360gcdlc.",
         "dlc_manual_extract": "DLC salvo em %s; extraia manualmente com 7-Zip no console.",
+        "dlc_install_local": "Instalar DLC local...",
+        "dlc_installing_local": "Instalando DLC local (%s)...",
+        "dlc_already_local": "Esta DLC já está instalada.",
+        "dlc_online": "Online",
+        "pick_dlc_file": "Escolher arquivo de DLC",
         "col_name": "Nome",
         "col_info": "Info",
         "tu_install_local": "Instalar TU local...",
@@ -644,6 +649,11 @@ TEXT = {
         "dlc_loading": "Loading DLCs...",
         "dlc_empty": "No DLC found in msx360gcdlc.",
         "dlc_manual_extract": "DLC saved to %s; extract it manually with 7-Zip on the console.",
+        "dlc_install_local": "Install local DLC...",
+        "dlc_installing_local": "Installing local DLC (%s)...",
+        "dlc_already_local": "This DLC is already installed.",
+        "dlc_online": "Online",
+        "pick_dlc_file": "Choose a DLC file",
         "col_name": "Name",
         "col_info": "Info",
         "tu_install_local": "Install local TU...",
@@ -1008,6 +1018,11 @@ TEXT = {
         "dlc_loading": "Cargando DLCs...",
         "dlc_empty": "No se encontraron DLCs en msx360gcdlc.",
         "dlc_manual_extract": "DLC guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
+        "dlc_install_local": "Instalar DLC local...",
+        "dlc_installing_local": "Instalando DLC local (%s)...",
+        "dlc_already_local": "Esta DLC ya está instalada.",
+        "dlc_online": "En línea",
+        "pick_dlc_file": "Elegir archivo de DLC",
         "col_name": "Nombre",
         "col_info": "Info",
         "tu_install_local": "Instalar TU local...",
@@ -1372,6 +1387,11 @@ TEXT = {
         "dlc_loading": "Chargement des DLC...",
         "dlc_empty": "Aucun DLC trouvé dans msx360gcdlc.",
         "dlc_manual_extract": "DLC enregistré dans %s; extrayez-le manuellement avec 7-Zip sur la console.",
+        "dlc_install_local": "Installer une DLC locale...",
+        "dlc_installing_local": "Installation de la DLC locale (%s)...",
+        "dlc_already_local": "Cette DLC est déjà installée.",
+        "dlc_online": "En ligne",
+        "pick_dlc_file": "Choisir un fichier DLC",
         "col_name": "Nom",
         "col_info": "Info",
         "tu_install_local": "Installer une TU locale...",
@@ -1731,6 +1751,11 @@ TEXT = {
         "dlc_loading": "DLCを読み込み中...",
         "dlc_empty": "msx360gcdlcにDLCは見つかりませんでした。",
         "dlc_manual_extract": "DLCを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
+        "dlc_install_local": "ローカルDLCをインストール...",
+        "dlc_installing_local": "ローカルDLCをインストール中 (%s)...",
+        "dlc_already_local": "このDLCは既にインストールされています。",
+        "dlc_online": "オンライン",
+        "pick_dlc_file": "DLCファイルを選択",
         "col_name": "名前",
         "col_info": "情報",
         "tu_install_local": "ローカルTUをインストール...",
@@ -2090,6 +2115,11 @@ TEXT = {
         "dlc_loading": "Загрузка DLC...",
         "dlc_empty": "DLC не найдены в msx360gcdlc.",
         "dlc_manual_extract": "DLC сохранён в %s; извлеките вручную 7-Zip на консоли.",
+        "dlc_install_local": "Установить локальную DLC...",
+        "dlc_installing_local": "Установка локальной DLC (%s)...",
+        "dlc_already_local": "Эта DLC уже установлена.",
+        "dlc_online": "Онлайн",
+        "pick_dlc_file": "Выберите файл DLC",
         "col_name": "Имя",
         "col_info": "Инфо",
         "tu_install_local": "Установить локальную TU...",
@@ -2404,8 +2434,10 @@ def load_config():
 
 def save_config(cfg):
     try:
-        with open(config_path(), "w", encoding="utf-8") as f:
+        tmp = config_path() + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, config_path())
     except Exception:
         pass
 
@@ -2439,6 +2471,11 @@ class _HTTPPool:
 
 
 _HTTP_POOL = _HTTPPool()
+
+
+# Sincronização de arquivos persistentes e do asset GL compartilhado
+_IO_LOCK = threading.Lock()
+_GL_ASSET_LOCK = threading.Lock()
 
 
 def fetch_bytes(url, timeout=40, attempts=2):
@@ -2584,6 +2621,11 @@ def download_internet_archive_file(identifier, filename, dest_path):
             os.replace(tmp_path, dest_path)
             return True
         except Exception:
+            try:
+                if os.path.isfile(dest_path + ".part"):
+                    os.remove(dest_path + ".part")
+            except OSError:
+                pass
             time.sleep(1.0)
     return False
 
@@ -2620,11 +2662,20 @@ def xboxunity_title_updates(tid):
     return items
 
 
+def _version_parts(v):
+    """Converte '1.2.3' (ou '1.2.3-beta') em lista de ints para comparação."""
+    out = []
+    for x in str(v or "0").split("."):
+        m = re.match(r"\d+", x.strip())
+        if not m:
+            break
+        out.append(int(m.group()))
+    return out
+
+
 def _version_num(v):
-    try:
-        return float(str(v or "0"))
-    except (TypeError, ValueError):
-        return -1e18
+    parts = _version_parts(v)
+    return tuple(parts) if parts else -1e18
 
 
 def pick_xboxunity_tu(updates):
@@ -2678,8 +2729,9 @@ def content_roots(root):
     for rr in ([drive] if drive else []) + roots:
         for p in (rr, os.path.join(rr, "Aurora")):
             p = os.path.normpath(p)
-            if p not in ordered:
-                ordered.append(p)
+            if p in ordered or not os.path.isdir(p):
+                continue
+            ordered.append(p)
     return ordered
 
 
@@ -2720,7 +2772,18 @@ def extract_zip_to(archive_path, dest_root):
     """Extrai um .zip para dest_root preservando a estrutura Content\\..."""
     try:
         import zipfile
+        dest_root = os.path.normpath(dest_root)
         with zipfile.ZipFile(archive_path) as zf:
+            # Valida membros contra path traversal (zip-slip)
+            for member in zf.namelist():
+                mpath = os.path.normpath(member.replace("/", os.sep))
+                if mpath in ("", ".", ".."):
+                    continue
+                if mpath.startswith("..") or os.path.isabs(mpath):
+                    raise ValueError("path traversal em %r" % member)
+                target = os.path.normpath(os.path.join(dest_root, mpath))
+                if not (os.path.commonpath([dest_root, target]) == dest_root):
+                    raise ValueError("path fora da raiz: %r" % member)
             zf.extractall(dest_root)
         return True
     except Exception:
@@ -2947,12 +3010,14 @@ class X360DB:
         return True
 
     def canonical(self, tid):
-        self._ensure_loaded()
+        if not self._loaded:
+            return tid.upper()
         return self.alt_ids.get(tid.upper(), tid.upper())
 
     def title_name(self, tid):
-        self._ensure_loaded()
-        info = self.titles.get(tid.upper()) or self.titles.get(self.canonical(tid))
+        if not self._loaded:
+            return tid.upper()
+        info = self.titles.get(tid.upper()) or self.titles.get(self.alt_ids.get(tid.upper(), tid.upper()))
         if info:
             return info["title"]
         return tid.upper()
@@ -3555,24 +3620,26 @@ def save_hidden_games(tids):
 
 def mark_installed(tid, kind):
     try:
-        data = {}
-        p = installed_path()
-        if os.path.isfile(p):
-            with open(p, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        data.setdefault(tid, {})[kind] = True
-        tmp = p + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, p)
+        with _IO_LOCK:
+            data = {}
+            p = installed_path()
+            if os.path.isfile(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            data.setdefault(tid, {})[kind] = True
+            tmp = p + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            os.replace(tmp, p)
     except Exception:
         pass
 
 
 def is_installed(tid, kind):
     try:
-        with open(installed_path(), "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with _IO_LOCK:
+            with open(installed_path(), "r", encoding="utf-8") as f:
+                data = json.load(f)
         return bool((data.get(tid) or {}).get(kind))
     except Exception:
         return False
@@ -3607,7 +3674,7 @@ def scan_aurora_db(root, logger=None):
             return []
 
     try:
-        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        conn = sqlite3.connect(_db_ro_uri(db_path), uri=True)
         conn.row_factory = sqlite3.Row
         tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
         _log(f"  [DB] Tabelas encontradas: {tables}")
@@ -3724,6 +3791,11 @@ def scan_aurora_db(root, logger=None):
     except Exception as e:
         _log(f"  [DB] Erro ao ler banco: {e}")
     return games
+
+
+def _db_ro_uri(db_path):
+    """Monta URI sqlite read-only com o caminho percent-encoded (trata '?'/'#')."""
+    return "file:" + urllib.parse.quote(db_path.replace("\\", "/")) + "?mode=ro"
 
 
 def find_content_db(root):
@@ -3905,37 +3977,38 @@ def db_rename_by_tid(root, tid, newtitle):
     if not db_path:
         return False
     try:
-        conn = sqlite3.connect(db_path)
-        table, sc = db_schema(conn)
-        if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
-            conn.close()
-            return False
-        target = ("%08X" % int(tid, 16)) if re.match(r"^[0-9A-F]{8}$", tid) else tid
-        conn.row_factory = sqlite3.Row
-        found = False
-        for row in conn.execute('SELECT "%s" FROM "%s"' % (sc["id"], table)):
-            rowid = row[0]
-            raw = None
-            try:
-                raw = conn.execute('SELECT "%s" FROM "%s" WHERE "%s" = ?' % (sc["tid"], table, sc["id"]), (rowid,)).fetchone()
-            except sqlite3.Error:
+        with _IO_LOCK:
+            conn = sqlite3.connect(db_path)
+            table, sc = db_schema(conn)
+            if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
+                conn.close()
+                return False
+            target = ("%08X" % int(tid, 16)) if re.match(r"^[0-9A-F]{8}$", tid) else tid
+            conn.row_factory = sqlite3.Row
+            found = False
+            for row in conn.execute('SELECT "%s" FROM "%s"' % (sc["id"], table)):
+                rowid = row[0]
                 raw = None
-            if raw is None:
-                continue
-            rawv = raw[0]
-            if isinstance(rawv, int):
-                cur = "%08X" % rawv
-            else:
-                cur = (str(rawv) or "").strip().upper()
-            if cur in (target, tid):
-                conn.execute(
-                    'UPDATE "%s" SET "%s" = ? WHERE "%s" = ?' % (table, sc["title"], sc["id"]),
-                    (newtitle, rowid),
-                )
-                found = True
-                break
-        conn.commit()
-        conn.close()
+                try:
+                    raw = conn.execute('SELECT "%s" FROM "%s" WHERE "%s" = ?' % (sc["tid"], table, sc["id"]), (rowid,)).fetchone()
+                except sqlite3.Error:
+                    raw = None
+                if raw is None:
+                    continue
+                rawv = raw[0]
+                if isinstance(rawv, int):
+                    cur = "%08X" % rawv
+                else:
+                    cur = (str(rawv) or "").strip().upper()
+                if cur in (target, tid):
+                    cur_update = conn.execute(
+                        'UPDATE "%s" SET "%s" = ? WHERE "%s" = ?' % (table, sc["title"], sc["id"]),
+                        (newtitle, rowid),
+                    )
+                    found = cur_update.rowcount > 0
+                    break
+            conn.commit()
+            conn.close()
         return found
     except sqlite3.Error:
         return False
@@ -4009,7 +4082,7 @@ def scan_homebrew_xex(root, known_folders=None):
     db_path = find_content_db(root)
     if db_path:
         try:
-            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn = sqlite3.connect(_db_ro_uri(db_path), uri=True)
             conn.row_factory = sqlite3.Row
             tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             if "ScanPaths" in tables:
@@ -4648,6 +4721,7 @@ class App:
         self._alt_msg = None
         self._alt_preview = None
         self._alt_items = []
+        self._tu_dlg_state = None
         self._alt_photo = None
         self._alt_preview_item = (0, None)
         self.unity_status = "checking"
@@ -4675,6 +4749,7 @@ class App:
         threading.Thread(target=self.load_db, daemon=True).start()
         threading.Thread(target=self.status_loop, daemon=True).start()
         threading.Thread(target=self.theme_loop, daemon=True).start()
+        threading.Thread(target=self.update_check_loop, daemon=True).start()
         # Persistent download worker
         self.download_worker_thread = threading.Thread(target=self._download_queue_worker, daemon=True)
         self.download_worker_thread.start()
@@ -4892,7 +4967,6 @@ class App:
             self.ftp_user = str(cfg.get("ftp_user", "xbox"))
             self.ftp_pass = str(cfg.get("ftp_pass", "xbox"))
             self.ftp_base = str(cfg.get("ftp_base", "Hdd:\\Aurora\\Data\\GameData"))
-            self.opt_missing_only.set(bool(cfg.get("download_missing_only", True)))
             self.queue.put("__config_loaded__")
         threading.Thread(target=_run, daemon=True).start()
 
@@ -4901,6 +4975,7 @@ class App:
         self.apply_show_status()
         self.apply_show_log()
         self._paint_status()
+        self.opt_missing_only.set(bool(self.cfg.get("download_missing_only", True)))
         self.opt_auto_search.set(bool(self.cfg.get("auto_search_titles", True)))
         self.chk_screenshots.configure(text=tr("opt_screenshots", self.ss_max))
         if self.cfg.get("show_debug_button", False):
@@ -4982,6 +5057,13 @@ class App:
                 elif isinstance(msg, str) and msg.startswith("__progress__:"):
                     parts = msg.split(":")
                     self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
+                elif msg == "__tu_dlg_render__":
+                    cb = getattr(self, "_tu_dlg_state", None)
+                    if cb is not None:
+                        try:
+                            cb()
+                        except tk.TclError:
+                            self._tu_dlg_state = None
                 elif msg == "__busy_true__":
                     self.set_busy(True)
                 else:
@@ -5083,10 +5165,9 @@ class App:
             pass
 
     def _version_greater(self, v1, v2):
-        try:
-            return tuple(map(int, v1.split("."))) > tuple(map(int, v2.split(".")))
-        except Exception:
-            return v1 > v2
+        p1 = _version_parts(v1)
+        p2 = _version_parts(v2)
+        return (p1 or [0]) > (p2 or [0])
 
     def browse(self):
         # Permite selecionar unidade (drive) ou pasta
@@ -5122,13 +5203,19 @@ class App:
 
     def cancel_worker(self):
         self.cancel_event.set()
+        drained = False
         try:
             while True:
                 self.download_queue.get_nowait()
                 self.download_queue.task_done()
+                drained = True
         except queue.Empty:
             pass
         self.log(tr("canceled"))
+        # Se o worker está ocioso (job apenas na fila, nunca processado), ele não
+        # postará __done__ sozinho — devolve o estado de busy aqui.
+        if drained and self.current_download_job is None:
+            self.queue.put("__done__")
 
     def start_scan(self):
         if self.busy:
@@ -5196,7 +5283,8 @@ class App:
             # quando o arquivo não é encontrado no disco num re-scan (ex.: capa de
             # homebrew guardada em local que a varredura física não alcança).
             try:
-                _inst = json.load(open(installed_path(), "r", encoding="utf-8"))
+                with open(installed_path(), "r", encoding="utf-8") as f:
+                    _inst = json.load(f)
             except Exception:
                 _inst = {}
             for _g in self.games:
@@ -5326,9 +5414,10 @@ class App:
                         continue
                     g["dname"] = name
                     self._update_content_db_name(tid, name)
-                    custom_names = load_custom_names()
-                    custom_names[tid] = name
-                    save_custom_names(custom_names)
+                    with _IO_LOCK:
+                        custom_names = load_custom_names()
+                        custom_names[tid] = name
+                        save_custom_names(custom_names)
                     changed += 1
                     if src == "db":
                         self.log(tr("logs_title_x360db", name))
@@ -5378,7 +5467,7 @@ class App:
             messagebox.showerror(tr("debug_db"), tr("db_notfound"))
             return
         try:
-            conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            conn = sqlite3.connect(_db_ro_uri(db_path), uri=True)
             tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
             info = f"DB: {db_path}\n\nTabelas:\n"
             for t in tables:
@@ -5471,9 +5560,10 @@ class App:
             self.log(tr("logs_no_dedicated_gamedata", g["tid"]))
         g["dname"] = clean
         # Salva nome customizado permanentemente
-        custom_names = load_custom_names()
-        custom_names[g["tid"]] = clean
-        save_custom_names(custom_names)
+        with _IO_LOCK:
+            custom_names = load_custom_names()
+            custom_names[g["tid"]] = clean
+            save_custom_names(custom_names)
         # Renomeia diretamente no content.db (TitleName), para refletir no Aurora
         try:
             db_path = find_content_db(self.aurora_path.get().strip().strip('"'))
@@ -5568,7 +5658,7 @@ class App:
                     db_path = find_content_db(path)
                     if db_path:
                         import sqlite3
-                        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+                        conn = sqlite3.connect(_db_ro_uri(db_path), uri=True)
                         try:
                             cur = conn.execute(
                                 'SELECT "Directory" FROM "ContentItems" WHERE "TitleId"=? LIMIT 1',
@@ -6155,9 +6245,10 @@ class App:
                     "dname": t["name"],
                     "has_cover": False,
                 }
-                custom_names = load_custom_names()
-                custom_names[t["tid"]] = t["name"]
-                save_custom_names(custom_names)
+                with _IO_LOCK:
+                    custom_names = load_custom_names()
+                    custom_names[t["tid"]] = t["name"]
+                    save_custom_names(custom_names)
                 extra = load_extra_games()
                 if t["tid"] not in extra:
                     extra.append(t["tid"])
@@ -6230,9 +6321,10 @@ class App:
             except OSError as exc:
                 messagebox.showerror(tr("error"), str(exc))
                 return
-        custom_names = load_custom_names()
-        custom_names[tid] = name
-        save_custom_names(custom_names)
+        with _IO_LOCK:
+            custom_names = load_custom_names()
+            custom_names[tid] = name
+            save_custom_names(custom_names)
         extra = load_extra_games()
         if tid not in extra:
             extra.append(tid)
@@ -6513,16 +6605,16 @@ class App:
             "banner": self.opt_banner.get(),
             "screenshots": self.opt_screenshots.get(),
         }
-        self.download_queue.put((targets, path, kinds))
+        force = self.opt_force.get()
+        self.download_queue.put((targets, path, kinds, force))
         if not self.busy:
             self.cancel_event.clear()
             self.set_busy(True)
 
     def _download_queue_worker(self):
         while True:
-            targets, path, kinds = self.download_queue.get()
+            targets, path, kinds, force = self.download_queue.get()
             self.current_download_job = (targets, path, kinds)
-            self.cancel_event.clear()
             self.queue.put("__busy_true__")
             try:
                 total = len(targets)
@@ -6540,7 +6632,7 @@ class App:
                     self.queue.put("__progress__:%d:%d" % (done, total))
                     self.log(tr("logs_progress_game", done, total, self.db.title_name(g["tid"]), g["tid"]))
                     try:
-                        self.download_one(path, g, kinds)
+                        self.download_one(path, g, kinds, force)
                     except Exception as exc:
                         self.log(tr("logs_game_err", exc))
                     time.sleep(0.3)
@@ -6613,9 +6705,9 @@ class App:
             checks.append(_has(["SS%s.asset" % g["tid"]] if folder else ["screenshot1.png"]))
         return not all(checks)
 
-    def download_one(self, path, g, kinds):
+    def download_one(self, path, g, kinds, force=False):
         tid = g["tid"]
-        if self.opt_force.get():
+        if force:
             skip = lambda kind: False
         else:
             skip = lambda kind: self._kind_exists(g, path, kind)
@@ -6719,7 +6811,8 @@ class App:
             try:
                 if os.path.isfile(path):
                     self.log(tr("game_cover_ok", os.path.basename(path)))
-                    return open(path, "rb").read()
+                    with open(path, "rb") as f:
+                        return f.read()
             except (OSError, IOError):
                 pass
             return None
@@ -7016,18 +7109,27 @@ class App:
                     tempfile.gettempdir(), "unity_tu_%s_%s.tu" % (tid, best["tuid"])
                 )
                 fname = download_url_to_file(XBOXUNITY_TU_GET % best["tuid"], tmp)
-                if not fname:
+                if not os.path.isfile(tmp):
                     self.log(tr("logs_unity_tu_dl_fail", tid))
                     return False
-                for dest_dir in content_dirs:
+                if not fname:
+                    # Servidor sem Content-Disposition: usa nome no padrão Aurora
+                    fname = "TU_%s_%s.tu" % (tid, best["tuid"])
+                try:
+                    for dest_dir in content_dirs:
+                        try:
+                            os.makedirs(dest_dir, exist_ok=True)
+                            shutil.copy2(tmp, os.path.join(dest_dir, fname))
+                            mark_installed(tid, kind)
+                            self.log(tr("unity_tu_dl_success", fname))
+                            return True
+                        except OSError:
+                            continue
+                finally:
                     try:
-                        os.makedirs(dest_dir, exist_ok=True)
-                        shutil.copy2(tmp, os.path.join(dest_dir, fname))
-                        mark_installed(tid, kind)
-                        self.log(tr("unity_tu_dl_success", fname))
-                        return True
+                        os.remove(tmp)
                     except OSError:
-                        continue
+                        pass
                 self.log(tr("ia_install_fail", fname))
                 return False
 
@@ -7067,6 +7169,10 @@ class App:
             tmp = os.path.join(tempfile.gettempdir(), "%s_%s_%s" % (tid, kind, os.path.basename(filename)))
             if not download_internet_archive_file(ia_id, filename, tmp):
                 self.log(tr("ia_download_failed", ia_id, filename))
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
                 return False
 
             installed = False
@@ -7098,10 +7204,18 @@ class App:
                         continue
             if not installed:
                 self.log(tr("ia_install_fail", filename))
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
                 return False
 
             mark_installed(tid, kind)
             self.log(tr("ia_download_success", tr("kind_" + kind), filename))
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
             return True
         except Exception as exc:
             self.log(tr("logs_dl_kind_err", kind, exc))
@@ -7111,19 +7225,19 @@ class App:
         tid = g["tid"]
         parts = {ASSET_TYPE_ICON: None, ASSET_TYPE_BANNER: None}
         if g["folder"]:
-            gl_file = os.path.join(g["folder"], "GL%s.asset" % tid)
-            if os.path.isfile(gl_file):
-                try:
-                    with open(gl_file, "rb") as f:
-                        blob = f.read()
-                    for s in parts:
-                        parts[s] = decode_asset(blob, s)
-                except Exception:
-                    pass
-        parts[slot] = new_img
-        textures = [(s, im) for s, im in parts.items() if im is not None]
-        if g["folder"]:
-            self.write_multi_asset(g["folder"], tid, "GL", textures)
+            with _GL_ASSET_LOCK:
+                gl_file = os.path.join(g["folder"], "GL%s.asset" % tid)
+                if os.path.isfile(gl_file):
+                    try:
+                        with open(gl_file, "rb") as f:
+                            blob = f.read()
+                        for s in parts:
+                            parts[s] = decode_asset(blob, s)
+                    except Exception:
+                        pass
+                parts[slot] = new_img
+                textures = [(s, im) for s, im in parts.items() if im is not None]
+                self.write_multi_asset(g["folder"], tid, "GL", textures)
         self.write_import(path, tid, import_name, new_img)
         return True
 
@@ -7202,7 +7316,8 @@ class App:
         self.write_import(path, g["tid"], "cover.png", img)
         mark_installed(g["tid"], "boxart")
         g["has_cover"] = True
-        self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
+        with self._preview_cache_lock:
+            self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
 
     def export_assets(self, g):
         """Exporta assets do jogo para a pasta game_covers/<Nome>_<TID>/.
@@ -7276,14 +7391,15 @@ class App:
 
         # 2) Preview cache (PIL.Image) - salva cover se não exportou
         if "cover.png" not in exported:
-            for cache_key in (f"{tid}|{g.get('folder') or 'import'}", f"{tid}|import"):
-                if cache_key in self.preview_cache:
-                    img = self.preview_cache[cache_key]
-                    if isinstance(img, Image.Image):
-                        img.save(os.path.join(target_dir, "cover.png"), "PNG")
-                        exported.append("cover.png")
-                        self.log(f"[EXPORT] Cover salvo do preview_cache: {cache_key}")
-                        break
+            with self._preview_cache_lock:
+                for cache_key in (f"{tid}|{g.get('folder') or 'import'}", f"{tid}|import"):
+                    if cache_key in self.preview_cache:
+                        img = self.preview_cache[cache_key]
+                        if isinstance(img, Image.Image):
+                            img.save(os.path.join(target_dir, "cover.png"), "PNG")
+                            exported.append("cover.png")
+                            self.log(f"[EXPORT] Cover salvo do preview_cache: {cache_key}")
+                            break
 
         # 3) Screenshots - procura em todos os Import candidatos
         for base in import_candidates:
@@ -7544,7 +7660,7 @@ class App:
             command=_install_local,
         )
         btn_local.pack(side=tk.LEFT, padx=4)
-        ttk.Button(bf, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("cancel"), command=_close).pack(side=tk.LEFT, padx=4)
 
         entries = []
         iids = []
@@ -7586,6 +7702,8 @@ class App:
         cached_online = []
 
         def _render():
+            if not dlg.winfo_exists():
+                return
             items = [dict(e, local=False) for e in cached_online]
             for fp in list_local_content(path, tid, sub):
                 try:
@@ -7593,9 +7711,15 @@ class App:
                 except OSError:
                     fsize = 0
                 items.append({"name": os.path.basename(fp), "size": fsize, "local": True})
-            _populate(items)
+            try:
+                _populate(items)
+            except tk.TclError:
+                return
             if not items:
-                msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty"))
+                try:
+                    msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty"))
+                except tk.TclError:
+                    return
 
         def _load():
             try:
@@ -7608,7 +7732,11 @@ class App:
                     cached_online[:] = ia_dlc_matches(self.game_title(g), tid)
             except Exception:
                 cached_online[:] = []
-            self.root.after(0, _render)
+            self.queue.put("__tu_dlg_render__")
+
+        def _close():
+            self._tu_dlg_state = None
+            dlg.destroy()
 
         def _dl():
             sel = tree.selection()
@@ -7621,7 +7749,7 @@ class App:
                     tr("tu_already_local") if is_tu else tr("dlc_already_local"),
                 )
                 return
-            dlg.destroy()
+            _close()
             if is_tu:
                 self.thread_download_kind(
                     path, g, "title_update",
@@ -7647,12 +7775,13 @@ class App:
             self.log(tr("tu_installing_local" if is_tu else "dlc_installing_local", os.path.basename(fname)))
             def _worker():
                 self._install_local_content_file(g, path, fname, kind)
-                self.root.after(0, _render)
+                self.queue.put("__tu_dlg_render__")
             threading.Thread(target=_worker, daemon=True).start()
 
         tree.bind("<Double-1>", lambda _ev: _dl())
-        dlg.protocol("WM_DELETE_WINDOW", dlg.destroy)
+        dlg.protocol("WM_DELETE_WINDOW", _close)
         dlg.grab_set()
+        self._tu_dlg_state = _render
         threading.Thread(target=_load, daemon=True).start()
 
     def _install_local_content_file(self, g, path, fname, kind):
@@ -7982,6 +8111,8 @@ class App:
 
     def open_assets(self, g):
         if self.busy:
+            return
+        if self._assets_dlg is not None and self._assets_dlg.winfo_exists():
             return
         path = self.aurora_path.get().strip().strip('"')
         dlg = tk.Toplevel(self.root)
@@ -8332,6 +8463,7 @@ class App:
         if not files:
             self.queue.put("__assets_msg__:0::")
             self.log(tr("logs_no_assets_to_export", g.get("tid", "").upper()))
+            self.queue.put("__done__")
             return
         ftp = None
         try:
@@ -8392,6 +8524,7 @@ class App:
             files = []
         if not files:
             self.queue.put("__assets_msg__:0::")
+            self.queue.put("__done__")
             return
         ftp = None
         try:
@@ -8467,6 +8600,7 @@ class App:
     def thread_download_kind(self, path, g, kind, tuid=None, version=None, ia_id=None, filename=None):
         if self.busy:
             return
+        self.cancel_event.clear()
         self.set_busy(True)
         self.log(tr("logs_downloading", kind, self.db.title_name(g["tid"]), g["tid"]))
 
@@ -8500,16 +8634,18 @@ class App:
     def thread_download_all(self, path, g):
         if self.busy:
             return
+        self.cancel_event.clear()
         self.set_busy(True)
         self.log(tr("dl_all_log", self.db.title_name(g["tid"]), g["tid"]))
         kinds = [k for k, *_ in ASSET_KINDS]
+        force = self.opt_force.get()
 
         def _run():
             try:
                 for kind in kinds:
                     if self.cancel_event.is_set():
                         break
-                    if self.opt_force.get() or not self._kind_exists(g, path, kind):
+                    if force or not self._kind_exists(g, path, kind):
                         try:
                             self.download_kind(path, g, kind)
                         except Exception as exc:
@@ -8623,6 +8759,8 @@ class App:
 
     def alt_covers(self, g):
         if self.busy:
+            return
+        if self._alt_dlg is not None and self._alt_dlg.winfo_exists():
             return
         tid = g["tid"]
         dlg = tk.Toplevel(self.root)
