@@ -269,6 +269,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "atualização de título (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "Baixar TU (atualização)...",
+        "m_dl_dlc": "Baixar DLC...",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -604,6 +606,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "title update (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "Download TU (title update)...",
+        "m_dl_dlc": "Download DLC...",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -945,6 +949,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "actualización de título (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "Descargar TU (actualización)...",
+        "m_dl_dlc": "Descargar DLC...",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1286,6 +1292,8 @@ TEXT = {
         "kind_screenshots": "capture",
         "kind_title_update": "mise à jour du titre (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "Télécharger TU (mise à jour)...",
+        "m_dl_dlc": "Télécharger DLC...",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1622,6 +1630,8 @@ TEXT = {
         "kind_screenshots": "スクリーンショット",
         "kind_title_update": "タイトルアップデート (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "TU（タイトルアップデート）をダウンロード...",
+        "m_dl_dlc": "DLC をダウンロード...",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -1958,6 +1968,8 @@ TEXT = {
         "kind_screenshots": "скриншот",
         "kind_title_update": "обновление игры (TU)",
         "kind_dlc": "DLC",
+        "m_dl_tu": "Скачать TU (обновление)...",
+        "m_dl_dlc": "Скачать DLC...",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -7050,6 +7062,20 @@ class App:
             return
         menu = tk.Menu(self.root, tearoff=0)
         menu.add_command(label=tr("m_assets"), command=lambda: self.open_assets(g))
+        menu.add_separator()
+        menu.add_command(
+            label=tr("m_dl_tu"),
+            command=lambda: self.thread_download_kind(
+                self.aurora_path.get().strip().strip('"'), g, "title_update"
+            ),
+        )
+        menu.add_command(
+            label=tr("m_dl_dlc"),
+            command=lambda: self.thread_download_kind(
+                self.aurora_path.get().strip().strip('"'), g, "dlc"
+            ),
+        )
+        menu.add_separator()
         menu.add_command(label=tr("m_alt"), command=lambda: self.alt_covers(g))
         menu.add_command(label=tr("m_custom"), command=lambda: self.install_custom(g))
         menu.add_command(label=tr("m_export_assets"), command=lambda: self.export_assets(g))
@@ -7359,13 +7385,19 @@ class App:
         ).pack(pady=(10, 4))
         body = ttk.Frame(dlg)
         body.pack(fill=tk.BOTH, expand=True, padx=10)
-        tree = ttk.Treeview(body, columns=("item", "kind", "status"), show="headings", height=5)
+        tree = ttk.Treeview(
+            body, columns=("item", "kind", "status"), show="headings",
+            height=max(8, len(ASSET_KINDS) + 1),
+        )
         tree.heading("item", text="")
         tree.heading("kind", text=tr("col_kind"))
         tree.heading("status", text=tr("col_status"))
         tree.column("item", width=24, stretch=False)
         tree.column("kind", width=170)
         tree.column("status", width=90)
+        ys = ttk.Scrollbar(body, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=ys.set)
+        ys.pack(side=tk.LEFT, fill=tk.Y)
         tree.pack(side=tk.LEFT, fill=tk.Y)
         kinds = {}
         for i, (kind, label, _p, _s, _imp) in enumerate(ASSET_KINDS):
