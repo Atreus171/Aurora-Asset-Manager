@@ -25,7 +25,6 @@ SolidCompression=yes
 CompressionThreads=auto
 InternalCompressLevel=ultra
 SetupIconFile=assets\icon.ico
-UninstallIconFile=assets\icon.ico
 LicenseFile=LICENSE
 InfoBeforeFile=README.md
 ArchitecturesInstallIn64BitMode=x64
@@ -34,12 +33,6 @@ DisableDirPage=no
 DisableProgramGroupPage=no
 DisableFinishedPage=no
 DefaultDialogFontName=Segoe UI
-WindowResizable=yes
-WindowShowCaption=yes
-WindowStartMaximized=no
-UsePreviousAppDir=no
-DisableReadyPage=no
-DisableReadyMemo=no
 CreateAppDir=yes
 UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName}
@@ -69,8 +62,8 @@ Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
