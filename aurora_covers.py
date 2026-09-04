@@ -3984,6 +3984,7 @@ class App:
         self.hidden_tids = set(load_hidden_games())
         self.worker = None
         self.busy = False
+        self._last_assets_kind = None
         # Download queue: each item = (games_list, path, kinds_dict)
         self.download_queue = queue.Queue()
         self.download_worker_thread = None
@@ -4195,6 +4196,10 @@ class App:
             self._preview_frame, text=tr("no_selection"), bg="#222", fg="#9a9a9a"
         )
         self.preview_lbl.pack(fill=tk.BOTH, expand=True)
+        # Drag-and-drop / double-click para importar capa
+        self.preview_lbl.bind("<Double-Button-1>", lambda e: self.import_cover_from_file())
+        self.preview_lbl.bind("<Button-3>", self._preview_context_menu)
+        self.preview_lbl.configure(cursor="hand2")
         self.preview_title = ttk.Label(preview_panel, text="", wraplength=320)
         self.preview_title.pack(pady=(6, 0))
         self.preview_info = ttk.Label(
@@ -5679,6 +5684,45 @@ class App:
         self.preview_lbl.configure(image=self._photo, text="")
         self.preview_status.configure(text=tr("cover_installed"))
 
+    def import_cover_from_file(self):
+        """Importa capa via arquivo (double-click no preview ou menu de contexto)."""
+        g = self.selected_game()
+        if g is None:
+            return
+        filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp *.ico"), ("Todos", "*.*")]
+        file_name = filedialog.askopenfilename(
+            title=tr("custom_cover") + " (%s)" % self.db.title_name(g["tid"]),
+            filetypes=filetypes,
+        )
+        if not file_name:
+            return
+        try:
+            img = box_render(Image.open(file_name), self.cover_format)
+        except Exception as exc:
+            messagebox.showerror(tr("warn"), tr("img_open_fail", exc))
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        try:
+            self.install_cover_img(path, g, img)
+        except Exception as exc:
+            messagebox.showerror(tr("warn"), tr("img_write_fail", exc))
+            return
+        self.log(tr("logs_custom_installed", self.db.title_name(g["tid"]), g["tid"]))
+        self.show_preview(g)
+        self.update_tree_row(g)
+
+    def _preview_context_menu(self, event):
+        """Menu de contexto no preview (botão direito)."""
+        g = self.selected_game()
+        if g is None:
+            return
+        menu = tk.Menu(self.root, tearoff=0)
+        menu.add_command(label=tr("custom_cover"), command=self.import_cover_from_file)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
     def _preview_info_thread(self, tid):
         try:
             self.db.info(tid)
@@ -6442,8 +6486,9 @@ class App:
             (ASSET_TYPE_BACKGROUND, "background.png"),
             (ASSET_TYPE_ICON, "icon.png"),
             (ASSET_TYPE_BANNER, "banner.png"),
-            (ASSET_TYPE_SCREENSHOT, "screenshots/screenshot1.png"),
         ]
+        # Screenshots: extrai todos (count dinâmico)
+        # será processado separadamente após
         for base in scan_dirs:
             if not os.path.isdir(base):
                 continue
@@ -6465,6 +6510,22 @@ class App:
                                     img.save(dst, "PNG")
                                     exported.append(dst_name)
                                     self.log(f"[EXPORT GC] Extraído {dst_name} ({img.size[0]}x{img.size[1]}) do container")
+                        # Extrai TODAS as screenshots do container GC
+                        i = 0
+                        while True:
+                            ss_name = f"screenshots/screenshot{i+1}.png"
+                            if ss_name in exported:
+                                i += 1
+                                continue
+                            img = decode_asset(blob, ASSET_TYPE_SCREENSHOT + i)
+                            if img is None:
+                                break
+                            dst = os.path.join(target_dir, ss_name)
+                            os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
+                            img.save(dst, "PNG")
+                            exported.append(ss_name)
+                            self.log(f"[EXPORT GC] Extraído {ss_name} ({img.size[0]}x{img.size[1]}) do container")
+                            i += 1
             except OSError:
                 pass
 
@@ -6961,6 +7022,10 @@ class App:
                     b.configure(state=tk.NORMAL if (ss_kind and len(imgs) > 1) else tk.DISABLED)
                 except tk.TclError:
                     pass
+        # Reset screenshot index when switching to screenshots kind
+        if ss_kind and self._last_assets_kind != "screenshots":
+            self._assets_ss_index = 0
+        self._last_assets_kind = kind
         if ss_kind:
             if imgs:
                 self._assets_ss_index = max(0, min(self._assets_ss_index, len(imgs) - 1))
