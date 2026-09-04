@@ -202,6 +202,7 @@ TEXT = {
         "scan_first": "Digitalize os jogos primeiro.",
         "pick_art": "Marque pelo menos um tipo de arte (capa, background, ícone, banner ou screenshots).",
         "pick_aurora": "Escolha a pasta raiz do Aurora primeiro.",
+        "not_aurora_folder": "A pasta selecionada não parece ser uma instalação do Aurora (falta Data/GameData ou pasta Aurora).",
         "pick_game": "Selecione um jogo na lista primeiro.",
         "img_open_fail": "Não foi possível abrir a imagem:\n%s",
         "img_write_fail": "Não foi possível gravar:\n%s",
@@ -524,6 +525,7 @@ TEXT = {
         "scan_first": "Scan the games first.",
         "pick_art": "Check at least one art type (cover, background, icon, banner or screenshots).",
         "pick_aurora": "Choose the Aurora root folder first.",
+        "not_aurora_folder": "The selected folder does not appear to be an Aurora installation (missing Data/GameData or Aurora folder).",
         "pick_game": "Select a game in the list first.",
         "img_open_fail": "Could not open the image:\n%s",
         "img_write_fail": "Could not write:\n%s",
@@ -847,6 +849,7 @@ TEXT = {
         "scan_first": "Escanee los juegos primero.",
         "pick_art": "Marque al menos un tipo de arte (portada, fondo, icono, banner o screenshots).",
         "pick_aurora": "Elija la carpeta raíz de Aurora primero.",
+        "not_aurora_folder": "La carpeta seleccionada no parece una instalación de Aurora (falta Data/GameData o carpeta Aurora).",
         "pick_game": "Seleccione un juego en la lista primero.",
         "img_open_fail": "No se pudo abrir la imagen:\n%s",
         "img_write_fail": "No se pudo escribir:\n%s",
@@ -1170,6 +1173,7 @@ TEXT = {
         "scan_first": "Scannez les jeux d'abord.",
         "pick_art": "Cochez au moins un type d'art (jaquette, fond, icône, bannière ou captures).",
         "pick_aurora": "Choisissez le dossier racine d'Aurora d'abord.",
+        "not_aurora_folder": "Le dossier sélectionné ne semble pas être une installation Aurora (manque Data/GameData ou dossier Aurora).",
         "pick_game": "Sélectionnez un jeu dans la liste d'abord.",
         "img_open_fail": "Impossible d'ouvrir l'image:\n%s",
         "img_write_fail": "Impossible d'écrire:\n%s",
@@ -1493,6 +1497,7 @@ TEXT = {
         "scan_first": "まずゲームをスキャンしてください。",
         "pick_art": "アートタイプを少なくとも1つ選択してください (カバー, 背景, アイコン, バナー, スクリーンショット)。",
         "pick_aurora": "まずAuroraのルートフォルダを選択してください。",
+        "not_aurora_folder": "選択したフォルダはAuroraのインストールではないようです（Data/GameDataまたはAuroraフォルダがありません）。",
         "pick_game": "まずリストからゲームを選択してください。",
         "img_open_fail": "画像を開けません:\n%s",
         "img_write_fail": "書き込めません:\n%s",
@@ -1816,6 +1821,7 @@ TEXT = {
         "scan_first": "Сначала отсканируйте игры.",
         "pick_art": "Выберите хотя бы один тип арта (обложка, фон, иконка, баннер или скриншоты).",
         "pick_aurora": "Сначала выберите корневую папку Aurora.",
+        "not_aurora_folder": "Выбранная папка не похожа на установку Aurora (нет Data/GameData или папки Aurora).",
         "pick_game": "Сначала выберите игру в списке.",
         "img_open_fail": "Не удалось открыть изображение:\n%s",
         "img_write_fail": "Не удалось записать:\n%s",
@@ -4399,6 +4405,14 @@ class App:
         if not path or not os.path.isdir(path):
             messagebox.showerror(tr("warn"), tr("pick_aurora"))
             return
+        # Valida se é estrutura Aurora (tem Data/GameData ou pasta Aurora)
+        aurora_root = path
+        if not (os.path.isdir(os.path.join(path, "Data", "GameData")) or os.path.isdir(os.path.join(path, "Aurora"))):
+            # Se for raiz de drive, permite (pode ter estrutura na raiz)
+            drive, tail = os.path.splitdrive(path)
+            if tail not in ("\\", "/"):
+                messagebox.showerror(tr("warn"), tr("not_aurora_folder"))
+                return
         self.cancel_event.clear()
         self.set_busy(True)
         threading.Thread(target=self.scan_worker, args=(path,), daemon=True).start()
@@ -6598,7 +6612,6 @@ class App:
         ttk.Radiobutton(rf, text="x360db", variable=repo_var, value="x360db").pack(side=tk.LEFT, padx=6)
         ttk.Radiobutton(rf, text="XboxUnity", variable=repo_var, value="xboxunity").pack(side=tk.LEFT, padx=6)
         ttk.Radiobutton(rf, text="360-Game-Art", variable=repo_var, value="gameart").pack(side=tk.LEFT, padx=6)
-        ttk.Radiobutton(rf, text="game_covers (local)", variable=repo_var, value="gamecovers").pack(side=tk.LEFT, padx=6)
         add_row(tr("set_repo"), rf)
 
         f_var = tk.StringVar(value=self.cover_format)
