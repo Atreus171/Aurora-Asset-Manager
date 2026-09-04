@@ -73,6 +73,13 @@ UNITY_OK = "#3fb950"
 UNITY_DOWN = "#f85149"
 UNITY_WAIT = "#9a9a9a"
 
+# Update checker
+GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
+GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
+CURRENT_VERSION = "1.5.2"
+UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
+
 ASSET_TYPE_ICON = 0
 ASSET_TYPE_BANNER = 1
 ASSET_TYPE_BOXART = 2
@@ -130,6 +137,7 @@ DEFAULT_CONFIG = {
     "show_game_info": True,
     "show_debug_button": False,
     "download_missing_only": True,
+    "auto_update_check": True,
     "ftp_host": "",
     "ftp_port": 21,
     "ftp_user": "xbox",
@@ -329,6 +337,9 @@ TEXT = {
         "auto_search_off": "Busca automática de títulos DESLIGADA.",
         "show_game_info": "Mostrar diretor e data de lançamento",
         "show_debug_button": "Mostrar botão Debug DB",
+        "auto_update_check": "Verificar atualizações automaticamente",
+        "update_available_title": "Atualização disponível",
+        "update_available_msg": "Uma nova versão ({0}) está disponível! Versão atual: {1}\n\nDeseja abrir a página de downloads?",
         "download_missing_only": "Baixar só jogos sem capa",
         "m_search": "Pesquisar título...",
         "m_rename": "Renomear jogo",
@@ -654,6 +665,9 @@ TEXT = {
         "auto_search_off": "Auto title search DISABLED.",
         "show_game_info": "Show director and release date",
         "show_debug_button": "Show Debug DB button",
+        "auto_update_check": "Check for updates automatically",
+        "update_available_title": "Update Available",
+        "update_available_msg": "A new version ({0}) is available! Current version: {1}\n\nOpen download page?",
         "download_missing_only": "Download only games without a cover",
         "m_search": "Search title...",
         "m_rename": "Rename game",
@@ -979,6 +993,9 @@ TEXT = {
         "auto_search_off": "Busca automática de títulos DESLIGADA.",
         "show_game_info": "Mostrar director y fecha de lanzamiento",
         "show_debug_button": "Mostrar botón Debug DB",
+        "auto_update_check": "Buscar actualizaciones automáticamente",
+        "update_available_title": "Actualización disponible",
+        "update_available_msg": "Hay una nueva versión ({0}) disponible! Versión actual: {1}\n\n¿Abrir página de descargas?",
         "download_missing_only": "Descargar solo juegos sin portada",
         "m_search": "Buscar título...",
         "m_rename": "Renombrar juego",
@@ -1304,6 +1321,9 @@ TEXT = {
         "auto_search_off": "Recherche auto des titres DÉSACTIVÉE.",
         "show_game_info": "Afficher le développeur et la date de sortie",
         "show_debug_button": "Afficher bouton Debug DB",
+        "auto_update_check": "Vérifier les mises à jour automatiquement",
+        "update_available_title": "Mise à jour disponible",
+        "update_available_msg": "Une nouvelle version ({0}) est disponible! Version actuelle: {1}\n\nOuvrir la page de téléchargement?",
         "download_missing_only": "Télécharger uniquement les jeux sans jaquette",
         "m_search": "Rechercher titre...",
         "m_rename": "Renommer le jeu",
@@ -1629,6 +1649,9 @@ TEXT = {
         "auto_search_off": "タイトル自動検索: オフ。",
         "show_game_info": "開発者と発売日を表示",
         "show_debug_button": "Debug DB ボタンを表示",
+        "auto_update_check": "自動的にアップデートを確認",
+        "update_available_title": "アップデート利用可能",
+        "update_available_msg": "新しいバージョン ({0}) が利用可能です！ 現在のバージョン: {1}\n\nダウンロードページを開きますか？",
         "download_missing_only": "カバーがないゲームのみダウンロード",
         "m_search": "タイトルを検索...",
         "m_rename": "ゲーム名を変更",
@@ -1954,6 +1977,9 @@ TEXT = {
         "auto_search_off": "Автопоиск названий: ВЫКЛ.",
         "show_game_info": "Показывать разработчика и дату релиза",
         "show_debug_button": "Показать кнопку Debug DB",
+        "auto_update_check": "Автоматически проверять обновления",
+        "update_available_title": "Доступно обновление",
+        "update_available_msg": "Доступна новая версия ({0})! Текущая версия: {1}\n\nОткрыть страницу загрузки?",
         "download_missing_only": "Скачивать только игры без обложки",
         "m_search": "Поиск названия...",
         "m_rename": "Переименовать игру",
@@ -3900,6 +3926,7 @@ def selftest():
         "show_game_info": True,
         "show_debug_button": False,
         "download_missing_only": True,
+        "auto_update_check": True,
         "ftp_host": "",
         "ftp_port": 21,
         "ftp_user": "xbox",
@@ -3995,6 +4022,11 @@ class App:
         self.download_queue = queue.Queue()
         self.download_worker_thread = None
         self.current_download_job = None
+        # Update checker
+        self.update_check_thread = None
+        self.last_update_check = 0
+        self.latest_version = None
+        self.update_available = False
         self.item_to_game = {}
         self.search_var = tk.StringVar()
         self._photo = None
@@ -4302,6 +4334,8 @@ class App:
                 elif isinstance(msg, str) and msg.startswith("__gameart_status__:"):
                     self.gameart_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
                     self._paint_status()
+                elif isinstance(msg, str) and msg.startswith("__update_available__:"):
+                    self._show_update_dialog(msg.split(":", 1)[1])
                 elif isinstance(msg, str) and msg.startswith("__preview_info__:"):
                     self._preview_info_show(msg.split(":", 1)[1])
                 elif msg == "__alt_preview__":
@@ -4416,6 +4450,35 @@ class App:
                 eff = detect_system_theme()
                 if eff != self._applied_theme:
                     self.queue.put("__theme_check__")
+
+    def update_check_loop(self):
+        while True:
+            if self.cfg.get("auto_update_check", True):
+                now = time.time()
+                if now - self.last_update_check >= UPDATE_CHECK_INTERVAL:
+                    self.last_update_check = now
+                    self.check_for_updates()
+            time.sleep(3600)  # Check every hour
+
+    def check_for_updates(self):
+        try:
+            data = fetch_bytes(GITHUB_API_RELEASES, timeout=15)
+            if not data:
+                return
+            release = json.loads(data.decode("utf-8"))
+            tag = release.get("tag_name", "").lstrip("v")
+            if tag and self._version_greater(tag, CURRENT_VERSION):
+                self.latest_version = tag
+                self.update_available = True
+                self.queue.put("__update_available__:" + tag)
+        except Exception:
+            pass
+
+    def _version_greater(self, v1, v2):
+        try:
+            return tuple(map(int, v1.split("."))) > tuple(map(int, v2.split(".")))
+        except Exception:
+            return v1 > v2
 
     def browse(self):
         # Permite selecionar unidade (drive) ou pasta
@@ -5743,6 +5806,13 @@ class App:
         parts = self._format_info(self.db.info(tid) or {})
         self.preview_info.configure(text=parts)
 
+    def _show_update_dialog(self, version):
+        if messagebox.askyesno(tr("update_available_title"),
+                                tr("update_available_msg", version, CURRENT_VERSION)):
+            # Open GitHub releases page
+            import webbrowser
+            webbrowser.open(f"https://github.com/{GITHUB_REPO}/releases/tag/v{version}")
+
     def _format_info(self, info):
         genres = ", ".join(info.get("genre") or [])[:60]
         dev = info.get("developer") or ""
@@ -6789,6 +6859,9 @@ class App:
         missing_only_var = tk.BooleanVar(value=self.opt_missing_only.get())
         add_row(tr("download_missing_only"), ttk.Checkbutton(outer, text=tr("download_missing_only"), variable=missing_only_var))
 
+        auto_update_var = tk.BooleanVar(value=self.cfg.get("auto_update_check", True))
+        add_row(tr("auto_update_check"), ttk.Checkbutton(outer, text=tr("auto_update_check"), variable=auto_update_var))
+
         # FTP
         add_section(tr("set_ftp"))
 
@@ -6866,6 +6939,7 @@ class App:
                     show_game_info=bool(show_game_info_var.get()),
                     show_debug_button=bool(show_debug_var.get()),
                     download_missing_only=bool(missing_only_var.get()),
+                    auto_update_check=bool(auto_update_var.get()),
                     ftp_host=self.ftp_host,
                     ftp_port=self.ftp_port,
                     ftp_user=self.ftp_user,

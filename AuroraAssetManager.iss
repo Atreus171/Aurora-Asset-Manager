@@ -1,0 +1,96 @@
+; Aurora Asset Manager - Inno Setup Installer Script
+; Compile with Inno Setup 6+
+
+#define AppName "Aurora Asset Manager"
+#define AppVersion "1.5.2"
+#define AppPublisher "Atreus171"
+#define AppURL "https://github.com/Atreus171/Aurora-Asset-Manager"
+#define AppExeName "AuroraAssetManager.exe"
+
+[Setup]
+AppId={{A7B8C9D0-E1F2-4A3B-8C7D-6E5F4A3B2C1D}}
+AppName={#AppName}
+AppVersion={#AppVersion}
+AppPublisher={#AppPublisher}
+AppPublisherURL={#AppURL}
+AppSupportURL={#AppURL}
+AppUpdatesURL={#AppURL}
+DefaultDirName={autopf}\{#AppName}
+DefaultGroupName={#AppName}
+AllowNoIcons=yes
+OutputDir=dist
+OutputBaseFilename=AuroraAssetManager_Setup_v{#AppVersion}
+Compression=lzma
+SolidCompression=yes
+CompressionThreads=auto
+InternalCompressLevel=ultra
+SetupIconFile=assets\icon.ico
+UninstallIconFile=assets\icon.ico
+WizardImageFile=assets\wizard.bmp
+WizardSmallImageFile=assets\wizard_small.bmp
+LicenseFile=LICENSE
+InfoBeforeFile=README.md
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
+DisableDirPage=no
+DisableProgramGroupPage=no
+DisableFinishedPage=no
+DefaultDialogFontName=Segoe UI
+WindowResizable=yes
+WindowShowCaption=yes
+WindowStartMaximized=no
+UsePreviousAppDir=no
+DisableReadyPage=no
+DisableReadyMemo=no
+CreateAppDir=yes
+UninstallDisplayIcon={app}\{#AppExeName}
+UninstallDisplayName={#AppName}
+AppCopyright=Copyright © 2024 Atreus171
+
+[Languages]
+Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
+Name: "english"; MessagesFile: "compiler:Languages\English.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "startmenuicon"; Description: "{cm:CreateStartMenuIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checked
+
+[Files]
+Source: "dist\AuroraAssetManager.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\AuroraAssetManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "game_covers\*"; DestDir: "{app}\game_covers"; Flags: ignoreversion recursesubdirs createallsubdirs; Flags: onlyifdoesntexist
+Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+
+[Icons]
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\icon.ico"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\game_covers"
+
+[Registry]
+Root: HKCU; Subkey: "Software\Atreus171\AuroraAssetManager"; ValueType: string; ValueName: "Version"; ValueData: "{#AppVersion}"; Flags: uninsdeletekey
+
+[Code]
+function InitializeSetup(): Boolean;
+begin
+  Result := True;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then begin
+    // Create game_covers directory if it doesn't exist
+    if not DirExists(ExpandConstant('{app}\game_covers')) then
+      ForceDirectories(ExpandConstant('{app}\game_covers'));
+  end;
+end;
