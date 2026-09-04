@@ -7,7 +7,13 @@ if not exist %ISCC% (
     set ISCC="C:\Program Files\Inno Setup 6\ISCC.exe"
 )
 if not exist %ISCC% (
-    echo Inno Setup 6 not found. Please install Inno Setup 6 from https://jrsoftware.org/isinfo.php
+    set ISCC="C:\Program Files (x86)\Inno Setup 7\ISCC.exe"
+)
+if not exist %ISCC% (
+    set ISCC="C:\Program Files\Inno Setup 7\ISCC.exe"
+)
+if not exist %ISCC% (
+    echo Inno Setup not found. Please install Inno Setup from https://jrsoftware.org/isinfo.php
     pause
     exit /b 1
 )
