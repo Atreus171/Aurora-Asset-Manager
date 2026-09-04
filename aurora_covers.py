@@ -288,6 +288,13 @@ TEXT = {
         "dlc_manual_extract": "DLC salvo em %s; extraia manualmente com 7-Zip no console.",
         "col_name": "Nome",
         "col_info": "Info",
+        "tu_install_local": "Instalar TU local...",
+        "pick_tu_file": "Escolher arquivo de TU",
+        "tu_online": "Online",
+        "tu_installing_local": "Instalando TU local (%s)...",
+        "tu_already_local": "Esta TU já está instalada.",
+        "tu_manual_extract": "TU salvo em %s; extraia manualmente com 7-Zip no console.",
+        "all_files": "Todos os arquivos",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -639,6 +646,13 @@ TEXT = {
         "dlc_manual_extract": "DLC saved to %s; extract it manually with 7-Zip on the console.",
         "col_name": "Name",
         "col_info": "Info",
+        "tu_install_local": "Install local TU...",
+        "pick_tu_file": "Choose a TU file",
+        "tu_online": "Online",
+        "tu_installing_local": "Installing local TU (%s)...",
+        "tu_already_local": "This TU is already installed.",
+        "tu_manual_extract": "TU saved to %s; extract it manually with 7-Zip on the console.",
+        "all_files": "All files",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -996,6 +1010,13 @@ TEXT = {
         "dlc_manual_extract": "DLC guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
         "col_name": "Nombre",
         "col_info": "Info",
+        "tu_install_local": "Instalar TU local...",
+        "pick_tu_file": "Elegir archivo de TU",
+        "tu_online": "En línea",
+        "tu_installing_local": "Instalando TU local (%s)...",
+        "tu_already_local": "Esta TU ya está instalada.",
+        "tu_manual_extract": "TU guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
+        "all_files": "Todos los archivos",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1353,6 +1374,13 @@ TEXT = {
         "dlc_manual_extract": "DLC enregistré dans %s; extrayez-le manuellement avec 7-Zip sur la console.",
         "col_name": "Nom",
         "col_info": "Info",
+        "tu_install_local": "Installer une TU locale...",
+        "pick_tu_file": "Choisir un fichier TU",
+        "tu_online": "En ligne",
+        "tu_installing_local": "Installation de la TU locale (%s)...",
+        "tu_already_local": "Cette TU est déjà installée.",
+        "tu_manual_extract": "TU enregistrée dans %s; extrayez-la manuellement avec 7-Zip sur la console.",
+        "all_files": "Tous les fichiers",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1705,6 +1733,13 @@ TEXT = {
         "dlc_manual_extract": "DLCを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
         "col_name": "名前",
         "col_info": "情報",
+        "tu_install_local": "ローカルTUをインストール...",
+        "pick_tu_file": "TUファイルを選択",
+        "tu_online": "オンライン",
+        "tu_installing_local": "ローカルTUをインストール中 (%s)...",
+        "tu_already_local": "このTUは既にインストールされています。",
+        "tu_manual_extract": "TUを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
+        "all_files": "すべてのファイル",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -2057,6 +2092,13 @@ TEXT = {
         "dlc_manual_extract": "DLC сохранён в %s; извлеките вручную 7-Zip на консоли.",
         "col_name": "Имя",
         "col_info": "Инфо",
+        "tu_install_local": "Установить локальную TU...",
+        "pick_tu_file": "Выберите файл TU",
+        "tu_online": "Онлайн",
+        "tu_installing_local": "Установка локальной TU (%s)...",
+        "tu_already_local": "Эта TU уже установлена.",
+        "tu_manual_extract": "TU сохранён в %s; извлеките вручную 7-Zip на консоли.",
+        "all_files": "Все файлы",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -2649,6 +2691,21 @@ def game_content_dirs(root, tid):
         if p not in dirs:
             dirs.append(p)
     return dirs
+
+
+def list_local_content(path, tid, sub):
+    """Arquivos já instalados localmente (TU em 000B0000, DLC em 00000002)."""
+    out = []
+    for d in game_content_dirs(path, tid):
+        folder = os.path.join(d, sub)
+        try:
+            for f in sorted(os.listdir(folder)):
+                fp = os.path.join(folder, f)
+                if os.path.isfile(fp):
+                    out.append(fp)
+        except OSError:
+            continue
+    return out
 
 
 def _list_xex(directory):
@@ -7447,11 +7504,12 @@ class App:
         path = self.aurora_path.get().strip().strip('"')
         tid = g["tid"]
         is_tu = kind == "title_update"
+        sub = "000B0000" if is_tu else "00000002"
         dlg = tk.Toplevel(self.root)
         dlg.transient(self.root)
         dlg.resizable(False, False)
-        dlg.configure(bg=THEMES.get(self._applied_theme, THEMES["escuro"])["bg"])
         th = THEMES.get(self._applied_theme, THEMES["escuro"])
+        dlg.configure(bg=th["bg"])
         dlg.title("%s - %s (%s)" % (tr("kind_" + kind), self.game_title(g), tid))
         ttk.Label(
             dlg, text="%s (%s)" % (tr("kind_" + kind), self.game_title(g))
@@ -7459,12 +7517,15 @@ class App:
         body = ttk.Frame(dlg)
         body.pack(fill=tk.BOTH, expand=True, padx=10)
         tree = ttk.Treeview(
-            body, columns=("name", "info"), show="headings", height=14
+            body, columns=("name", "info", "status"), show="headings", height=14
         )
         tree.heading("name", text=tr("col_name"))
         tree.heading("info", text=tr("col_info"))
+        tree.heading("status", text=tr("col_status"))
         tree.column("name", width=300)
-        tree.column("info", width=230)
+        tree.column("info", width=210)
+        tree.column("status", width=90, anchor=tk.CENTER)
+        tree.tag_configure("local", foreground=th.get("muted", "#9a9a9a"))
         ys = ttk.Scrollbar(body, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=ys.set)
         ys.pack(side=tk.RIGHT, fill=tk.Y)
@@ -7476,10 +7537,13 @@ class App:
         msg.pack(pady=(4, 0))
         bf = ttk.Frame(dlg)
         bf.pack(pady=(6, 10))
-        btn_dl = ttk.Button(
-            bf, text=tr("dl_online"), command=lambda: _dl(), state=tk.DISABLED
-        )
+        btn_dl = ttk.Button(bf, text=tr("dl_online"), command=lambda: _dl(), state=tk.DISABLED)
         btn_dl.pack(side=tk.LEFT, padx=4)
+        btn_local = ttk.Button(
+            bf, text=tr("tu_install_local" if is_tu else "dlc_install_local"),
+            command=_install_local,
+        )
+        btn_local.pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
 
         entries = []
@@ -7501,13 +7565,15 @@ class App:
                     if date:
                         info += "  (%s)" % date
                 else:
-                    name = os.path.splitext(e.get("name") or "")[0].lstrip(".-_ ")
+                    name = os.path.splitext(os.path.basename(e.get("name") or ""))[0].lstrip(".-_ ")
                     size = e.get("size") or 0
-                    if size:
-                        info = "%.1f MB" % (size / (1024.0 * 1024.0))
-                    else:
-                        info = ""
-                iid = tree.insert("", tk.END, values=(name, info))
+                    info = "%.1f MB" % (size / (1024.0 * 1024.0)) if size else ""
+                st = tr("assets_installed") if e.get("local") else (
+                    tr("tu_online") if is_tu else tr("dlc_online")
+                )
+                vals = (name, info, st)
+                tags = ("local",) if e.get("local") else ()
+                iid = tree.insert("", tk.END, values=vals, tags=tags)
                 iids.append(iid)
             if iids:
                 tree.selection_set(iids[0])
@@ -7517,27 +7583,44 @@ class App:
             except tk.TclError:
                 pass
 
+        cached_online = []
+
+        def _render():
+            items = [dict(e, local=False) for e in cached_online]
+            for fp in list_local_content(path, tid, sub):
+                try:
+                    fsize = os.path.getsize(fp)
+                except OSError:
+                    fsize = 0
+                items.append({"name": os.path.basename(fp), "size": fsize, "local": True})
+            _populate(items)
+            if not items:
+                msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty"))
+
         def _load():
-            if is_tu:
-                try:
+            try:
+                if is_tu:
                     ups = xboxunity_title_updates(tid)
-                except Exception:
-                    ups = []
-                rows = sorted(ups, key=lambda x: _version_num(x.get("version")), reverse=True)
-            else:
-                try:
-                    rows = ia_dlc_matches(self.game_title(g), tid)
-                except Exception:
-                    rows = []
-            self.root.after(0, lambda: _populate(rows))
-            if not rows:
-                self.root.after(0, lambda: msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty")))
+                    cached_online[:] = sorted(
+                        ups, key=lambda x: _version_num(x.get("version")), reverse=True
+                    )
+                else:
+                    cached_online[:] = ia_dlc_matches(self.game_title(g), tid)
+            except Exception:
+                cached_online[:] = []
+            self.root.after(0, _render)
 
         def _dl():
             sel = tree.selection()
             if not sel or sel[0] not in iids:
                 return
             e = entries[iids.index(sel[0])]
+            if e.get("local"):
+                messagebox.showinfo(
+                    tr("info"),
+                    tr("tu_already_local") if is_tu else tr("dlc_already_local"),
+                )
+                return
             dlg.destroy()
             if is_tu:
                 self.thread_download_kind(
@@ -7549,10 +7632,77 @@ class App:
                     path, g, "dlc", ia_id=IA_DLC_ITEM, filename=e.get("name"),
                 )
 
+        def _install_local():
+            ftype = tr("pick_tu_file") if is_tu else tr("pick_dlc_file")
+            fname = filedialog.askopenfilename(
+                parent=dlg,
+                title=ftype,
+                filetypes=[
+                    (tr("kind_" + kind), "*.xex *.tu *.zip *.rar *.7z"),
+                    (tr("all_files"), "*.*"),
+                ],
+            )
+            if not fname:
+                return
+            self.log(tr("tu_installing_local" if is_tu else "dlc_installing_local", os.path.basename(fname)))
+            def _worker():
+                self._install_local_content_file(g, path, fname, kind)
+                self.root.after(0, _render)
+            threading.Thread(target=_worker, daemon=True).start()
+
         tree.bind("<Double-1>", lambda _ev: _dl())
         dlg.protocol("WM_DELETE_WINDOW", dlg.destroy)
         dlg.grab_set()
         threading.Thread(target=_load, daemon=True).start()
+
+    def _install_local_content_file(self, g, path, fname, kind):
+        """Instala um TU/DLC local (arquivo escolhido) na pasta de conteúdo
+        do Aurora (000B0000 para TU, 00000002 para DLC)."""
+        tid = g["tid"]
+        sub = "000B0000" if kind == "title_update" else "00000002"
+        dests = [os.path.join(d, sub) for d in game_content_dirs(path, tid)]
+        basename = os.path.basename(fname)
+        try:
+            low = fname.lower()
+            installed = False
+            if low.endswith((".zip", ".rar", ".7z")):
+                extracted = False
+                for base_root in content_roots(path):
+                    if extract_archive_to(fname, base_root):
+                        installed = True
+                        extracted = True
+                if not extracted:
+                    copied = None
+                    for dest_dir in dests:
+                        try:
+                            os.makedirs(dest_dir, exist_ok=True)
+                            shutil.copy2(fname, os.path.join(dest_dir, basename))
+                            copied = os.path.join(dest_dir, basename)
+                            installed = True
+                        except OSError:
+                            continue
+                        if installed:
+                            break
+                    if installed:
+                        self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract",
+                                    os.path.dirname(copied) if copied else ""))
+            else:
+                for dest_dir in dests:
+                    try:
+                        os.makedirs(dest_dir, exist_ok=True)
+                        shutil.copy2(fname, os.path.join(dest_dir, basename))
+                        installed = True
+                    except OSError:
+                        continue
+                    if installed:
+                        break
+            if installed:
+                mark_installed(tid, kind)
+                self.log(tr("ia_download_success", tr("kind_" + kind), basename))
+            else:
+                self.log(tr("ia_install_fail", basename))
+        except Exception as exc:
+            self.log(tr("logs_dl_kind_err", kind, exc))
 
     def apply_theme(self):
         eff = detect_system_theme() if self.theme == "sistema" else self.theme
