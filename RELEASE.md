@@ -1,6 +1,27 @@
 # Release Notes
 
-## v1.5.1 (Latest) - "Download Queue Release"
+## v1.5.4 (Latest) - "DLC & Title Updates Release"
+
+### ✨ New Features
+- **Download DLC & Title Updates (TU)**: new kinds in the assets dialog
+  - "Atualização de Título (TU)" and "DLC" rows available alongside covers/screenshots
+  - Downloads from **Internet Archive** (searches by game title, the way IA indexes content)
+  - Installs into the real 360/Aurora layout:
+    - TU → `Content\0000000000000000\<TID>\000B0000\`
+    - DLC → `Content\0000000000000000\<TID>\00000002\`
+  - Smart result ordering: prefers `.xex` files and names matching TU/DLC, avoids Windows/PC packs
+  - `.zip` archives auto-extract (preserving `Content\...` structure); `.7z` saved for manual extraction
+  - "Baixar e instalar assets" panel now shows installed/missing state for TU/DLC based on files on disk
+- **Install local TU/DLC files**: "Alterar... / PC" lets you pick a local `.xex`/`.zip`/`.7z` and installs it in the correct Content folder
+
+### 🔧 Fixes
+- Fixed duplicate `poke_url` definition and unused variable in the Internet Archive search
+- Fixed download helper that never saved the file to disk
+- Added translation strings for the new feature in all 6 languages
+
+---
+
+## v1.5.1 - "Download Queue Release"
 
 ### ✨ New Features
 - **Persistent download queue** with background worker thread:

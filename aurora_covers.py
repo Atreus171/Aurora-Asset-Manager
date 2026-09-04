@@ -14,6 +14,8 @@ import urllib.parse
 import urllib.request
 import ftplib
 import concurrent.futures
+import shutil
+import tempfile
 from datetime import datetime
 
 import tkinter as tk
@@ -77,7 +79,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.3"
+CURRENT_VERSION = "1.5.4"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -85,6 +87,8 @@ ASSET_TYPE_BANNER = 1
 ASSET_TYPE_BOXART = 2
 ASSET_TYPE_BACKGROUND = 4
 ASSET_TYPE_SCREENSHOT = 5
+ASSET_TYPE_TITLE_UPDATE = 6
+ASSET_TYPE_DLC = 7
 
 ART_SIZE = {
     ASSET_TYPE_BOXART: (BOXART_W, BOXART_H),
@@ -263,6 +267,8 @@ TEXT = {
         "kind_icon": "ícone",
         "kind_banner": "banner",
         "kind_screenshots": "screenshot",
+        "kind_title_update": "atualização de título (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -493,6 +499,12 @@ TEXT = {
         "logs_kind_err": "Erro: %s",
         "logs_kind_err_with": "%s: erro: %s",
         "logs_kind_skip": "%s: já instalado (pulando).",
+        "logs_searching_ia": "Buscando %s no Internet Archive para %s...",
+        "ia_no_results": "Nenhum resultado no Internet Archive para %s.",
+        "logs_downloading_ia": "Baixando %s do Internet Archive (%s/%s)...",
+        "ia_download_failed": "Falha ao baixar %s do Internet Archive (%s).",
+        "ia_download_success": "%s baixado com sucesso do Internet Archive (%s).",
+        "ia_install_fail": "Não foi possível instalar %s (verifique o arquivo baixado).",
         "unity_fetch_fail": "Falha ao baixar a capa do XboxUnity.",
         "logs_alt_installed": "Capa alternativa instalada para %s (%s).",
         "logs_alt_err": "Erro: %s",
@@ -590,6 +602,8 @@ TEXT = {
         "kind_icon": "icon",
         "kind_banner": "banner",
         "kind_screenshots": "screenshot",
+        "kind_title_update": "title update (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -821,7 +835,18 @@ TEXT = {
         "logs_kind_err": "Error: %s",
         "logs_kind_err_with": "%s: error: %s",
         "logs_kind_skip": "%s: already installed (skipping).",
+        "logs_searching_ia": "Searching %s on Internet Archive for %s...",
+        "ia_no_results": "No results on Internet Archive for %s.",
+        "logs_downloading_ia": "Downloading %s from Internet Archive (%s/%s)...",
+        "ia_download_failed": "Failed to download %s from Internet Archive (%s).",
+        "ia_download_success": "%s downloaded successfully from Internet Archive (%s).",
         "unity_fetch_fail": "Failed to download the cover from XboxUnity.",
+        "logs_searching_ia": "Searching Internet Archive for %s of %s...",
+        "ia_no_results": "No Internet Archive results for %s.",
+        "logs_downloading_ia": "Downloading %s from Internet Archive (%s/%s)...",
+        "ia_download_failed": "Failed to download %s from Internet Archive (%s).",
+        "ia_download_success": "%s downloaded successfully from Internet Archive (%s).",
+        "ia_install_fail": "Could not install %s (check the downloaded file).",
         "logs_alt_installed": "Alternative cover installed for %s (%s).",
         "logs_alt_err": "Error: %s",
     },
@@ -918,6 +943,8 @@ TEXT = {
         "kind_icon": "icono",
         "kind_banner": "banner",
         "kind_screenshots": "screenshot",
+        "kind_title_update": "actualización de título (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1149,7 +1176,18 @@ TEXT = {
         "logs_kind_err": "Error: %s",
         "logs_kind_err_with": "%s: error: %s",
         "logs_kind_skip": "%s: ya instalado (saltando).",
+        "logs_searching_ia": "Buscando %s en Internet Archive para %s...",
+        "ia_no_results": "Sin resultados en Internet Archive para %s.",
+        "logs_downloading_ia": "Descargando %s de Internet Archive (%s/%s)...",
+        "ia_download_failed": "Error al descargar %s de Internet Archive (%s).",
+        "ia_download_success": "%s descargado con éxito de Internet Archive (%s).",
         "unity_fetch_fail": "Fallo al descargar la portada de XboxUnity.",
+        "logs_searching_ia": "Buscando en Internet Archive %s de %s...",
+        "ia_no_results": "Sin resultados en Internet Archive para %s.",
+        "logs_downloading_ia": "Descargando %s de Internet Archive (%s/%s)...",
+        "ia_download_failed": "Error al descargar %s de Internet Archive (%s).",
+        "ia_download_success": "%s descargado correctamente de Internet Archive (%s).",
+        "ia_install_fail": "No se pudo instalar %s (verifica el archivo descargado).",
         "logs_alt_installed": "Portada alternativa instalada para %s (%s).",
         "logs_alt_err": "Error: %s",
     },
@@ -1246,6 +1284,8 @@ TEXT = {
         "kind_icon": "icône",
         "kind_banner": "bannière",
         "kind_screenshots": "capture",
+        "kind_title_update": "mise à jour du titre (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1478,6 +1518,12 @@ TEXT = {
         "logs_kind_err_with": "%s : erreur : %s",
         "logs_kind_skip": "%s : déjà installé (ignoré).",
         "unity_fetch_fail": "Échec du téléchargement de la jaquette depuis XboxUnity.",
+        "logs_searching_ia": "Recherche sur Internet Archive : %s de %s...",
+        "ia_no_results": "Aucun résultat sur Internet Archive pour %s.",
+        "logs_downloading_ia": "Téléchargement de %s depuis Internet Archive (%s/%s)...",
+        "ia_download_failed": "Échec du téléchargement de %s depuis Internet Archive (%s).",
+        "ia_download_success": "%s téléchargé avec succès depuis Internet Archive (%s).",
+        "ia_install_fail": "Impossible d'installer %s (vérifiez le fichier téléchargé).",
         "logs_alt_installed": "Jaquette alternative installée pour %s (%s).",
         "logs_alt_err": "Erreur : %s",
     },
@@ -1574,6 +1620,8 @@ TEXT = {
         "kind_icon": "アイコン",
         "kind_banner": "バナー",
         "kind_screenshots": "スクリーンショット",
+        "kind_title_update": "タイトルアップデート (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -1806,6 +1854,12 @@ TEXT = {
         "logs_kind_err_with": "%s: エラー: %s",
         "logs_kind_skip": "%s: インストール済み（スキップ）。",
         "unity_fetch_fail": "XboxUnity からカバーのダウンロードに失敗しました。",
+        "logs_searching_ia": "インターネットアーカイブで%sの%sを検索中...",
+        "ia_no_results": "インターネットアーカイブに%sの結果がありません。",
+        "logs_downloading_ia": "インターネットアーカイブから%sをダウンロード中（%s/%s）...",
+        "ia_download_failed": "インターネットアーカイブから%sのダウンロードに失敗しました（%s）。",
+        "ia_download_success": "%sをインターネットアーカイブからダウンロードしました（%s）。",
+        "ia_install_fail": "%sをインストールできませんでした（ダウンロードしたファイルを確認してください）。",
         "logs_alt_installed": "%s (%s) に代替カバーをインストールしました。",
         "logs_alt_err": "エラー: %s",
     },
@@ -1902,6 +1956,8 @@ TEXT = {
         "kind_icon": "иконка",
         "kind_banner": "баннер",
         "kind_screenshots": "скриншот",
+        "kind_title_update": "обновление игры (TU)",
+        "kind_dlc": "DLC",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -2134,6 +2190,12 @@ TEXT = {
         "logs_kind_err_with": "%s: ошибка: %s",
         "logs_kind_skip": "%s: уже установлено (пропуск).",
         "unity_fetch_fail": "Не удалось загрузить обложку с XboxUnity.",
+        "logs_searching_ia": "Поиск %s для %s в Internet Archive...",
+        "ia_no_results": "Нет результатов в Internet Archive для %s.",
+        "logs_downloading_ia": "Загрузка %s из Internet Archive (%s/%s)...",
+        "ia_download_failed": "Не удалось загрузить %s из Internet Archive (%s).",
+        "ia_download_success": "%s успешно загружен из Internet Archive (%s).",
+        "ia_install_fail": "Не удалось установить %s (проверьте загруженный файл).",
         "logs_alt_installed": "Альтернативная обложка установлена для %s (%s).",
         "logs_alt_err": "Ошибка: %s",
     },
@@ -2173,6 +2235,8 @@ ASSET_KINDS = [
     ("icon", "Ícone (64x64)", "GL", ASSET_TYPE_ICON, "icon.png"),
     ("banner", "Banner (420x95)", "GL", ASSET_TYPE_BANNER, "banner.png"),
     ("screenshots", "Screenshots", "SS", ASSET_TYPE_SCREENSHOT, "screenshot1.png"),
+    ("title_update", "Atualização de Título (TU)", "TU", ASSET_TYPE_TITLE_UPDATE, "title_update.xex"),
+    ("dlc", "DLC", "DLC", ASSET_TYPE_DLC, "dlc.xex"),
 ]
 
 
@@ -2274,6 +2338,215 @@ def poke_url(url, timeout=8, method="GET"):
             return True
     except Exception:
         return False
+
+
+# Internet Archive API for Title Updates and DLC
+INTERNET_ARCHIVE_API = "https://archive.org/advancedsearch.php"
+INTERNET_ARCHIVE_DOWNLOAD = "https://archive.org/download/"
+
+
+def search_internet_archive(query, rows=20):
+    """Search Internet Archive for Title Updates or DLC."""
+    params = {
+        "q": query,
+        "output": "json",
+        "rows": rows,
+        "page": 1,
+        "fl": "identifier,title,mediatype,description,creator,date",
+    }
+    data = download_json(f"{INTERNET_ARCHIVE_API}?{urllib.parse.urlencode(params)}")
+    if not data:
+        return []
+    return data.get("response", {}).get("docs", [])
+
+
+def get_internet_archive_files(identifier):
+    """Get list of files for an Internet Archive item."""
+    url = f"https://archive.org/metadata/{identifier}"
+    data = download_json(url)
+    if not data:
+        return []
+    files = data.get("files", [])
+    return [f.get("name") for f in files if f.get("name")]
+
+
+def download_internet_archive_file(identifier, filename, dest_path):
+    """Baixa um arquivo específico do Internet Archive direto para dest_path
+    (streaming, sem carregar tudo na memória)."""
+    url = f"{INTERNET_ARCHIVE_DOWNLOAD}{identifier}/{filename}"
+    for _ in range(2):
+        try:
+            req = urllib.request.Request(url, headers=USER_AGENT)
+            tmp_path = dest_path + ".part"
+            with _HTTP_POOL.open(req, timeout=60) as resp, open(tmp_path, "wb") as f:
+                while True:
+                    chunk = resp.read(64 * 1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            os.replace(tmp_path, dest_path)
+            return True
+        except Exception:
+            time.sleep(1.0)
+    return False
+
+
+def content_roots(root):
+    """Raízes (drive e pasta Aurora) onde fica Content\\0000000000000000\\<TID>."""
+    r = (root or "").strip().strip('"')
+    roots = [r] if r else []
+    drive = os.path.splitdrive(os.path.abspath(r or os.getcwd()))[0] + os.sep
+    if drive and drive not in roots:
+        roots.append(drive)
+    ordered = []
+    for rr in ([drive] if drive else []) + roots:
+        for p in (rr, os.path.join(rr, "Aurora")):
+            p = os.path.normpath(p)
+            if p not in ordered:
+                ordered.append(p)
+    return ordered
+
+
+def game_content_dirs(root, tid):
+    """Pastas Content\\0000000000000000\\<TID> nos drives e pasta Aurora."""
+    dirs = []
+    for rr in content_roots(root):
+        p = os.path.normpath(os.path.join(rr, "Content", "0000000000000000", tid))
+        if p not in dirs:
+            dirs.append(p)
+    return dirs
+
+
+def _list_xex(directory):
+    """Lista arquivos .xex de uma pasta (ou [] se não existir)."""
+    try:
+        return [f for f in os.listdir(directory) if f.lower().endswith(".xex")]
+    except OSError:
+        return []
+
+
+def extract_zip_to(archive_path, dest_root):
+    """Extrai um .zip para dest_root preservando a estrutura Content\\..."""
+    try:
+        import zipfile
+        with zipfile.ZipFile(archive_path) as zf:
+            zf.extractall(dest_root)
+        return True
+    except Exception:
+        return False
+
+
+def search_title_updates_dlc(tid, game_title=None, ia_id=None, kind=None):
+    """Procura Title Updates ou DLC no Internet Archive.
+
+    O Internet Archive indexa pelo NOME do jogo (não pelo TID), então a busca
+    usa o título do jogo como base, com filtros de relevância. Com ia_id,
+    lista arquivos do item específico. `kind` ("title_update"/"dlc") melhora
+    a ordenação dos resultados."""
+    def _clean(s):
+        return s and any(c.isalnum() for c in s)
+
+    def _relevant(item, filename, words):
+        text = " ".join(filter(None, [
+            item.get("identifier", ""), item.get("title", ""),
+            item.get("description", ""), filename,
+        ])).lower()
+        if words:
+            return any(w in text for w in words)
+        return True
+
+    results = []
+
+    if ia_id:
+        for f in get_internet_archive_files(ia_id):
+            low = f.lower()
+            if low.endswith((".xex", ".zip", ".7z")):
+                results.append({
+                    "identifier": ia_id,
+                    "filename": f,
+                    "title": "Title Update/DLC for %s" % tid,
+                    "date": "",
+                    "description": "",
+                    "kind_hint": 0,
+                })
+        return results
+
+    stop = {"the", "and", "for", "with", "edition", "xbox", "360",
+            "game", "games", "of", "a", "an", "dlc", "tu", "title",
+            "update", "updates", "pack", "plus", "dual"}
+    words = [w for w in re.split(r"[^a-z0-9]+", (game_title or "").lower())
+             if len(w) > 2 and w not in stop][:4]
+    base = " ".join('"%s"' % w for w in words[:3]) if words else tid
+    queries = [
+        "%s AND (title_update OR \"title update\" OR update)" % base,
+        "%s AND (dlc OR \"downloadable content\" OR content)" % base,
+        "%s AND (xbox 360 OR xbox360 OR 360)" % base,
+        "%s AND mediatype:software" % base,
+    ]
+
+    seen_items = []
+    for query in queries:
+        for item in search_internet_archive(query, rows=10):
+            identifier = (item.get("identifier") or "").strip()
+            if not identifier or not _clean(identifier):
+                continue
+            if identifier in seen_items:
+                continue
+            if words:
+                # Pré-filtro rápido antes de buscar metadados (evita chamadas demais)
+                quick = (identifier + " " + (item.get("title") or "")).lower()
+                if not any(w in quick for w in words):
+                    continue
+            seen_items.append(identifier)
+            for f in get_internet_archive_files(identifier):
+                low = f.lower()
+                if not low.endswith((".xex", ".zip", ".7z")):
+                    continue
+                if not _relevant(item, f, words):
+                    continue
+                # Pontuação: menor = melhor. Prefere console 360, .xex direto,
+                # e nomes relacionados ao tipo (TU/DLC).
+                score = 0
+                if not low.endswith(".xex"):
+                    score += 2
+                if "win" in low or "windows" in low or "pc" in low or "installer" in low:
+                    score += 4
+                if "xbox" in identifier or "360" in identifier:
+                    score -= 3
+                if low.endswith((".7z", ".zip")) and any(x in low for x in ("-tu", "_tu", "tu", "update", "dlc")):
+                    score -= 1
+                if kind == "title_update" and ("tu" in low or "title" in low or "update" in low):
+                    score -= 1
+                if kind == "dlc" and ("dlc" in low or "content" in low):
+                    score -= 1
+                results.append({
+                    "identifier": identifier,
+                    "filename": f,
+                    "title": (item.get("title") or "").strip() or identifier,
+                    "date": (item.get("date") or "").strip(),
+                    "description": (item.get("description") or "").strip()[:200],
+                    "kind_hint": max(0, score),
+                })
+
+    # Deduplicate (menor score primeiro)
+    seen = set()
+    unique = []
+    for r in sorted(results, key=lambda x: x.get("kind_hint", 99)):
+        key = (r["identifier"], r["filename"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(r)
+    return unique
+
+
+def pick_ia_result(results, kind):
+    """Escolhe o melhor resultado: prefere .xex direto (evita .zip quando dá)."""
+    if not results:
+        return None
+    for r in results:
+        if r.get("filename", "").lower().endswith(".xex"):
+            return r
+    return results[0]
 
 
 class X360DB:
@@ -3961,7 +4234,7 @@ def selftest():
         missing = en_keys - set(TEXT[lang_code].keys())
         assert not missing, "translations missing in %s: %s" % (lang_code, sorted(missing))
     assert tr("m_rename") != "m_rename"
-    assert [k for k, *_ in ASSET_KINDS] == ["boxart", "background", "icon", "banner", "screenshots"]
+    assert [k for k, *_ in ASSET_KINDS] == ["boxart", "background", "icon", "banner", "screenshots", "title_update", "dlc"]
     assert THEMES["escuro"]["fg"] == "#e6e6e6"
     print("selftest OK: configurações e temas OK")
 
@@ -5947,6 +6220,22 @@ class App:
             return _has(["GL%s.asset" % g["tid"]] if folder else ["icon.png"])
         if kind == "screenshots":
             return _has(["SS%s.asset" % g["tid"]] if folder else ["screenshot1.png"])
+        if kind == "title_update":
+            for d in game_content_dirs(path, g["tid"]):
+                tu_dir = os.path.join(d, "000B0000")
+                if any(f.lower().endswith(".xex") for f in _list_xex(tu_dir)):
+                    return True
+            if folder:
+                tu_dir = os.path.join(folder, "$TitleUpdate")
+                if any(f.lower().endswith(".xex") for f in _list_xex(tu_dir)):
+                    return True
+            return False
+        if kind == "dlc":
+            for d in game_content_dirs(path, g["tid"]):
+                dlc_dir = os.path.join(d, "00000002")
+                if any(f.lower().endswith(".xex") for f in _list_xex(dlc_dir)):
+                    return True
+            return False
         return False
 
     def needs_download(self, g, path):
@@ -6328,6 +6617,72 @@ class App:
                 mark_installed(tid, "screenshots")
                 self.log(tr("logs_ss_installed", len(textures)))
                 return True
+            if kind == "title_update":
+                # Download Title Update from Internet Archive
+                return self._download_title_update_dlc(path, g, tid, "title_update")
+            if kind == "dlc":
+                # Download DLC from Internet Archive
+                return self._download_title_update_dlc(path, g, tid, "dlc")
+        except Exception as exc:
+            self.log(tr("logs_dl_kind_err", kind, exc))
+            return False
+
+    def _download_title_update_dlc(self, path, g, tid, kind):
+        """Baixa Title Update (TU) ou DLC do Internet Archive e instala
+        em Content\\0000000000000000\\<TID>\\ (pasta 000B0000 para TU,
+        00000002 para DLC), estrutura padrão do 360/Aurora."""
+        try:
+            sub = "000B0000" if kind == "title_update" else "00000002"
+            content_dirs = [os.path.join(d, sub) for d in game_content_dirs(path, tid)]
+            folder = (g.get("folder") or "").strip()
+
+            ia_id = g.get("ia_id") or g.get("internet_archive_id")
+            if ia_id:
+                files = get_internet_archive_files(ia_id)
+                candidates = [f for f in files if f.lower().endswith((".xex", ".zip", ".7z"))]
+                if not candidates:
+                    self.log(tr("ia_no_results", ia_id))
+                    return False
+                filename = g.get(f"{kind}_filename") or candidates[0]
+            else:
+                self.log(tr("logs_searching_ia", tr("kind_" + kind), self.game_title(g)))
+                results = search_title_updates_dlc(tid, self.game_title(g), kind=kind)
+                result = pick_ia_result(results, kind)
+                if not result:
+                    self.log(tr("ia_no_results", self.game_title(g)))
+                    return False
+                ia_id = result["identifier"]
+                filename = result["filename"]
+
+            self.log(tr("logs_downloading_ia", tr("kind_" + kind), ia_id, filename))
+            tmp = os.path.join(tempfile.gettempdir(), "%s_%s_%s" % (tid, kind, os.path.basename(filename)))
+            if not download_internet_archive_file(ia_id, filename, tmp):
+                self.log(tr("ia_download_failed", ia_id, filename))
+                return False
+
+            installed = False
+            if filename.lower().endswith(".zip"):
+                # Arquivos zipados normalmente contêm Content\\0000000000000000\\<TID>\\...
+                for base_root in content_roots(path):
+                    if extract_zip_to(tmp, base_root):
+                        installed = True
+            else:
+                # .xex: copia direto; .7z: salva o arquivo na pasta do tipo
+                # (.7z normalmente requer extração manual no console)
+                for dest_dir in content_dirs:
+                    try:
+                        os.makedirs(dest_dir, exist_ok=True)
+                        shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                        installed = True
+                    except OSError:
+                        continue
+            if not installed:
+                self.log(tr("ia_install_fail", filename))
+                return False
+
+            mark_installed(tid, kind)
+            self.log(tr("ia_download_success", tr("kind_" + kind), filename))
+            return True
         except Exception as exc:
             self.log(tr("logs_dl_kind_err", kind, exc))
             return False
@@ -7088,12 +7443,19 @@ class App:
         if dlg is None or not dlg.winfo_exists():
             return
         for item, kind in self._assets_kinds.items():
-            img = self.load_kind_image(self._assets_g, kind, self._assets_path)
-            st = (
-                tr("assets_installed")
-                if img is not None
-                else tr("assets_missing")
-            )
+            if kind in ("title_update", "dlc"):
+                st = (
+                    tr("assets_installed")
+                    if self._kind_exists(self._assets_g, self._assets_path, kind)
+                    else tr("assets_missing")
+                )
+            else:
+                img = self.load_kind_image(self._assets_g, kind, self._assets_path)
+                st = (
+                    tr("assets_installed")
+                    if img is not None
+                    else tr("assets_missing")
+                )
             self._assets_tree.set(item, "status", st)
         self._assets_on_select()
 
@@ -7522,6 +7884,9 @@ class App:
     def pick_kind_file(self, g, kind):
         if self.busy:
             return
+        if kind in ("title_update", "dlc"):
+            self.pick_kind_binary(g, kind)
+            return
         filetypes = [("Imagens", "*.png *.jpg *.jpeg *.bmp *.webp *.ico"), ("Todos", "*.*")]
         titles = {
             "boxart": tr("kind_boxart"),
@@ -7570,6 +7935,48 @@ class App:
         g2 = self.selected_game()
         if g2 is g:
             self.show_preview(g)
+
+    def pick_kind_binary(self, g, kind):
+        """Instala um arquivo .xex/.7z (ou .zip) local como Title Update ou DLC."""
+        if self.busy:
+            return
+        filetypes = [
+            ("XEX/Arquivo", "*.xex *.zip *.7z"),
+            ("Todos", "*.*"),
+        ]
+        file_name = filedialog.askopenfilename(
+            title=tr("pick_kind", tr("kind_" + kind), self.db.title_name(g["tid"])),
+            filetypes=filetypes,
+        )
+        if not file_name:
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        tid = g["tid"]
+        sub = "000B0000" if kind == "title_update" else "00000002"
+        copied = False
+        try:
+            if file_name.lower().endswith(".zip"):
+                for base_root in content_roots(path):
+                    if extract_zip_to(file_name, base_root):
+                        copied = True
+            else:
+                for dest_dir in [os.path.join(d, sub) for d in game_content_dirs(path, tid)]:
+                    try:
+                        os.makedirs(dest_dir, exist_ok=True)
+                        shutil.copy2(file_name, os.path.join(dest_dir, os.path.basename(file_name)))
+                        copied = True
+                    except OSError:
+                        continue
+        except Exception as exc:
+            messagebox.showerror(tr("error"), tr("img_write_fail", exc))
+            return
+        if not copied:
+            messagebox.showerror(tr("error"), tr("ia_install_fail", os.path.basename(file_name)))
+            return
+        mark_installed(tid, kind)
+        self.log(tr("asset_changed", kind, self.db.title_name(tid), tid))
+        self.refresh_assets_dlg()
+        self.update_tree_row(g)
 
     def alt_covers(self, g):
         if self.busy:
