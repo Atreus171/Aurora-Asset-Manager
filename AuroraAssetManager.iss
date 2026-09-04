@@ -55,7 +55,6 @@ CreateStartMenuIcon=Create Start Menu shortcut
 
 [Files]
 Source: "dist\AuroraAssetManager.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist\AuroraAssetManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "game_covers\*"; DestDir: "{app}\game_covers"; Flags: ignoreversion recursesubdirs createallsubdirs onlyifdoesntexist
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
