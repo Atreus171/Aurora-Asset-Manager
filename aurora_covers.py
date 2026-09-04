@@ -277,8 +277,10 @@ TEXT = {
         "btn_dl_dlc": "Baixar DLC",
         "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
-        "logs_unity_tu_none": "XboxUnity não tem TU para %s; tentando Internet Archive.",
-        "logs_unity_tu_dl_fail": "Falha ao baixar TU do XboxUnity para %s; tentando Internet Archive.",
+        "logs_unity_tu_none": "XboxUnity não tem TU para %s.",
+        "logs_unity_tu_dl_fail": "Falha ao baixar TU do XboxUnity para %s.",
+        "unity_tu_loading": "Carregando TUs...",
+        "unity_tu_empty": "Nenhuma TU disponível no XboxUnity.",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -620,8 +622,10 @@ TEXT = {
         "btn_dl_dlc": "Download DLC",
         "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
-        "logs_unity_tu_none": "XboxUnity has no TU for %s; trying Internet Archive.",
-        "logs_unity_tu_dl_fail": "Failed to download TU from XboxUnity for %s; trying Internet Archive.",
+        "logs_unity_tu_none": "XboxUnity has no TU for %s.",
+        "logs_unity_tu_dl_fail": "Failed to download TU from XboxUnity for %s.",
+        "unity_tu_loading": "Loading TUs...",
+        "unity_tu_empty": "No TUs available on XboxUnity.",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -969,8 +973,10 @@ TEXT = {
         "btn_dl_dlc": "Descargar DLC",
         "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
-        "logs_unity_tu_none": "XboxUnity no tiene TU para %s; probando Internet Archive.",
-        "logs_unity_tu_dl_fail": "Fallo al descargar TU de XboxUnity para %s; probando Internet Archive.",
+        "logs_unity_tu_none": "XboxUnity no tiene TU para %s.",
+        "logs_unity_tu_dl_fail": "Fallo al descargar TU de XboxUnity para %s.",
+        "unity_tu_loading": "Cargando TUs...",
+        "unity_tu_empty": "No hay TUs disponibles en XboxUnity.",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1318,8 +1324,10 @@ TEXT = {
         "btn_dl_dlc": "Téléch. DLC",
         "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
         "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
-        "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s ; essai Internet Archive.",
-        "logs_unity_tu_dl_fail": "Échec du téléchargement TU depuis XboxUnity pour %s ; essai Internet Archive.",
+        "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s.",
+        "logs_unity_tu_dl_fail": "Échec du téléchargement TU depuis XboxUnity pour %s.",
+        "unity_tu_loading": "Chargement des TU...",
+        "unity_tu_empty": "Aucune TU disponible sur XboxUnity.",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1662,8 +1670,10 @@ TEXT = {
         "btn_dl_dlc": "DLC 取得",
         "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
-        "logs_unity_tu_none": "XboxUnityに%sのTUがありません。Internet Archiveを試します。",
-        "logs_unity_tu_dl_fail": "%sのTUをXboxUnityからダウンロードできませんでした。Internet Archiveを試します。",
+        "logs_unity_tu_none": "XboxUnityに%sのTUがありません。",
+        "logs_unity_tu_dl_fail": "%sのTUをXboxUnityからダウンロードできませんでした。",
+        "unity_tu_loading": "TUを読み込み中...",
+        "unity_tu_empty": "XboxUnityに利用可能なTUがありません。",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -2006,8 +2016,10 @@ TEXT = {
         "btn_dl_dlc": "Скачать DLC",
         "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
-        "logs_unity_tu_none": "На XboxUnity нет TU для %s; пробую Internet Archive.",
-        "logs_unity_tu_dl_fail": "Не удалось скачать TU с XboxUnity для %s; пробую Internet Archive.",
+        "logs_unity_tu_none": "На XboxUnity нет TU для %s.",
+        "logs_unity_tu_dl_fail": "Не удалось скачать TU с XboxUnity для %s.",
+        "unity_tu_loading": "Загрузка TU...",
+        "unity_tu_empty": "Нет доступных TU на XboxUnity.",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -2473,15 +2485,19 @@ def xboxunity_title_updates(tid):
     return items
 
 
+def _version_num(v):
+    try:
+        return float(str(v or "0"))
+    except (TypeError, ValueError):
+        return -1e18
+
+
 def pick_xboxunity_tu(updates):
     """Escolhe o TU mais recente do XboxUnity (maior versão numérica)."""
     best = None
     best_v = -1e18
     for u in updates:
-        try:
-            v = float(str(u.get("version") or "0"))
-        except (TypeError, ValueError):
-            continue
+        v = _version_num(u.get("version"))
         if v > best_v:
             best_v = v
             best = u
@@ -2713,7 +2729,12 @@ class X360DB:
             pass
 
     def load_index(self):
-        raw = self._read_cache()
+        if self._loaded:
+            return True
+        with self._load_lock:
+            if self._loaded:
+                return True
+            raw = self._read_cache()
         if not raw:
             raw = download_json(GAMES_INDEX_URL)
             if not raw:
@@ -2740,6 +2761,7 @@ class X360DB:
             }
             for alt in entry.get("alternative_id") or []:
                 self.alt_ids[alt.upper()] = tid
+        self._loaded = True
         self.ready.set()
         return True
 
@@ -4668,7 +4690,6 @@ class App:
         self._paint_status()
         self.post(tr("loading_index"))
         self.root.after(100, self.poll_queue)
-        threading.Thread(target=self.load_db, daemon=True).start()
         threading.Thread(target=self.status_loop, daemon=True).start()
         threading.Thread(target=self.theme_loop, daemon=True).start()
 
@@ -6689,7 +6710,7 @@ class App:
         self.log(tr("unity_no_usable", tid))
         return None
 
-    def download_kind(self, path, g, kind):
+    def download_kind(self, path, g, kind, tuid=None, version=None):
         tid = g["tid"]
         try:
             if kind == "boxart":
@@ -6766,8 +6787,8 @@ class App:
                 self.log(tr("logs_ss_installed", len(textures)))
                 return True
             if kind == "title_update":
-                # Download Title Update from Internet Archive
-                return self._download_title_update_dlc(path, g, tid, "title_update")
+                # Download Title Update from XboxUnity
+                return self._download_title_update_dlc(path, g, tid, "title_update", tuid=tuid, version=version)
             if kind == "dlc":
                 # Download DLC from Internet Archive
                 return self._download_title_update_dlc(path, g, tid, "dlc")
@@ -6775,45 +6796,57 @@ class App:
             self.log(tr("logs_dl_kind_err", kind, exc))
             return False
 
-    def _download_title_update_dlc(self, path, g, tid, kind):
-        """Baixa Title Update (TU) do XboxUnity (com fallback para Internet
-        Archive) ou DLC do Internet Archive, e instala em
-        Content\\0000000000000000\\<TID>\\ (pasta 000B0000 para TU,
-        00000002 para DLC), estrutura padrão do 360/Aurora."""
+    def _download_title_update_dlc(self, path, g, tid, kind, tuid=None, version=None):
+        """Baixa Title Update (TU) do XboxUnity (sem Internet Archive) ou DLC
+        do Internet Archive, e instala em Content\\0000000000000000\\<TID>\\
+        (pasta 000B0000 para TU, 00000002 para DLC), estrutura padrão que o
+        Aurora reconhece (mesmo local usado quando o TU é baixado via Aurora)."""
         try:
             sub = "000B0000" if kind == "title_update" else "00000002"
             content_dirs = [os.path.join(d, sub) for d in game_content_dirs(path, tid)]
             folder = (g.get("folder") or "").strip()
 
             if kind == "title_update":
-                # Primeiro tenta XboxUnity (indexado por TitleID, baixa direto).
+                # Baixa do XboxUnity (indexado por TitleID; arquivo já vem no
+                # padrão Aurora, ex.: TU_16L61UI_0000000000000.00000000000G2).
                 self.log(tr("logs_unity_tu_search", self.game_title(g), tid))
-                best = pick_xboxunity_tu(xboxunity_title_updates(tid))
-                if best:
-                    self.log(
-                        tr("logs_unity_tu_found", tid,
-                           best.get("version") or "?", best.get("name") or tid)
-                    )
-                    tmp = os.path.join(
-                        tempfile.gettempdir(), "unity_tu_%s_%s.tu" % (tid, best["tuid"])
-                    )
-                    fname = download_url_to_file(XBOXUNITY_TU_GET % best["tuid"], tmp)
-                    if fname:
-                        for dest_dir in content_dirs:
-                            try:
-                                os.makedirs(dest_dir, exist_ok=True)
-                                shutil.copy2(tmp, os.path.join(dest_dir, fname))
-                                mark_installed(tid, kind)
-                                self.log(tr("ia_download_success", tr("kind_" + kind), fname))
-                                return True
-                            except OSError:
-                                continue
-                        self.log(tr("ia_install_fail", fname))
-                        return False
-                    self.log(tr("logs_unity_tu_dl_fail", tid))
+                updates = xboxunity_title_updates(tid)
+                best = None
+                if tuid:
+                    for u in updates:
+                        if u["tuid"] == str(tuid):
+                            best = u
+                            break
+                    if best is None and version:
+                        best = {"tuid": str(tuid), "media_id": "",
+                                "version": str(version), "name": "", "date": ""}
                 else:
+                    best = pick_xboxunity_tu(updates)
+                if not best:
                     self.log(tr("logs_unity_tu_none", self.game_title(g)))
-                # Sem TU no XboxUnity? Cai no Internet Archive (fallback).
+                    return False
+                self.log(
+                    tr("logs_unity_tu_found", tid,
+                       best.get("version") or "?", best.get("name") or tid)
+                )
+                tmp = os.path.join(
+                    tempfile.gettempdir(), "unity_tu_%s_%s.tu" % (tid, best["tuid"])
+                )
+                fname = download_url_to_file(XBOXUNITY_TU_GET % best["tuid"], tmp)
+                if not fname:
+                    self.log(tr("logs_unity_tu_dl_fail", tid))
+                    return False
+                for dest_dir in content_dirs:
+                    try:
+                        os.makedirs(dest_dir, exist_ok=True)
+                        shutil.copy2(tmp, os.path.join(dest_dir, fname))
+                        mark_installed(tid, kind)
+                        self.log(tr("ia_download_success", tr("kind_" + kind), fname))
+                        return True
+                    except OSError:
+                        continue
+                self.log(tr("ia_install_fail", fname))
+                return False
 
             ia_id = g.get("ia_id") or g.get("internet_archive_id")
             if ia_id:
@@ -7230,12 +7263,10 @@ class App:
         menu = tk.Menu(self.root, tearoff=0)
         menu.add_command(label=tr("m_assets"), command=lambda: self.open_assets(g))
         menu.add_separator()
-        menu.add_command(
-            label=tr("m_dl_tu"),
-            command=lambda: self.thread_download_kind(
-                self.aurora_path.get().strip().strip('"'), g, "title_update"
-            ),
-        )
+        tu_menu = tk.Menu(menu, tearoff=0)
+        menu.add_cascade(label=tr("m_dl_tu"), menu=tu_menu)
+        tu_menu.add_command(label=tr("unity_tu_loading"), state=tk.DISABLED)
+        self._fill_tu_menu_async(tu_menu, g)
         menu.add_command(
             label=tr("m_dl_dlc"),
             command=lambda: self.thread_download_kind(
@@ -7260,6 +7291,47 @@ class App:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
             menu.grab_release()
+
+    def _fill_tu_menu_async(self, tu_menu, g):
+        def _fetch():
+            try:
+                ups = xboxunity_title_updates(g["tid"])
+            except Exception:
+                ups = []
+            self.root.after(0, lambda: self._populate_tu_menu(tu_menu, g, ups))
+        threading.Thread(target=_fetch, daemon=True).start()
+
+    def _populate_tu_menu(self, tu_menu, g, updates):
+        try:
+            tu_menu.delete(0, "end")
+        except tk.TclError:
+            return
+        if not updates:
+            try:
+                tu_menu.add_command(label=tr("unity_tu_empty"), state=tk.DISABLED)
+            except tk.TclError:
+                pass
+            return
+        for u in sorted(updates, key=lambda x: _version_num(x.get("version")), reverse=True):
+            v = (u.get("version") or "?").strip()
+            date = (u.get("date") or "")[:10]
+            lbl = "TU %s - %s" % (v, u.get("media_id") or "?")
+            if date:
+                lbl += " (%s)" % date
+            try:
+                tu_menu.add_command(
+                    label=lbl,
+                    command=lambda u=u: self.download_tu_from_menu(g, u),
+                )
+            except tk.TclError:
+                return
+
+    def download_tu_from_menu(self, g, u):
+        path = self.aurora_path.get().strip().strip('"')
+        self.thread_download_kind(
+            path, g, "title_update",
+            tuid=u.get("tuid"), version=u.get("version"),
+        )
 
     def apply_theme(self):
         eff = detect_system_theme() if self.theme == "sistema" else self.theme
@@ -8021,7 +8093,7 @@ class App:
             return
         self.pick_kind_file(self._assets_g, kind)
 
-    def thread_download_kind(self, path, g, kind):
+    def thread_download_kind(self, path, g, kind, tuid=None, version=None):
         if self.busy:
             return
         self.set_busy(True)
@@ -8029,7 +8101,7 @@ class App:
 
         def _run():
             try:
-                ok = self.download_kind(path, g, kind)
+                ok = self.download_kind(path, g, kind, tuid=tuid, version=version)
                 self.log(tr("logs_kind_result", kind, "OK" if ok else tr("no_success")))
             except Exception as exc:
                 self.log(tr("logs_kind_err", exc))

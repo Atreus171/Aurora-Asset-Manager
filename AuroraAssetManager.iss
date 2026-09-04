@@ -54,7 +54,7 @@ Name: "startmenuicon"; Description: "{cm:CreateStartMenuIcon}"; GroupDescription
 CreateStartMenuIcon=Create Start Menu shortcut
 
 [Files]
-Source: "dist\AuroraAssetManager.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\AuroraAssetManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "game_covers\*"; DestDir: "{app}\game_covers"; Flags: ignoreversion recursesubdirs createallsubdirs onlyifdoesntexist
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -74,6 +74,12 @@ Type: filesandordirs; Name: "{app}\game_covers"
 Root: HKCU; Subkey: "Software\Atreus171\AuroraAssetManager"; ValueType: string; ValueName: "Version"; ValueData: "{#AppVersion}"; Flags: uninsdeletekey
 
 [Code]
+procedure InitializeWizard();
+begin
+  // Pré-seleciona "Eu aceito o acordo" na página de licença
+  WizardForm.LicenseAcceptedRadio.Checked := True;
+end;
+
 function InitializeSetup(): Boolean;
 begin
   Result := True;
