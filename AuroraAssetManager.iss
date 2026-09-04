@@ -26,8 +26,6 @@ CompressionThreads=auto
 InternalCompressLevel=ultra
 SetupIconFile=assets\icon.ico
 UninstallIconFile=assets\icon.ico
-WizardImageFile=assets\wizard.bmp
-WizardSmallImageFile=assets\wizard_small.bmp
 LicenseFile=LICENSE
 InfoBeforeFile=README.md
 ArchitecturesInstallIn64BitMode=x64
@@ -49,7 +47,7 @@ AppCopyright=Copyright © 2024 Atreus171
 
 [Languages]
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
-Name: "english"; MessagesFile: "compiler:Languages\English.isl"
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
@@ -57,13 +55,16 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "startmenuicon"; Description: "{cm:CreateStartMenuIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checked
+Name: "startmenuicon"; Description: "{cm:CreateStartMenuIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+
+[CustomMessages]
+CreateStartMenuIcon=Create Start Menu shortcut
 
 [Files]
 Source: "dist\AuroraAssetManager.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\AuroraAssetManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "game_covers\*"; DestDir: "{app}\game_covers"; Flags: ignoreversion recursesubdirs createallsubdirs; Flags: onlyifdoesntexist
+Source: "game_covers\*"; DestDir: "{app}\game_covers"; Flags: ignoreversion recursesubdirs createallsubdirs onlyifdoesntexist
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
