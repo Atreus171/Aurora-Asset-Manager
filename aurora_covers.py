@@ -3992,6 +3992,8 @@ class App:
         self.search_var = tk.StringVar()
         self._photo = None
         self.preview_cache = {}
+        self._preview_cache_lock = threading.Lock()
+        self._preview_cache_max = 100
         self._assets_dlg = None
         self._assets_tree = None
         self._assets_kinds = {}
@@ -5620,8 +5622,9 @@ class App:
 
     def load_cover(self, g):
         key = g["tid"] + "|" + (g["folder"] or "import")
-        if key in self.preview_cache:
-            return self.preview_cache[key]
+        with self._preview_cache_lock:
+            if key in self.preview_cache:
+                return self.preview_cache[key]
         img = None
         cover_file = find_cover_file(g["folder"], g["tid"])
         if cover_file:
@@ -5644,8 +5647,20 @@ class App:
                             break
                 if img is not None:
                     break
-        self.preview_cache[key] = img
-        return img
+        if img is None:
+            with self._preview_cache_lock:
+                self._preview_cache_put(key, None)
+                return None
+        thumb = cover_fit(img, PREVIEW_W, PREVIEW_H)
+        with self._preview_cache_lock:
+            self._preview_cache_put(key, thumb)
+        return thumb
+
+    def _preview_cache_put(self, key, value):
+        if len(self.preview_cache) >= self._preview_cache_max:
+            oldest = next(iter(self.preview_cache))
+            del self.preview_cache[oldest]
+        self.preview_cache[key] = value
 
     def show_preview(self, g):
         img = self.load_cover(g)
