@@ -13,6 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import ftplib
+import concurrent.futures
 from datetime import datetime
 
 import tkinter as tk
@@ -2176,13 +2177,40 @@ def log(*args):
     print(*args)
 
 
+# HTTP connection pooling for faster repeated requests
+class _HTTPPool:
+    def __init__(self):
+        self._opener = None
+        self._lock = threading.Lock()
+
+    def _get_opener(self):
+        if self._opener is None:
+            with self._lock:
+                if self._opener is None:
+                    handlers = [
+                        urllib.request.HTTPCookieProcessor(),
+                        urllib.request.HTTPRedirectHandler(),
+                        urllib.request.HTTPHandler(),
+                        urllib.request.HTTPSHandler(),
+                    ]
+                    self._opener = urllib.request.build_opener(*handlers)
+        return self._opener
+
+    def open(self, req, timeout=40):
+        opener = self._get_opener()
+        return opener.open(req, timeout=timeout)
+
+
+_HTTP_POOL = _HTTPPool()
+
+
 def fetch_bytes(url, timeout=40, attempts=2):
     for _ in range(attempts):
         try:
             req = urllib.request.Request(url, headers=USER_AGENT)
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with _HTTP_POOL.open(req, timeout=timeout) as resp:
                 data = resp.read()
-                if resp.status == 200 and len(data) > 0:
+                if getattr(resp, "status", 200) == 200 and len(data) > 0:
                     return data
         except Exception:
             time.sleep(1.0)
@@ -2209,7 +2237,7 @@ def display_path(path):
 def poke_url(url, timeout=8, method="GET"):
     try:
         req = urllib.request.Request(url, headers=USER_AGENT, method=method)
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _HTTP_POOL.open(req, timeout=timeout) as resp:
             resp.read(1024)
             return True
     except Exception:
@@ -2223,6 +2251,17 @@ class X360DB:
         self.info_cache = {}
         self.ready = threading.Event()
         self.index_file = os.path.join(os.path.dirname(config_path()), "aurora_covers_games.json")
+        self._loaded = False
+        self._load_lock = threading.Lock()
+
+    def _ensure_loaded(self):
+        if self._loaded:
+            return
+        with self._load_lock:
+            if self._loaded:
+                return
+            self.load_index()
+            self._loaded = True
 
     def _read_cache(self):
         try:
@@ -2275,18 +2314,22 @@ class X360DB:
         return True
 
     def canonical(self, tid):
+        self._ensure_loaded()
         return self.alt_ids.get(tid.upper(), tid.upper())
 
     def title_name(self, tid):
+        self._ensure_loaded()
         info = self.titles.get(tid.upper())
         if info:
             return info["title"]
         return tid.upper()
 
     def artwork_url(self, tid, kind):
+        self._ensure_loaded()
         return X360DB_RAW + "titles/" + self.canonical(tid) + "/artwork/" + kind + ".jpg"
 
     def info(self, tid):
+        self._ensure_loaded()
         tid = self.canonical(tid)
         if tid in self.info_cache:
             return self.info_cache[tid]
@@ -2295,6 +2338,7 @@ class X360DB:
         return self.info_cache[tid]
 
     def download_artwork(self, tid, kind):
+        self._ensure_loaded()
         data = fetch_bytes(self.artwork_url(tid, kind))
         if data is not None:
             return data
@@ -2509,11 +2553,12 @@ def is_black_cover(data):
 
 def cover_fill(image, target_w, target_h):
     image = ImageOps.exif_transpose(image)
-    image = image.convert("RGBA")
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
     scale = max(target_w / image.width, target_h / image.height)
     nw = max(target_w, round(image.width * scale))
     nh = max(target_h, round(image.height * scale))
-    image = image.resize((nw, nh), Image.LANCZOS)
+    image = image.resize((nw, nh), Image.BILINEAR)
     left = (nw - target_w) // 2
     top = (nh - target_h) // 2
     return image.crop((left, top, left + target_w, top + target_h))
@@ -2521,8 +2566,9 @@ def cover_fill(image, target_w, target_h):
 
 def cover_fit(image, target_w, target_h):
     image = ImageOps.exif_transpose(image)
-    image = image.convert("RGBA")
-    image.thumbnail((target_w, target_h), Image.LANCZOS)
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    image.thumbnail((target_w, target_h), Image.BILINEAR)
     return image
 
 
@@ -5800,16 +5846,31 @@ class App:
         else:
             skip = lambda kind: self._kind_exists(g, path, kind)
         got = False
+
+        # Download different asset types in parallel
+        download_tasks = []
         if kinds.get("boxart") and not skip("boxart"):
-            got = self.download_kind(path, g, "boxart") or got
+            download_tasks.append(("boxart", lambda: self.download_kind(path, g, "boxart")))
         if kinds.get("background") and not skip("background"):
-            self.download_kind(path, g, "background")
+            download_tasks.append(("background", lambda: self.download_kind(path, g, "background")))
         if kinds.get("icon") and not skip("icon"):
-            self.download_kind(path, g, "icon")
+            download_tasks.append(("icon", lambda: self.download_kind(path, g, "icon")))
         if kinds.get("banner") and not skip("banner"):
-            self.download_kind(path, g, "banner")
+            download_tasks.append(("banner", lambda: self.download_kind(path, g, "banner")))
         if kinds.get("screenshots") and not skip("screenshots"):
-            self.download_kind(path, g, "screenshots")
+            download_tasks.append(("screenshots", lambda: self.download_kind(path, g, "screenshots")))
+
+        if download_tasks:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(download_tasks)) as executor:
+                futures = {executor.submit(fn): kind for kind, fn in download_tasks}
+                for future in concurrent.futures.as_completed(futures):
+                    kind = futures[future]
+                    try:
+                        result = future.result()
+                        if kind == "boxart" and result:
+                            got = True
+                    except Exception as exc:
+                        self.log(tr("logs_dl_kind_err", kind, exc))
         if got:
             g["has_cover"] = True
 
