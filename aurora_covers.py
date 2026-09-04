@@ -454,6 +454,7 @@ TEXT = {
         "logs_ftp_err": "Erro no FTP: %s",
         "ftp_inaccessible": "FTP: impossível acessar %s (%s)",
         "logs_downloading": "Baixando %s para %s (%s)...",
+        "logs_downloading_assets": "Baixando todos os assets de %s...",
         "logs_rename_folder_err": "Não foi possível renomear a pasta: %s",
         "logs_no_dedicated_gamedata": "Sem pasta GameData dedicada para %s; renomeação salva apenas na lista.",
         "logs_db_titlename_ok": "content.db: TitleName atualizado para '%s'.",
@@ -778,6 +779,7 @@ TEXT = {
         "logs_ftp_err": "FTP error: %s",
         "ftp_inaccessible": "FTP: cannot access %s (%s)",
         "logs_downloading": "Downloading %s for %s (%s)...",
+        "logs_downloading_assets": "Downloading all assets for %s...",
         "logs_rename_folder_err": "Could not rename the folder: %s",
         "logs_no_dedicated_gamedata": "No dedicated GameData folder for %s; rename saved only in the list.",
         "logs_db_titlename_ok": "content.db: TitleName updated to '%s'.",
@@ -1102,6 +1104,7 @@ TEXT = {
         "logs_ftp_err": "Error de FTP: %s",
         "ftp_inaccessible": "FTP: no se puede acceder a %s (%s)",
         "logs_downloading": "Descargando %s para %s (%s)...",
+        "logs_downloading_assets": "Descargando todos los assets de %s...",
         "logs_rename_folder_err": "No se pudo renombrar la carpeta: %s",
         "logs_no_dedicated_gamedata": "Sin carpeta GameData dedicada para %s; el renombrado se guarda solo en la lista.",
         "logs_db_titlename_ok": "content.db: TitleName actualizado a '%s'.",
@@ -1426,6 +1429,7 @@ TEXT = {
         "logs_ftp_err": "Erreur FTP : %s",
         "ftp_inaccessible": "FTP : impossible d'accéder à %s (%s)",
         "logs_downloading": "Téléchargement de %s pour %s (%s)...",
+        "logs_downloading_assets": "Téléchargement de tous les assets de %s...",
         "logs_rename_folder_err": "Impossible de renommer le dossier : %s",
         "logs_no_dedicated_gamedata": "Pas de dossier GameData dédié pour %s ; le renommage n'est enregistré que dans la liste.",
         "logs_db_titlename_ok": "content.db : TitleName mis à jour vers '%s'.",
@@ -1750,6 +1754,7 @@ TEXT = {
         "logs_ftp_err": "FTP エラー: %s",
         "ftp_inaccessible": "FTP: %s にアクセスできません (%s)",
         "logs_downloading": "%s を %s (%s) にダウンロード中...",
+        "logs_downloading_assets": "%s の全アセットをダウンロード中...",
         "logs_rename_folder_err": "フォルダ名を変更できません: %s",
         "logs_no_dedicated_gamedata": "%s に専用の GameData フォルダがありません。リスト内のみで名前を保存します。",
         "logs_db_titlename_ok": "content.db: TitleName を '%s' に更新しました。",
@@ -2074,6 +2079,7 @@ TEXT = {
         "logs_ftp_err": "Ошибка FTP: %s",
         "ftp_inaccessible": "FTP: невозможно получить доступ к %s (%s)",
         "logs_downloading": "Загрузка %s для %s (%s)...",
+        "logs_downloading_assets": "Загрузка всех ассетов для %s...",
         "logs_rename_folder_err": "Не удалось переименовать папку: %s",
         "logs_no_dedicated_gamedata": "Нет выделенной папки GameData для %s; переименование сохранено только в списке.",
         "logs_db_titlename_ok": "content.db: TitleName обновлён на '%s'.",
@@ -6354,8 +6360,8 @@ class App:
         self.preview_cache.pop(g["tid"] + "|" + (g["folder"] or "import"), None)
 
     def export_assets(self, g):
-        """Exporta assets instalados do jogo para a pasta game_covers/<Nome>_<TID>/.
-        Cria a pasta mesmo se não houver assets (para o usuário adicionar manualmente)."""
+        """Exporta assets do jogo para a pasta game_covers/<Nome>_<TID>/.
+        Baixa assets faltando dos repositórios online antes de exportar."""
         tid = g.get("tid", "").upper()
         if not tid:
             return
@@ -6367,16 +6373,24 @@ class App:
         os.makedirs(target_dir, exist_ok=True)
         os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
 
+        # Primeiro, garante que todos os assets estão baixados localmente
+        self.log(tr("logs_downloading_assets", name))
+        path = self.aurora_path.get().strip().strip('"')
+        kinds = {
+            "boxart": True,
+            "background": True,
+            "icon": True,
+            "banner": True,
+            "screenshots": True,
+        }
+        self.download_one(path, g, kinds)
+
         exported = []
         aurora_root = self.aurora_path.get().strip().strip('"')
         
-        # Tenta múltiplas localizações do Import
-        import_candidates = [
-            os.path.join(aurora_root, "Import", tid),           # Padrão: Aurora/Import/TID/
-            os.path.join(aurora_root, "..", "Import", tid),     # Se aurora_root for subpasta
-            os.path.join(aurora_root, "Data", "Import", tid),   # Aurora/Data/Import/TID/
-            os.path.join(aurora_root, "..", "Data", "Import", tid),
-        ]
+        # Usa as mesmas bases de Import que o write_import usa
+        import_bases_list = import_bases(aurora_root)
+        import_candidates = [os.path.join(base, tid) for base in import_bases_list]
         
         def find_and_copy(filename, dst_name):
             for base in import_candidates:
