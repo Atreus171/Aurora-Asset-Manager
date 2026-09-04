@@ -77,7 +77,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.2"
+CURRENT_VERSION = "1.5.3"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -6817,6 +6817,10 @@ class App:
         for code, name in LANGUAGES.items():
             ttk.Radiobutton(lf, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
         add_row(tr("set_lang"), lf)
+
+        # Version info
+        ver_lbl = ttk.Label(outer, text=f"Versão {CURRENT_VERSION}", foreground="#888888", font=("Segoe UI", 8))
+        add_row("Versão", ver_lbl)
 
         show_status_var = tk.BooleanVar(value=self.show_status)
         show_log_var = tk.BooleanVar(value=self.show_log)
