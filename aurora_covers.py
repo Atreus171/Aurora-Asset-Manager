@@ -271,6 +271,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "Baixar TU (atualização)...",
         "m_dl_dlc": "Baixar DLC...",
+        "btn_dl_tu": "Baixar TU",
+        "btn_dl_dlc": "Baixar DLC",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -608,6 +610,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "Download TU (title update)...",
         "m_dl_dlc": "Download DLC...",
+        "btn_dl_tu": "Download TU",
+        "btn_dl_dlc": "Download DLC",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -951,6 +955,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "Descargar TU (actualización)...",
         "m_dl_dlc": "Descargar DLC...",
+        "btn_dl_tu": "Descargar TU",
+        "btn_dl_dlc": "Descargar DLC",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1294,6 +1300,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "Télécharger TU (mise à jour)...",
         "m_dl_dlc": "Télécharger DLC...",
+        "btn_dl_tu": "Téléch. TU",
+        "btn_dl_dlc": "Téléch. DLC",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1632,6 +1640,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "TU（タイトルアップデート）をダウンロード...",
         "m_dl_dlc": "DLC をダウンロード...",
+        "btn_dl_tu": "TU 取得",
+        "btn_dl_dlc": "DLC 取得",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -1970,6 +1980,8 @@ TEXT = {
         "kind_dlc": "DLC",
         "m_dl_tu": "Скачать TU (обновление)...",
         "m_dl_dlc": "Скачать DLC...",
+        "btn_dl_tu": "Скачать TU",
+        "btn_dl_dlc": "Скачать DLC",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -4462,6 +4474,14 @@ class App:
             btn_row, text=tr("download"), command=self.start_download, state=tk.DISABLED
         )
         self.btn_dl.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_dl_tu = ttk.Button(
+            btn_row, text=tr("btn_dl_tu"), command=lambda: self.download_kind_selected("title_update"), state=tk.DISABLED
+        )
+        self.btn_dl_tu.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_dl_dlc = ttk.Button(
+            btn_row, text=tr("btn_dl_dlc"), command=lambda: self.download_kind_selected("dlc"), state=tk.DISABLED
+        )
+        self.btn_dl_dlc.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_custom = ttk.Button(
             btn_row, text=tr("custom_cover"), command=self.install_custom, state=tk.DISABLED
         )
@@ -4793,6 +4813,8 @@ class App:
         state = tk.DISABLED if busy else tk.NORMAL
         self.btn_scan.configure(state=state)
         self.btn_dl.configure(state=state if self.games else tk.DISABLED)
+        self.btn_dl_tu.configure(state=state if self.games else tk.DISABLED)
+        self.btn_dl_dlc.configure(state=state if self.games else tk.DISABLED)
         self.btn_cancel.configure(state=tk.NORMAL if busy else tk.DISABLED)
 
     def cancel_worker(self):
@@ -5972,12 +5994,25 @@ class App:
             self.btn_custom.configure(state=tk.DISABLED)
             self.btn_search.configure(state=tk.DISABLED)
             self.btn_debug_db.configure(state=tk.DISABLED)
+            self.btn_dl_tu.configure(state=tk.DISABLED)
+            self.btn_dl_dlc.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
         self.btn_custom.configure(state=tk.NORMAL)
         self.btn_search.configure(state=tk.NORMAL)
         self.btn_debug_db.configure(state=tk.NORMAL)
+        self.btn_dl_tu.configure(state=tk.NORMAL)
+        self.btn_dl_dlc.configure(state=tk.NORMAL)
         self.show_preview(g)
+
+    def download_kind_selected(self, kind):
+        if self.busy:
+            return
+        g = self.selected_game()
+        if g is None:
+            messagebox.showwarning(tr("warn"), tr("pick_game"))
+            return
+        self.thread_download_kind(self.aurora_path.get().strip().strip('"'), g, kind)
 
     def load_cover(self, g):
         key = g["tid"] + "|" + (g["folder"] or "import")
