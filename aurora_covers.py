@@ -39,6 +39,8 @@ GAMES_INDEX_URL = X360DB_RAW + "games.json"
 GAMES_INDEX_MIRROR = "https://cdn.jsdelivr.net/gh/xenia-manager/x360db@main/games.json"
 # 360-Game-Art (Element18592): capas ordenadas por TitleID em Games/<tid>/cover.jpg
 GAME_ART_RAW = "https://raw.githubusercontent.com/Element18592/360-Game-Art/main/Games/"
+# game_covers remoto (este repo): capas em game_covers/<Nome>_<TID>/cover.png ou game_covers/<TID>/cover.png
+GAME_COVERS_REMOTE = "https://raw.githubusercontent.com/Atreus171/Aurora-Asset-Manager/main/game_covers/"
 # Pasta de assets locais (game_covers).
 # - Rodando por código (python aurora_covers.py): usa a pasta do repo.
 # - Rodando compilado (.exe): usa pasta "game_covers" ao lado do executável.
@@ -5799,8 +5801,12 @@ class App:
 
     def get_cover_blob(self, tid, g=None):
         try:
-            # Se repo for gamecovers, usa APENAS a pasta local game_covers
+            # Se repo for gamecovers, busca do REMOTO (GitHub raw) + fallback local
             if self.repo == "gamecovers":
+                b = self._gamecovers_remote(tid, g)
+                if b:
+                    return b
+                # Fallback local se remoto falhar
                 if g:
                     b = self._local_asset(tid, g)
                     if b:
@@ -5950,6 +5956,56 @@ class App:
                             return open(os.path.join(base, name), "rb").read()
                 except OSError:
                     pass
+        return None
+
+    def _gamecovers_remote(self, tid, g=None):
+        """Busca capa no repositório remoto game_covers (GitHub raw).
+        Tenta múltiplos padrões de URL:
+        - game_covers/<Nome>_<TID>/cover.png
+        - game_covers/<TID>/cover.png
+        - game_covers/<TID>.png
+        - game_covers/<TID>.jpg
+        - game_covers/<HomebrewID>/cover.png"""
+        # Tenta com nome do jogo + TID
+        if g:
+            for key in ("dname", "folder_name", "title"):
+                raw = str(g.get(key) or "").strip()
+                if raw and raw.lower() != tid.lower():
+                    safe_name = re.sub(r'[\\/:*?"<>|]', "_", raw)
+                    for suffix in (tid, tid.lower()):
+                        folder_name = f"{safe_name}_{suffix}"
+                        # Tenta cover.png
+                        url = GAME_COVERS_REMOTE + folder_name + "/cover.png"
+                        b = fetch_bytes(url)
+                        if b:
+                            self.log(tr("gameart_cover_ok", tid) + f" (remote: {folder_name}/cover.png)")
+                            return b
+        # Tenta apenas TID
+        for suffix in (tid, tid.lower()):
+            url = GAME_COVERS_REMOTE + suffix + "/cover.png"
+            b = fetch_bytes(url)
+            if b:
+                self.log(tr("gameart_cover_ok", tid) + f" (remote: {suffix}/cover.png)")
+                return b
+            # Tenta arquivo solto
+            for ext in (".png", ".jpg", ".jpeg"):
+                url = GAME_COVERS_REMOTE + suffix + ext
+                b = fetch_bytes(url)
+                if b:
+                    self.log(tr("gameart_cover_ok", tid) + f" (remote: {suffix}{ext})")
+                    return b
+        # Tenta HomebrewID (TID sintético SHA1 do nome)
+        if g:
+            for key in ("dname", "folder_name", "title"):
+                raw = str(g.get(key) or "").strip()
+                if raw and raw.lower() != tid.lower():
+                    hb_tid = legacy_tid_for(raw)
+                    if hb_tid:
+                        url = GAME_COVERS_REMOTE + hb_tid + "/cover.png"
+                        b = fetch_bytes(url)
+                        if b:
+                            self.log(tr("gameart_cover_ok", tid) + f" (remote: {hb_tid}/cover.png)")
+                            return b
         return None
 
     def _unity_cover(self, tid, g=None):
