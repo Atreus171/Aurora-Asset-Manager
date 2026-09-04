@@ -15,6 +15,7 @@ import urllib.request
 import ftplib
 import concurrent.futures
 import shutil
+import subprocess
 import tempfile
 from datetime import datetime
 
@@ -281,6 +282,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "Falha ao baixar TU do XboxUnity para %s.",
         "unity_tu_loading": "Carregando TUs...",
         "unity_tu_empty": "Nenhuma TU disponível no XboxUnity.",
+        "unity_tu_dl_success": "TU baixado com sucesso do XboxUnity (%s).",
+        "dlc_loading": "Carregando DLCs...",
+        "dlc_empty": "Nenhuma DLC encontrada em msx360gcdlc.",
+        "dlc_manual_extract": "DLC salvo em %s; extraia manualmente com 7-Zip no console.",
+        "col_name": "Nome",
+        "col_info": "Info",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -626,6 +633,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "Failed to download TU from XboxUnity for %s.",
         "unity_tu_loading": "Loading TUs...",
         "unity_tu_empty": "No TUs available on XboxUnity.",
+        "unity_tu_dl_success": "TU downloaded successfully from XboxUnity (%s).",
+        "dlc_loading": "Loading DLCs...",
+        "dlc_empty": "No DLC found in msx360gcdlc.",
+        "dlc_manual_extract": "DLC saved to %s; extract it manually with 7-Zip on the console.",
+        "col_name": "Name",
+        "col_info": "Info",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -977,6 +990,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "Fallo al descargar TU de XboxUnity para %s.",
         "unity_tu_loading": "Cargando TUs...",
         "unity_tu_empty": "No hay TUs disponibles en XboxUnity.",
+        "unity_tu_dl_success": "TU descargado con éxito de XboxUnity (%s).",
+        "dlc_loading": "Cargando DLCs...",
+        "dlc_empty": "No se encontraron DLCs en msx360gcdlc.",
+        "dlc_manual_extract": "DLC guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
+        "col_name": "Nombre",
+        "col_info": "Info",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1328,6 +1347,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "Échec du téléchargement TU depuis XboxUnity pour %s.",
         "unity_tu_loading": "Chargement des TU...",
         "unity_tu_empty": "Aucune TU disponible sur XboxUnity.",
+        "unity_tu_dl_success": "TU téléchargé avec succès depuis XboxUnity (%s).",
+        "dlc_loading": "Chargement des DLC...",
+        "dlc_empty": "Aucun DLC trouvé dans msx360gcdlc.",
+        "dlc_manual_extract": "DLC enregistré dans %s; extrayez-le manuellement avec 7-Zip sur la console.",
+        "col_name": "Nom",
+        "col_info": "Info",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1674,6 +1699,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "%sのTUをXboxUnityからダウンロードできませんでした。",
         "unity_tu_loading": "TUを読み込み中...",
         "unity_tu_empty": "XboxUnityに利用可能なTUがありません。",
+        "unity_tu_dl_success": "XboxUnityからTUをダウンロードしました (%s)。",
+        "dlc_loading": "DLCを読み込み中...",
+        "dlc_empty": "msx360gcdlcにDLCは見つかりませんでした。",
+        "dlc_manual_extract": "DLCを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
+        "col_name": "名前",
+        "col_info": "情報",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -2020,6 +2051,12 @@ TEXT = {
         "logs_unity_tu_dl_fail": "Не удалось скачать TU с XboxUnity для %s.",
         "unity_tu_loading": "Загрузка TU...",
         "unity_tu_empty": "Нет доступных TU на XboxUnity.",
+        "unity_tu_dl_success": "TU успешно скачан с XboxUnity (%s).",
+        "dlc_loading": "Загрузка DLC...",
+        "dlc_empty": "DLC не найдены в msx360gcdlc.",
+        "dlc_manual_extract": "DLC сохранён в %s; извлеките вручную 7-Zip на консоли.",
+        "col_name": "Имя",
+        "col_info": "Инфо",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -2405,6 +2442,8 @@ def poke_url(url, timeout=8, method="GET"):
 # Internet Archive API for Title Updates and DLC
 INTERNET_ARCHIVE_API = "https://archive.org/advancedsearch.php"
 INTERNET_ARCHIVE_DOWNLOAD = "https://archive.org/download/"
+# Item do Internet Archive com DLCs de Xbox 360 (msx360gcdlc)
+IA_DLC_ITEM = "msx360gcdlc"
 
 
 def search_internet_archive(query, rows=20):
@@ -2430,6 +2469,60 @@ def get_internet_archive_files(identifier):
         return []
     files = data.get("files", [])
     return [f.get("name") for f in files if f.get("name")]
+
+
+def get_ia_file_entries(identifier):
+    """Lista de arquivos de um item do Internet Archive com {name, size}."""
+    url = f"https://archive.org/metadata/{identifier}"
+    data = download_json(url)
+    if not data:
+        return []
+    out = []
+    for f in data.get("files") or []:
+        name = f.get("name")
+        if not name:
+            continue
+        size = f.get("size") or 0
+        try:
+            size = int(size)
+        except (TypeError, ValueError):
+            size = 0
+        out.append({"name": name, "size": size})
+    return out
+
+
+def ia_dlc_matches(game_title, tid, limit=20):
+    """Arquivos DLC do item msx360gcdlc (374 DLCs de 360) que correspondem ao
+    jogo, ordenados por relevância do nome. Retorna [{name, size}]."""
+    stop = {"dlc", "x360", "xb360", "xf", "xbla", "rf", "ztm", "the", "and",
+            "for", "with", "xbox", "360", "game", "games", "edition", "pack",
+            "plus", "dual", "content", "rar"}
+    words = {w for w in re.split(r"[^a-z0-9]+", (game_title or "").lower())
+             if len(w) > 1 and w not in stop}
+    if not words:
+        return []
+    entries = get_ia_file_entries(IA_DLC_ITEM)
+    scored = []
+    for e in entries:
+        if not e["name"].lower().endswith(".rar"):
+            continue
+        fset = set(re.split(r"[^a-z0-9]+", e["name"].lower()))
+        fset.discard("")
+        score = sum(1 for w in words if w in fset)
+        if score:
+            scored.append((score, len(fset), e))
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    if not scored:
+        return []
+    best = scored[0][0]
+    out = []
+    for score, _fsz, e in scored:
+        if score < max(1, best - 1):
+            continue
+        out.append(e)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def download_internet_archive_file(identifier, filename, dest_path):
@@ -2573,6 +2666,37 @@ def extract_zip_to(archive_path, dest_root):
         with zipfile.ZipFile(archive_path) as zf:
             zf.extractall(dest_root)
         return True
+    except Exception:
+        return False
+
+
+def find_sevenzip():
+    """Localiza o 7-Zip instalado (para extrair .rar/.7z de DLC)."""
+    cands = [
+        os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"), "7-Zip", "7z.exe"),
+        os.path.join(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"), "7-Zip", "7z.exe"),
+        r"C:\Program Files\7-Zip\7z.exe",
+        r"C:\Program Files (x86)\7-Zip\7z.exe",
+    ]
+    for c in cands:
+        if os.path.isfile(c) and c not in (None, ""):
+            return c
+    return None
+
+
+def extract_archive_to(archive_path, dest_root):
+    """Extrai .zip (nativo) ou .rar/.7z (via 7-Zip) em dest_root."""
+    if archive_path.lower().endswith(".zip"):
+        return extract_zip_to(archive_path, dest_root)
+    exe = find_sevenzip()
+    if not exe:
+        return False
+    try:
+        proc = subprocess.run(
+            [exe, "x", "-y", "-o" + str(dest_root), str(archive_path)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3600,
+        )
+        return proc.returncode == 0
     except Exception:
         return False
 
@@ -2771,7 +2895,7 @@ class X360DB:
 
     def title_name(self, tid):
         self._ensure_loaded()
-        info = self.titles.get(tid.upper())
+        info = self.titles.get(tid.upper()) or self.titles.get(self.canonical(tid))
         if info:
             return info["title"]
         return tid.upper()
@@ -6710,7 +6834,7 @@ class App:
         self.log(tr("unity_no_usable", tid))
         return None
 
-    def download_kind(self, path, g, kind, tuid=None, version=None):
+    def download_kind(self, path, g, kind, tuid=None, version=None, ia_id=None, filename=None):
         tid = g["tid"]
         try:
             if kind == "boxart":
@@ -6790,17 +6914,19 @@ class App:
                 # Download Title Update from XboxUnity
                 return self._download_title_update_dlc(path, g, tid, "title_update", tuid=tuid, version=version)
             if kind == "dlc":
-                # Download DLC from Internet Archive
-                return self._download_title_update_dlc(path, g, tid, "dlc")
+                # Download DLC from Internet Archive (msx360gcdlc)
+                return self._download_title_update_dlc(path, g, tid, "dlc", ia_id=ia_id, filename=filename)
         except Exception as exc:
             self.log(tr("logs_dl_kind_err", kind, exc))
             return False
 
-    def _download_title_update_dlc(self, path, g, tid, kind, tuid=None, version=None):
+    def _download_title_update_dlc(self, path, g, tid, kind, tuid=None, version=None,
+                                   ia_id=None, filename=None):
         """Baixa Title Update (TU) do XboxUnity (sem Internet Archive) ou DLC
-        do Internet Archive, e instala em Content\\0000000000000000\\<TID>\\
-        (pasta 000B0000 para TU, 00000002 para DLC), estrutura padrão que o
-        Aurora reconhece (mesmo local usado quando o TU é baixado via Aurora)."""
+        do Internet Archive (item msx360gcdlc), e instala em
+        Content\\0000000000000000\\<TID>\\ (pasta 000B0000 para TU,
+        00000002 para DLC), estrutura padrão que o Aurora reconhece (mesmo
+        local usado quando o TU é baixado via Aurora)."""
         try:
             sub = "000B0000" if kind == "title_update" else "00000002"
             content_dirs = [os.path.join(d, sub) for d in game_content_dirs(path, tid)]
@@ -6841,23 +6967,37 @@ class App:
                         os.makedirs(dest_dir, exist_ok=True)
                         shutil.copy2(tmp, os.path.join(dest_dir, fname))
                         mark_installed(tid, kind)
-                        self.log(tr("ia_download_success", tr("kind_" + kind), fname))
+                        self.log(tr("unity_tu_dl_success", fname))
                         return True
                     except OSError:
                         continue
                 self.log(tr("ia_install_fail", fname))
                 return False
 
-            ia_id = g.get("ia_id") or g.get("internet_archive_id")
-            if ia_id:
-                files = get_internet_archive_files(ia_id)
-                candidates = [f for f in files if f.lower().endswith((".xex", ".zip", ".7z"))]
-                if not candidates:
-                    self.log(tr("ia_no_results", ia_id))
-                    return False
-                filename = g.get(f"{kind}_filename") or candidates[0]
-            else:
+            # DLC: Internet Archive — decide a fonte (escolha explícita,
+            # item dedicado msx360gcdlc, ia_id do jogo ou busca genérica).
+            if not (ia_id and filename):
+                ia_id = g.get("ia_id") or g.get("internet_archive_id")
+            if not (ia_id and filename):
                 self.log(tr("logs_searching_ia", tr("kind_" + kind), self.game_title(g)))
+                matches = ia_dlc_matches(self.game_title(g), tid)
+                if matches:
+                    ia_id = IA_DLC_ITEM
+                    filename = matches[0]["name"]
+            if ia_id and filename:
+                pass
+            elif ia_id:
+                fname2 = g.get(f"{kind}_filename")
+                if fname2:
+                    filename = fname2
+                else:
+                    files = get_internet_archive_files(ia_id)
+                    candidates = [f for f in files if f.lower().endswith((".xex", ".zip", ".7z", ".rar"))]
+                    if not candidates:
+                        self.log(tr("ia_no_results", ia_id))
+                        return False
+                    filename = candidates[0]
+            else:
                 results = search_title_updates_dlc(tid, self.game_title(g), kind=kind)
                 result = pick_ia_result(results, kind)
                 if not result:
@@ -6873,14 +7013,25 @@ class App:
                 return False
 
             installed = False
-            if filename.lower().endswith(".zip"):
-                # Arquivos zipados normalmente contêm Content\\0000000000000000\\<TID>\\...
+            low = filename.lower()
+            if low.endswith((".zip", ".rar", ".7z")):
+                # Extrai preservando Content\\0000000000000000\\<TID>\\...
                 for base_root in content_roots(path):
-                    if extract_zip_to(tmp, base_root):
+                    if extract_archive_to(tmp, base_root):
                         installed = True
+                if not installed and low.endswith((".rar", ".7z")):
+                    # Sem 7-Zip: salva o arquivo no local correto p/ extração manual
+                    for dest_dir in content_dirs:
+                        try:
+                            os.makedirs(dest_dir, exist_ok=True)
+                            shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                            installed = True
+                        except OSError:
+                            continue
+                    if installed:
+                        self.log(tr("dlc_manual_extract", os.path.dirname(os.path.abspath(content_dirs[0])) if content_dirs else ""))
             else:
-                # .xex: copia direto; .7z: salva o arquivo na pasta do tipo
-                # (.7z normalmente requer extração manual no console)
+                # .xex: copia direto
                 for dest_dir in content_dirs:
                     try:
                         os.makedirs(dest_dir, exist_ok=True)
@@ -7263,15 +7414,13 @@ class App:
         menu = tk.Menu(self.root, tearoff=0)
         menu.add_command(label=tr("m_assets"), command=lambda: self.open_assets(g))
         menu.add_separator()
-        tu_menu = tk.Menu(menu, tearoff=0)
-        menu.add_cascade(label=tr("m_dl_tu"), menu=tu_menu)
-        tu_menu.add_command(label=tr("unity_tu_loading"), state=tk.DISABLED)
-        self._fill_tu_menu_async(tu_menu, g)
+        menu.add_command(
+            label=tr("m_dl_tu"),
+            command=lambda: self._open_tu_dlc_chooser(g, "title_update"),
+        )
         menu.add_command(
             label=tr("m_dl_dlc"),
-            command=lambda: self.thread_download_kind(
-                self.aurora_path.get().strip().strip('"'), g, "dlc"
-            ),
+            command=lambda: self._open_tu_dlc_chooser(g, "dlc"),
         )
         menu.add_separator()
         menu.add_command(label=tr("m_alt"), command=lambda: self.alt_covers(g))
@@ -7292,46 +7441,118 @@ class App:
         finally:
             menu.grab_release()
 
-    def _fill_tu_menu_async(self, tu_menu, g):
-        def _fetch():
-            try:
-                ups = xboxunity_title_updates(g["tid"])
-            except Exception:
-                ups = []
-            self.root.after(0, lambda: self._populate_tu_menu(tu_menu, g, ups))
-        threading.Thread(target=_fetch, daemon=True).start()
+    def _open_tu_dlc_chooser(self, g, kind):
+        if self.busy:
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        tid = g["tid"]
+        is_tu = kind == "title_update"
+        dlg = tk.Toplevel(self.root)
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        dlg.configure(bg=THEMES.get(self._applied_theme, THEMES["escuro"])["bg"])
+        th = THEMES.get(self._applied_theme, THEMES["escuro"])
+        dlg.title("%s - %s (%s)" % (tr("kind_" + kind), self.game_title(g), tid))
+        ttk.Label(
+            dlg, text="%s (%s)" % (tr("kind_" + kind), self.game_title(g))
+        ).pack(pady=(10, 4))
+        body = ttk.Frame(dlg)
+        body.pack(fill=tk.BOTH, expand=True, padx=10)
+        tree = ttk.Treeview(
+            body, columns=("name", "info"), show="headings", height=14
+        )
+        tree.heading("name", text=tr("col_name"))
+        tree.heading("info", text=tr("col_info"))
+        tree.column("name", width=300)
+        tree.column("info", width=230)
+        ys = ttk.Scrollbar(body, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=ys.set)
+        ys.pack(side=tk.RIGHT, fill=tk.Y)
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        msg = tk.Label(
+            dlg, text=tr("unity_tu_loading" if is_tu else "dlc_loading"),
+            bg=th["bg"], fg=th["muted"],
+        )
+        msg.pack(pady=(4, 0))
+        bf = ttk.Frame(dlg)
+        bf.pack(pady=(6, 10))
+        btn_dl = ttk.Button(
+            bf, text=tr("dl_online"), command=lambda: _dl(), state=tk.DISABLED
+        )
+        btn_dl.pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("cancel"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
 
-    def _populate_tu_menu(self, tu_menu, g, updates):
-        try:
-            tu_menu.delete(0, "end")
-        except tk.TclError:
-            return
-        if not updates:
+        entries = []
+        iids = []
+
+        def _populate(items):
             try:
-                tu_menu.add_command(label=tr("unity_tu_empty"), state=tk.DISABLED)
-            except tk.TclError:
-                pass
-            return
-        for u in sorted(updates, key=lambda x: _version_num(x.get("version")), reverse=True):
-            v = (u.get("version") or "?").strip()
-            date = (u.get("date") or "")[:10]
-            lbl = "TU %s - %s" % (v, u.get("media_id") or "?")
-            if date:
-                lbl += " (%s)" % date
-            try:
-                tu_menu.add_command(
-                    label=lbl,
-                    command=lambda u=u: self.download_tu_from_menu(g, u),
-                )
+                for it in tree.get_children():
+                    tree.delete(it)
             except tk.TclError:
                 return
+            entries[:] = items
+            iids[:] = []
+            for e in items:
+                if is_tu:
+                    name = "TU %s - %s" % (e.get("version") or "?", e.get("media_id") or "?")
+                    date = (e.get("date") or "")[:10]
+                    info = e.get("name") or tid
+                    if date:
+                        info += "  (%s)" % date
+                else:
+                    name = os.path.splitext(e.get("name") or "")[0].lstrip(".-_ ")
+                    size = e.get("size") or 0
+                    if size:
+                        info = "%.1f MB" % (size / (1024.0 * 1024.0))
+                    else:
+                        info = ""
+                iid = tree.insert("", tk.END, values=(name, info))
+                iids.append(iid)
+            if iids:
+                tree.selection_set(iids[0])
+                tree.focus(iids[0])
+            try:
+                btn_dl.configure(state=tk.NORMAL if iids else tk.DISABLED)
+            except tk.TclError:
+                pass
 
-    def download_tu_from_menu(self, g, u):
-        path = self.aurora_path.get().strip().strip('"')
-        self.thread_download_kind(
-            path, g, "title_update",
-            tuid=u.get("tuid"), version=u.get("version"),
-        )
+        def _load():
+            if is_tu:
+                try:
+                    ups = xboxunity_title_updates(tid)
+                except Exception:
+                    ups = []
+                rows = sorted(ups, key=lambda x: _version_num(x.get("version")), reverse=True)
+            else:
+                try:
+                    rows = ia_dlc_matches(self.game_title(g), tid)
+                except Exception:
+                    rows = []
+            self.root.after(0, lambda: _populate(rows))
+            if not rows:
+                self.root.after(0, lambda: msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty")))
+
+        def _dl():
+            sel = tree.selection()
+            if not sel or sel[0] not in iids:
+                return
+            e = entries[iids.index(sel[0])]
+            dlg.destroy()
+            if is_tu:
+                self.thread_download_kind(
+                    path, g, "title_update",
+                    tuid=e.get("tuid"), version=e.get("version"),
+                )
+            else:
+                self.thread_download_kind(
+                    path, g, "dlc", ia_id=IA_DLC_ITEM, filename=e.get("name"),
+                )
+
+        tree.bind("<Double-1>", lambda _ev: _dl())
+        dlg.protocol("WM_DELETE_WINDOW", dlg.destroy)
+        dlg.grab_set()
+        threading.Thread(target=_load, daemon=True).start()
 
     def apply_theme(self):
         eff = detect_system_theme() if self.theme == "sistema" else self.theme
@@ -8093,7 +8314,7 @@ class App:
             return
         self.pick_kind_file(self._assets_g, kind)
 
-    def thread_download_kind(self, path, g, kind, tuid=None, version=None):
+    def thread_download_kind(self, path, g, kind, tuid=None, version=None, ia_id=None, filename=None):
         if self.busy:
             return
         self.set_busy(True)
@@ -8101,7 +8322,8 @@ class App:
 
         def _run():
             try:
-                ok = self.download_kind(path, g, kind, tuid=tuid, version=version)
+                ok = self.download_kind(path, g, kind, tuid=tuid, version=version,
+                                        ia_id=ia_id, filename=filename)
                 self.log(tr("logs_kind_result", kind, "OK" if ok else tr("no_success")))
             except Exception as exc:
                 self.log(tr("logs_kind_err", exc))
