@@ -69,6 +69,8 @@ SS_MAX_DEFAULT = 6
 XBOXUNITY_CVERS = "https://www.xboxunity.net/api/Covers/%s"
 XBOXUNITY_LIB = "https://www.xboxunity.net/Resources/Lib"
 XBOXUNITY_ROOT = "https://www.xboxunity.net/"
+XBOXUNITY_TU_INFO = XBOXUNITY_LIB + "/TitleUpdateInfo.php?titleid=%s"
+XBOXUNITY_TU_GET = XBOXUNITY_LIB + "/TitleUpdate.php?tuid=%s"
 X360DB_PING_URL = GAMES_INDEX_URL
 PING_INTERVAL = 20
 UNITY_OK = "#3fb950"
@@ -273,6 +275,10 @@ TEXT = {
         "m_dl_dlc": "Baixar DLC...",
         "btn_dl_tu": "Baixar TU",
         "btn_dl_dlc": "Baixar DLC",
+        "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
+        "logs_unity_tu_none": "XboxUnity não tem TU para %s; tentando Internet Archive.",
+        "logs_unity_tu_dl_fail": "Falha ao baixar TU do XboxUnity para %s; tentando Internet Archive.",
         "asset_changed": "Asset '%s' alterado para %s (%s).",
         "m_assets": "Ver/alterar assets deste jogo...",
         "m_alt": "Capas alternativas online...",
@@ -612,6 +618,10 @@ TEXT = {
         "m_dl_dlc": "Download DLC...",
         "btn_dl_tu": "Download TU",
         "btn_dl_dlc": "Download DLC",
+        "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
+        "logs_unity_tu_none": "XboxUnity has no TU for %s; trying Internet Archive.",
+        "logs_unity_tu_dl_fail": "Failed to download TU from XboxUnity for %s; trying Internet Archive.",
         "asset_changed": "Asset '%s' changed for %s (%s).",
         "m_assets": "View/change assets of this game...",
         "m_alt": "Alternative covers online...",
@@ -957,6 +967,10 @@ TEXT = {
         "m_dl_dlc": "Descargar DLC...",
         "btn_dl_tu": "Descargar TU",
         "btn_dl_dlc": "Descargar DLC",
+        "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
+        "logs_unity_tu_none": "XboxUnity no tiene TU para %s; probando Internet Archive.",
+        "logs_unity_tu_dl_fail": "Fallo al descargar TU de XboxUnity para %s; probando Internet Archive.",
         "asset_changed": "Asset '%s' cambiado para %s (%s).",
         "m_assets": "Ver/cambiar assets de este juego...",
         "m_alt": "Portadas alternativas online...",
@@ -1302,6 +1316,10 @@ TEXT = {
         "m_dl_dlc": "Télécharger DLC...",
         "btn_dl_tu": "Téléch. TU",
         "btn_dl_dlc": "Téléch. DLC",
+        "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
+        "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s ; essai Internet Archive.",
+        "logs_unity_tu_dl_fail": "Échec du téléchargement TU depuis XboxUnity pour %s ; essai Internet Archive.",
         "asset_changed": "Asset '%s' modifié pour %s (%s).",
         "m_assets": "Voir/modifier les assets de ce jeu...",
         "m_alt": "Jaquettes alternatives en ligne...",
@@ -1642,6 +1660,10 @@ TEXT = {
         "m_dl_dlc": "DLC をダウンロード...",
         "btn_dl_tu": "TU 取得",
         "btn_dl_dlc": "DLC 取得",
+        "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
+        "logs_unity_tu_none": "XboxUnityに%sのTUがありません。Internet Archiveを試します。",
+        "logs_unity_tu_dl_fail": "%sのTUをXboxUnityからダウンロードできませんでした。Internet Archiveを試します。",
         "asset_changed": "アセット '%s' が %s (%s) で変更されました。",
         "m_assets": "このゲームのアセットを表示/変更...",
         "m_alt": "オンラインで代替カバー...",
@@ -1982,6 +2004,10 @@ TEXT = {
         "m_dl_dlc": "Скачать DLC...",
         "btn_dl_tu": "Скачать TU",
         "btn_dl_dlc": "Скачать DLC",
+        "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
+        "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
+        "logs_unity_tu_none": "На XboxUnity нет TU для %s; пробую Internet Archive.",
+        "logs_unity_tu_dl_fail": "Не удалось скачать TU с XboxUnity для %s; пробую Internet Archive.",
         "asset_changed": "Ассет '%s' изменен для %s (%s).",
         "m_assets": "Просмотреть/изменить ассеты этой игры...",
         "m_alt": "Альтернативные обложки онлайн...",
@@ -2413,6 +2439,81 @@ def download_internet_archive_file(identifier, filename, dest_path):
         except Exception:
             time.sleep(1.0)
     return False
+
+
+def xboxunity_title_updates(tid):
+    """Lista Title Updates disponíveis no XboxUnity para um TitleID.
+    Retorna lista de dicts com tuid, media_id, version, name, size, date."""
+    data = download_json(XBOXUNITY_TU_INFO % tid.upper(), timeout=20)
+    if not isinstance(data, dict):
+        return []
+    medias = data.get("MediaIDS") or data.get("MediaIds") or []
+    items = []
+    for m in medias:
+        if not isinstance(m, dict):
+            continue
+        media = (m.get("MediaID") or "").strip().upper()
+        for u in m.get("Updates") or []:
+            if not isinstance(u, dict):
+                continue
+            try:
+                tuid = int(u.get("TitleUpdateID") or 0)
+            except (TypeError, ValueError):
+                continue
+            if not tuid:
+                continue
+            items.append({
+                "tuid": str(tuid),
+                "media_id": media,
+                "version": (u.get("Version") or "0").strip(),
+                "name": (u.get("Name") or "").strip(),
+                "size": u.get("Size"),
+                "date": (u.get("UploadDate") or "").strip(),
+            })
+    return items
+
+
+def pick_xboxunity_tu(updates):
+    """Escolhe o TU mais recente do XboxUnity (maior versão numérica)."""
+    best = None
+    best_v = -1e18
+    for u in updates:
+        try:
+            v = float(str(u.get("version") or "0"))
+        except (TypeError, ValueError):
+            continue
+        if v > best_v:
+            best_v = v
+            best = u
+    return best
+
+
+def download_url_to_file(url, dest_path):
+    """Baixa url (streaming) para dest_path. Devolve o nome sugerido pelo
+    servidor (Content-Disposition) ou None em caso de falha."""
+    try:
+        req = urllib.request.Request(url, headers=USER_AGENT)
+        tmp_path = dest_path + ".part"
+        fname = None
+        with _HTTP_POOL.open(req, timeout=120) as resp, open(tmp_path, "wb") as f:
+            content_disp = resp.headers.get("Content-Disposition") or ""
+            m = re.search(r'filename="?([^";]+)"?', content_disp)
+            if m:
+                fname = m.group(1).strip()
+            while True:
+                chunk = resp.read(64 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+        os.replace(tmp_path, dest_path)
+        return fname
+    except Exception:
+        try:
+            if os.path.isfile(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
+        return None
 
 
 def content_roots(root):
@@ -6675,13 +6776,44 @@ class App:
             return False
 
     def _download_title_update_dlc(self, path, g, tid, kind):
-        """Baixa Title Update (TU) ou DLC do Internet Archive e instala
-        em Content\\0000000000000000\\<TID>\\ (pasta 000B0000 para TU,
+        """Baixa Title Update (TU) do XboxUnity (com fallback para Internet
+        Archive) ou DLC do Internet Archive, e instala em
+        Content\\0000000000000000\\<TID>\\ (pasta 000B0000 para TU,
         00000002 para DLC), estrutura padrão do 360/Aurora."""
         try:
             sub = "000B0000" if kind == "title_update" else "00000002"
             content_dirs = [os.path.join(d, sub) for d in game_content_dirs(path, tid)]
             folder = (g.get("folder") or "").strip()
+
+            if kind == "title_update":
+                # Primeiro tenta XboxUnity (indexado por TitleID, baixa direto).
+                self.log(tr("logs_unity_tu_search", self.game_title(g), tid))
+                best = pick_xboxunity_tu(xboxunity_title_updates(tid))
+                if best:
+                    self.log(
+                        tr("logs_unity_tu_found", tid,
+                           best.get("version") or "?", best.get("name") or tid)
+                    )
+                    tmp = os.path.join(
+                        tempfile.gettempdir(), "unity_tu_%s_%s.tu" % (tid, best["tuid"])
+                    )
+                    fname = download_url_to_file(XBOXUNITY_TU_GET % best["tuid"], tmp)
+                    if fname:
+                        for dest_dir in content_dirs:
+                            try:
+                                os.makedirs(dest_dir, exist_ok=True)
+                                shutil.copy2(tmp, os.path.join(dest_dir, fname))
+                                mark_installed(tid, kind)
+                                self.log(tr("ia_download_success", tr("kind_" + kind), fname))
+                                return True
+                            except OSError:
+                                continue
+                        self.log(tr("ia_install_fail", fname))
+                        return False
+                    self.log(tr("logs_unity_tu_dl_fail", tid))
+                else:
+                    self.log(tr("logs_unity_tu_none", self.game_title(g)))
+                # Sem TU no XboxUnity? Cai no Internet Archive (fallback).
 
             ia_id = g.get("ia_id") or g.get("internet_archive_id")
             if ia_id:
