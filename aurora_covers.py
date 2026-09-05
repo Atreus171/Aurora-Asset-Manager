@@ -3543,8 +3543,9 @@ def extra_games_path():
 
 def load_extra_games():
     try:
-        with open(extra_games_path(), "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with _IO_LOCK:
+            with open(extra_games_path(), "r", encoding="utf-8") as f:
+                data = json.load(f)
         if isinstance(data, list):
             return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
     except Exception:
@@ -3554,10 +3555,11 @@ def load_extra_games():
 
 def save_extra_games(tids):
     try:
-        tmp = extra_games_path() + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(tids, f, indent=2)
-        os.replace(tmp, extra_games_path())
+        with _IO_LOCK:
+            tmp = extra_games_path() + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(tids, f, indent=2)
+            os.replace(tmp, extra_games_path())
     except Exception:
         pass
 
@@ -3599,8 +3601,9 @@ def hidden_games_path():
 
 def load_hidden_games():
     try:
-        with open(hidden_games_path(), "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with _IO_LOCK:
+            with open(hidden_games_path(), "r", encoding="utf-8") as f:
+                data = json.load(f)
         if isinstance(data, list):
             return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
     except Exception:
@@ -3610,10 +3613,11 @@ def load_hidden_games():
 
 def save_hidden_games(tids):
     try:
-        tmp = hidden_games_path() + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(list(set(tids)), f, indent=2)
-        os.replace(tmp, hidden_games_path())
+        with _IO_LOCK:
+            tmp = hidden_games_path() + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(list(set(tids)), f, indent=2)
+            os.replace(tmp, hidden_games_path())
     except Exception:
         pass
 
@@ -6249,10 +6253,10 @@ class App:
                     custom_names = load_custom_names()
                     custom_names[t["tid"]] = t["name"]
                     save_custom_names(custom_names)
-                extra = load_extra_games()
-                if t["tid"] not in extra:
-                    extra.append(t["tid"])
-                    save_extra_games(extra)
+                    extra = load_extra_games()
+                    if t["tid"] not in extra:
+                        extra.append(t["tid"])
+                        save_extra_games(extra)
                 self.games.append(g)
                 count += 1
             if count:
@@ -6325,9 +6329,10 @@ class App:
             custom_names = load_custom_names()
             custom_names[tid] = name
             save_custom_names(custom_names)
-        extra = load_extra_games()
-        if tid not in extra:
-            extra.append(tid)
+            extra = load_extra_games()
+            if tid not in extra:
+                extra.append(tid)
+                save_extra_games(extra)
             save_extra_games(extra)
         self.games.append(g)
         self.log(tr("add_game_added", name or tid, tid))
