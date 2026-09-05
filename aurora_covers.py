@@ -82,7 +82,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.5.2"
+CURRENT_VERSION = "1.5.5.3"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -8072,10 +8072,6 @@ class App:
             ttk.Radiobutton(lf, text=name, variable=lang_var, value=code).pack(side=tk.LEFT, padx=6)
         add_row(tr("set_lang"), lf)
 
-        # Version info
-        ver_lbl = ttk.Label(outer, text=f"Versão {CURRENT_VERSION}", foreground="#888888", font=("Segoe UI", 8))
-        add_row("Versão", ver_lbl)
-
         show_status_var = tk.BooleanVar(value=self.show_status)
         show_log_var = tk.BooleanVar(value=self.show_log)
         sf2 = ttk.Frame(outer)
@@ -8144,6 +8140,10 @@ class App:
         add_row(tr("ftp_base_lbl"), ftp_base_ent)
 
         # Credits
+        # Version label above credits
+        ver_lbl = ttk.Label(outer, text=f"Versão {CURRENT_VERSION}", foreground="#888888", font=("Segoe UI", 8))
+        ver_lbl.grid(row=row_idx, column=0, columnspan=2, pady=(12, 0))
+        row_idx += 1
         ttk.Separator(outer, orient=tk.HORIZONTAL).grid(row=row_idx, column=0, columnspan=2, sticky="ew", pady=(12, 4))
         row_idx += 1
         tk.Label(
