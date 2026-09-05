@@ -286,6 +286,8 @@ TEXT = {
         "dlc_loading": "Carregando DLCs...",
         "dlc_empty": "Nenhuma DLC encontrada em msx360gcdlc.",
         "dlc_manual_extract": "DLC salvo em %s; extraia manualmente com 7-Zip no console.",
+        "add_game_folder_scanning": "Escaneando pasta %s...",
+        "add_game_folder_err": "Erro ao escanear pasta: %s",
         "dlc_install_local": "Instalar DLC local...",
         "dlc_installing_local": "Instalando DLC local (%s)...",
         "dlc_already_local": "Esta DLC já está instalada.",
@@ -649,6 +651,8 @@ TEXT = {
         "dlc_loading": "Loading DLCs...",
         "dlc_empty": "No DLC found in msx360gcdlc.",
         "dlc_manual_extract": "DLC saved to %s; extract it manually with 7-Zip on the console.",
+        "add_game_folder_scanning": "Scanning folder %s...",
+        "add_game_folder_err": "Error scanning folder: %s",
         "dlc_install_local": "Install local DLC...",
         "dlc_installing_local": "Installing local DLC (%s)...",
         "dlc_already_local": "This DLC is already installed.",
@@ -1018,6 +1022,8 @@ TEXT = {
         "dlc_loading": "Cargando DLCs...",
         "dlc_empty": "No se encontraron DLCs en msx360gcdlc.",
         "dlc_manual_extract": "DLC guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
+        "add_game_folder_scanning": "Escaneando carpeta %s...",
+        "add_game_folder_err": "Error al escanear carpeta: %s",
         "dlc_install_local": "Instalar DLC local...",
         "dlc_installing_local": "Instalando DLC local (%s)...",
         "dlc_already_local": "Esta DLC ya está instalada.",
@@ -1387,6 +1393,8 @@ TEXT = {
         "dlc_loading": "Chargement des DLC...",
         "dlc_empty": "Aucun DLC trouvé dans msx360gcdlc.",
         "dlc_manual_extract": "DLC enregistré dans %s; extrayez-le manuellement avec 7-Zip sur la console.",
+        "add_game_folder_scanning": "Analyse du dossier %s...",
+        "add_game_folder_err": "Erreur lors de l'analyse du dossier: %s",
         "dlc_install_local": "Installer une DLC locale...",
         "dlc_installing_local": "Installation de la DLC locale (%s)...",
         "dlc_already_local": "Cette DLC est déjà installée.",
@@ -1751,6 +1759,8 @@ TEXT = {
         "dlc_loading": "DLCを読み込み中...",
         "dlc_empty": "msx360gcdlcにDLCは見つかりませんでした。",
         "dlc_manual_extract": "DLCを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
+        "add_game_folder_scanning": "フォルダ %s をスキャン中...",
+        "add_game_folder_err": "フォルダのスキャン中にエラー: %s",
         "dlc_install_local": "ローカルDLCをインストール...",
         "dlc_installing_local": "ローカルDLCをインストール中 (%s)...",
         "dlc_already_local": "このDLCは既にインストールされています。",
@@ -2115,6 +2125,8 @@ TEXT = {
         "dlc_loading": "Загрузка DLC...",
         "dlc_empty": "DLC не найдены в msx360gcdlc.",
         "dlc_manual_extract": "DLC сохранён в %s; извлеките вручную 7-Zip на консоли.",
+        "add_game_folder_scanning": "Сканирование папки %s...",
+        "add_game_folder_err": "Ошибка сканирования папки: %s",
         "dlc_install_local": "Установить локальную DLC...",
         "dlc_installing_local": "Установка локальной DLC (%s)...",
         "dlc_already_local": "Эта DLC уже установлена.",
@@ -2943,9 +2955,13 @@ class X360DB:
         self.index_file = os.path.join(os.path.dirname(config_path()), "aurora_covers_games.json")
         self._loaded = False
         self._load_lock = threading.Lock()
+        self._last_load_fail = 0.0
 
     def _ensure_loaded(self):
         if self._loaded:
+            return
+        # Backoff: se falhou há menos de 5 min, não tenta de novo (evita freeze offline)
+        if self._last_load_fail and time.time() - self._last_load_fail < 300:
             return
         with self._load_lock:
             if self._loaded:
@@ -2992,6 +3008,7 @@ class X360DB:
             elif raw:
                 self._write_cache(raw)
         if not isinstance(raw, list) or not raw:
+            self._last_load_fail = time.time()
             return False
         for entry in raw:
             if not isinstance(entry, dict):
@@ -4726,6 +4743,8 @@ class App:
         self._alt_preview = None
         self._alt_items = []
         self._tu_dlg_state = None
+        self._add_folder_callback = None
+        self._add_folder_context = None
         self._alt_photo = None
         self._alt_preview_item = (0, None)
         self.unity_status = "checking"
@@ -5068,6 +5087,19 @@ class App:
                             cb()
                         except tk.TclError:
                             self._tu_dlg_state = None
+                elif msg == "__add_folder_probe_done__":
+                    # msg é tupla: ("__add_folder_probe_done__", status, folder, games_found/error_msg)
+                    if isinstance(msg, tuple) and len(msg) >= 3:
+                        status = msg[1]
+                        folder = msg[2]
+                        cb = getattr(self, "_add_folder_callback", None)
+                        if cb:
+                            if status == "ok":
+                                games_found = msg[3] if len(msg) > 3 else []
+                                cb(status, folder, games_found)
+                            else:
+                                error_msg = msg[3] if len(msg) > 3 else ""
+                                cb(status, folder, error_msg=error_msg)
                 elif msg == "__busy_true__":
                     self.set_busy(True)
                 else:
@@ -6227,7 +6259,7 @@ class App:
             res["ok"] = True
             dlg.destroy()
 
-        # Confirmação do fluxo de pasta: adiciona todos os jogos encontrados na pasta
+# Confirmação do fluxo de pasta: adiciona todos os jogos encontrados na pasta
         def _apply_folder_selection():
             raw = v_folder.get().strip().strip('"')
             if not raw:
@@ -6237,47 +6269,72 @@ class App:
                 messagebox.showerror(tr("warn"), tr("folder_not_found", raw))
                 return
             folder = os.path.normpath(raw)
-            games_found = self.probe_folder_games(folder)
-            count = 0
-            for t in games_found:
-                if any(g["tid"] == t["tid"] for g in self.games):
-                    continue
-                g = {
-                    "folder": t["folder"],
-                    "tid": t["tid"],
-                    "folder_name": os.path.basename(t["folder"]) if t["folder"] else t["tid"],
-                    "dname": t["name"],
-                    "has_cover": False,
-                }
-                with _IO_LOCK:
-                    custom_names = load_custom_names()
-                    custom_names[t["tid"]] = t["name"]
-                    save_custom_names(custom_names)
-                    extra = load_extra_games()
-                    if t["tid"] not in extra:
-                        extra.append(t["tid"])
-                        save_extra_games(extra)
-                self.games.append(g)
-                count += 1
-            if count:
-                targets = [g for g in self.games if g["tid"] in {t["tid"] for t in games_found}]
-                threading.Thread(target=self._fetch_unity_names, args=(targets,), daemon=True).start()
-            self.log(tr("add_game_folder_done", count, folder))
-            # Salva a pasta na lista de pastas gerenciadas
-            if count:
-                added = load_added_folders()
-                # Evita duplicata
-                if not any(f.get("folder") == folder for f in added):
-                    added.append({
-                        "folder": folder,
-                        "added": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "count": count,
-                    })
-                    save_added_folders(added)
-            self.refresh_tree()
-            res["ok"] = True
-            res["folder"] = folder
-            dlg.destroy()
+            # Mostra feedback imediato e roda a varredura em background
+            self.log(tr("add_game_folder_scanning", folder))
+            
+            def _probe_worker():
+                try:
+                    games_found = self.probe_folder_games(folder)
+                except Exception as exc:
+                    self.queue.put(("__add_folder_probe_done__", "error", folder, str(exc)))
+                    return
+                self.queue.put(("__add_folder_probe_done__", "ok", folder, games_found))
+
+            # Guarda callback e contexto para o handler processar
+            self._add_folder_callback = _on_folder_probe_done
+            self._add_folder_context = {"folder": folder}
+            threading.Thread(target=_probe_worker, daemon=True).start()
+
+        def _on_folder_probe_done(status, folder, games_found=None, error_msg=None):
+            # Chamado via queue no main thread
+            self._add_folder_callback = None
+            self._add_folder_context = None
+            if status == "error":
+                self.log(tr("add_game_folder_err", error_msg))
+                messagebox.showerror(tr("error"), error_msg)
+                return
+            if status == "ok" and games_found:
+                count = 0
+                for t in games_found:
+                    if any(g["tid"] == t["tid"] for g in self.games):
+                        continue
+                    g = {
+                        "folder": t["folder"],
+                        "tid": t["tid"],
+                        "folder_name": os.path.basename(t["folder"]) if t["folder"] else t["tid"],
+                        "dname": t["name"],
+                        "has_cover": False,
+                    }
+                    with _IO_LOCK:
+                        custom_names = load_custom_names()
+                        custom_names[t["tid"]] = t["name"]
+                        save_custom_names(custom_names)
+                        extra = load_extra_games()
+                        if t["tid"] not in extra:
+                            extra.append(t["tid"])
+                            save_extra_games(extra)
+                    self.games.append(g)
+                    count += 1
+                if count:
+                    targets = [g for g in self.games if g["tid"] in {t["tid"] for t in games_found}]
+                    threading.Thread(target=self._fetch_unity_names, args=(targets,), daemon=True).start()
+                self.log(tr("add_game_folder_done", count, folder))
+                if count:
+                    added = load_added_folders()
+                    if not any(f.get("folder") == folder for f in added):
+                        added.append({
+                            "folder": folder,
+                            "added": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "count": count,
+                        })
+                        save_added_folders(added)
+                self.refresh_tree()
+                res["ok"] = True
+                res["folder"] = folder
+                dlg.destroy()
+            else:
+                self.log(tr("add_game_folder_done", 0, folder))
+                dlg.destroy()
 
         def _ok(_event=None):
             tid = v_tid.get().strip().upper()
