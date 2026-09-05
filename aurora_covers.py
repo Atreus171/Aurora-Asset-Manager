@@ -82,7 +82,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.5"
+CURRENT_VERSION = "1.5.5.2"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -378,7 +378,11 @@ TEXT = {
         "show_debug_button": "Mostrar botão Debug DB",
         "auto_update_check": "Verificar atualizações automaticamente",
         "update_available_title": "Atualização disponível",
-        "update_available_msg": "Uma nova versão ({0}) está disponível! Versão atual: {1}\n\nDeseja abrir a página de downloads?",
+        "update_available_msg": "Uma nova versão (%s) está disponível! Versão atual: %s\n\nDeseja baixar e instalar agora?",
+        "update_downloading": "Baixando atualização %s...",
+        "update_installing": "Instalando atualização...",
+        "update_download_failed": "Falha ao baixar atualização: %s",
+        "update_install_failed": "Falha ao iniciar instalador: %s",
         "download_missing_only": "Baixar só jogos sem capa",
         "m_search": "Pesquisar título...",
         "m_rename": "Renomear jogo",
@@ -744,7 +748,11 @@ TEXT = {
         "show_debug_button": "Show Debug DB button",
         "auto_update_check": "Check for updates automatically",
         "update_available_title": "Update Available",
-        "update_available_msg": "A new version ({0}) is available! Current version: {1}\n\nOpen download page?",
+        "update_available_msg": "A new version (%s) is available! Current version: %s\n\nDownload and install now?",
+        "update_downloading": "Downloading update %s...",
+        "update_installing": "Installing update...",
+        "update_download_failed": "Failed to download update: %s",
+        "update_install_failed": "Failed to start installer: %s",
         "download_missing_only": "Download only games without a cover",
         "m_search": "Search title...",
         "m_rename": "Rename game",
@@ -1115,7 +1123,11 @@ TEXT = {
         "show_debug_button": "Mostrar botón Debug DB",
         "auto_update_check": "Buscar actualizaciones automáticamente",
         "update_available_title": "Actualización disponible",
-        "update_available_msg": "Hay una nueva versión ({0}) disponible! Versión actual: {1}\n\n¿Abrir página de descargas?",
+        "update_available_msg": "Hay una nueva versión (%s) disponible! Versión actual: %s\n\n¿Descargar e instalar ahora?",
+        "update_downloading": "Descargando actualización %s...",
+        "update_installing": "Instalando actualización...",
+        "update_download_failed": "Error al descargar actualización: %s",
+        "update_install_failed": "Error al iniciar instalador: %s",
         "download_missing_only": "Descargar solo juegos sin portada",
         "m_search": "Buscar título...",
         "m_rename": "Renombrar juego",
@@ -1486,7 +1498,11 @@ TEXT = {
         "show_debug_button": "Afficher bouton Debug DB",
         "auto_update_check": "Vérifier les mises à jour automatiquement",
         "update_available_title": "Mise à jour disponible",
-        "update_available_msg": "Une nouvelle version ({0}) est disponible! Version actuelle: {1}\n\nOuvrir la page de téléchargement?",
+        "update_available_msg": "Une nouvelle version (%s) est disponible! Version actuelle: %s\n\nTélécharger et installer maintenant?",
+        "update_downloading": "Téléchargement de la mise à jour %s...",
+        "update_installing": "Installation de la mise à jour...",
+        "update_download_failed": "Échec du téléchargement de la mise à jour: %s",
+        "update_install_failed": "Échec du lancement de l'installeur: %s",
         "download_missing_only": "Télécharger uniquement les jeux sans jaquette",
         "m_search": "Rechercher titre...",
         "m_rename": "Renommer le jeu",
@@ -1852,7 +1868,11 @@ TEXT = {
         "show_debug_button": "Debug DB ボタンを表示",
         "auto_update_check": "自動的にアップデートを確認",
         "update_available_title": "アップデート利用可能",
-        "update_available_msg": "新しいバージョン ({0}) が利用可能です！ 現在のバージョン: {1}\n\nダウンロードページを開きますか？",
+        "update_available_msg": "新しいバージョン (%s) が利用可能です！ 現在のバージョン: %s\n\n今すぐダウンロードしてインストールしますか？",
+        "update_downloading": "アップデート %s をダウンロード中...",
+        "update_installing": "アップデートをインストール中...",
+        "update_download_failed": "アップデートのダウンロードに失敗: %s",
+        "update_install_failed": "インストーラーの起動に失敗: %s",
         "download_missing_only": "カバーがないゲームのみダウンロード",
         "m_search": "タイトルを検索...",
         "m_rename": "ゲーム名を変更",
@@ -2218,7 +2238,11 @@ TEXT = {
         "show_debug_button": "Показать кнопку Debug DB",
         "auto_update_check": "Автоматически проверять обновления",
         "update_available_title": "Доступно обновление",
-        "update_available_msg": "Доступна новая версия ({0})! Текущая версия: {1}\n\nОткрыть страницу загрузки?",
+        "update_available_msg": "Доступна новая версия (%s)! Текущая версия: %s\n\nСкачать и установить сейчас?",
+        "update_downloading": "Загрузка обновления %s...",
+        "update_installing": "Установка обновления...",
+        "update_download_failed": "Ошибка загрузки обновления: %s",
+        "update_install_failed": "Ошибка запуска установщика: %s",
         "download_missing_only": "Скачивать только игры без обложки",
         "m_search": "Поиск названия...",
         "m_rename": "Переименовать игру",
@@ -5100,6 +5124,22 @@ class App:
                             else:
                                 error_msg = msg[3] if len(msg) > 3 else ""
                                 cb(status, folder, error_msg=error_msg)
+                elif isinstance(msg, tuple) and msg[0] == "__update_download_done__":
+                    ok = msg[1]
+                    if ok:
+                        installer_path = msg[2]
+                        self.log(tr("update_installing"))
+                        try:
+                            subprocess.Popen([installer_path], shell=False)
+                            self.root.after(2000, self.root.destroy)
+                        except Exception as exc:
+                            messagebox.showerror(tr("error"), tr("update_install_failed", exc))
+                    else:
+                        error = msg[2] if len(msg) > 2 else tr("update_download_failed")
+                        self.log(tr("update_download_failed", error))
+                        messagebox.showerror(tr("error"), tr("update_download_failed", error))
+                elif isinstance(msg, tuple) and msg[0] == "__update_progress__":
+                    self.log(msg[1])
                 elif msg == "__busy_true__":
                     self.set_busy(True)
                 else:
@@ -6584,11 +6624,43 @@ class App:
         self.preview_info.configure(text=parts)
 
     def _show_update_dialog(self, version):
-        if messagebox.askyesno(tr("update_available_title"),
-                                tr("update_available_msg", version, CURRENT_VERSION)):
-            # Open GitHub releases page
-            import webbrowser
-            webbrowser.open(f"https://github.com/{GITHUB_REPO}/releases/tag/v{version}")
+        if not messagebox.askyesno(tr("update_available_title"),
+                                    tr("update_available_msg", version, CURRENT_VERSION)):
+            return
+        # Download and run installer
+        self.log(tr("update_downloading", version))
+        threading.Thread(target=self._download_and_run_installer, args=(version,), daemon=True).start()
+
+    def _download_and_run_installer(self, version):
+        """Baixa o instalador da release do GitHub e executa."""
+        try:
+            # Busca assets da release
+            api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/v{version}"
+            data = fetch_bytes(api_url, timeout=15)
+            if not data:
+                self.queue.put(("__update_download_done__", False, "Falha ao obter info da release"))
+                return
+            release = json.loads(data.decode("utf-8"))
+            assets = release.get("assets", [])
+            # Procura o instalador .exe
+            installer_url = None
+            for asset in assets:
+                name = asset.get("name", "")
+                if name.endswith(".exe") and "Setup" in name:
+                    installer_url = asset.get("browser_download_url")
+                    break
+            if not installer_url:
+                self.queue.put(("__update_download_done__", False, "Instalador não encontrado na release"))
+                return
+            # Baixa o instalador
+            self.queue.put(("__update_progress__", "Baixando instalador..."))
+            tmp_path = os.path.join(tempfile.gettempdir(), f"AuroraAssetManager_Setup_{version}.exe")
+            if not download_url_to_file(installer_url, tmp_path):
+                self.queue.put(("__update_download_done__", False, "Falha no download do instalador"))
+                return
+            self.queue.put(("__update_download_done__", True, tmp_path))
+        except Exception as exc:
+            self.queue.put(("__update_download_done__", False, str(exc)))
 
     def _format_info(self, info):
         genres = ", ".join(info.get("genre") or [])[:60]
