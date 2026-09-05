@@ -2,7 +2,7 @@
 ; Compile with Inno Setup 6+
 
 #define AppName "Aurora Asset Manager"
-#define AppVersion "1.5.5.3"
+#define AppVersion "1.5.5.4"
 #define AppPublisher "Atreus171"
 #define AppURL "https://github.com/Atreus171/Aurora-Asset-Manager"
 #define AppExeName "AuroraAssetManager.exe"
