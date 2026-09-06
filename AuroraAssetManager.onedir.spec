@@ -6,7 +6,7 @@ a = Analysis(
     ['aurora_covers.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets/icon.ico', '.'), ('assets/icone2.jpeg', '.')],
+    datas=[('assets/icon.ico', '.'), ('assets/icon2.jpeg', '.'), ('assets/icone2.jpeg', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

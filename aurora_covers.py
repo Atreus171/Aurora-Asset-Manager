@@ -34,11 +34,13 @@ _window_icon_photo = None
 
 def set_window_icon(root):
     """Define o ícone que aparece no topo da janela e na interface do app.
-    Usa assets/icone2.jpeg (o user escolheu um JPG); o ícone do EXE/instalador
+    Usa assets/icon2.jpeg (o user escolheu um JPG); o ícone do EXE/instalador
     (assets/icon.ico) NÃO é alterado."""
     global _window_icon_photo
     try:
-        icon = resource_path("icone2.jpeg")
+        icon = resource_path("icon2.jpeg")
+        if not os.path.isfile(icon):
+            icon = resource_path("icone2.jpeg")
         if not os.path.isfile(icon):
             icon = resource_path("icon.ico")
         if not os.path.isfile(icon):
