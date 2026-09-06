@@ -165,7 +165,6 @@ DEFAULT_CONFIG = {
     "show_status": True,
     "show_log": True,
     "auto_search_titles": True,
-    "show_game_info": True,
     "show_debug_button": False,
     "download_missing_only": True,
     "auto_update_check": True,
@@ -398,7 +397,6 @@ TEXT = {
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "auto_search_on": "Busca automática de títulos LIGADA.",
         "auto_search_off": "Busca automática de títulos DESLIGADA.",
-        "show_game_info": "Mostrar diretor e data de lançamento",
         "show_debug_button": "Mostrar botão Debug DB",
         "auto_update_check": "Verificar atualizações automaticamente",
         "update_available_title": "Atualização disponível",
@@ -518,6 +516,7 @@ TEXT = {
         "logs_no_index": "Aviso: índice do x360db não carregou; sem filtro de DLC/updates.",
         "logs_ignored_dlc": "Ignorados %d TitleIDs de DLC/update (não constam no índice de jogos).",
         "logs_god_xdlc": "Jogos GOD/XDLC no HD sem pasta GameData: %d (serão tratados via Import)",
+        "logs_total_games": "Total de jogos carregados: %d",
         "logs_fetch_names": "Buscando %d nomes no XboxUnity...",
         "logs_title_x360db": "Título encontrado no x360db: %s",
         "logs_title_unity": "Título encontrado no XboxUnity: %s",
@@ -778,7 +777,6 @@ TEXT = {
         "auto_search_titles": "Auto-search titles (XboxUnity)",
         "auto_search_on": "Auto title search ENABLED.",
         "auto_search_off": "Auto title search DISABLED.",
-        "show_game_info": "Show director and release date",
         "show_debug_button": "Show Debug DB button",
         "auto_update_check": "Check for updates automatically",
         "update_available_title": "Update Available",
@@ -898,6 +896,7 @@ TEXT = {
         "logs_no_index": "Warning: x360db index did not load; no DLC/update filter.",
         "logs_ignored_dlc": "Ignored %d DLC/update TitleIDs (not in the games index).",
         "logs_god_xdlc": "GOD/XDLC games on HDD without a GameData folder: %d (will be handled via Import)",
+        "logs_total_games": "Total games loaded: %d",
         "logs_fetch_names": "Fetching %d names from XboxUnity...",
         "logs_title_x360db": "Title found on x360db: %s",
         "logs_title_unity": "Title found on XboxUnity: %s",
@@ -1163,7 +1162,6 @@ TEXT = {
         "auto_search_titles": "Buscar títulos automaticamente (XboxUnity)",
         "auto_search_on": "Busca automática de títulos LIGADA.",
         "auto_search_off": "Busca automática de títulos DESLIGADA.",
-        "show_game_info": "Mostrar director y fecha de lanzamiento",
         "show_debug_button": "Mostrar botón Debug DB",
         "auto_update_check": "Buscar actualizaciones automáticamente",
         "update_available_title": "Actualización disponible",
@@ -1283,6 +1281,7 @@ TEXT = {
         "logs_no_index": "Aviso: el índice de x360db no cargó; sin filtro de DLC/updates.",
         "logs_ignored_dlc": "Ignorados %d TitleIDs de DLC/update (no constan en el índice de juegos).",
         "logs_god_xdlc": "Juegos GOD/XDLC en HDD sin carpeta GameData: %d (se tratarán vía Import)",
+        "logs_total_games": "Total de juegos cargados: %d",
         "logs_fetch_names": "Buscando %d nombres en XboxUnity...",
         "logs_title_x360db": "Título encontrado en x360db: %s",
         "logs_title_unity": "Título encontrado en XboxUnity: %s",
@@ -1548,7 +1547,6 @@ TEXT = {
         "auto_search_titles": "Recherche auto des titres (XboxUnity)",
         "auto_search_on": "Recherche auto des titres ACTIVÉE.",
         "auto_search_off": "Recherche auto des titres DÉSACTIVÉE.",
-        "show_game_info": "Afficher le développeur et la date de sortie",
         "show_debug_button": "Afficher bouton Debug DB",
         "auto_update_check": "Vérifier les mises à jour automatiquement",
         "update_available_title": "Mise à jour disponible",
@@ -1668,6 +1666,7 @@ TEXT = {
         "logs_no_index": "Attention : l'index x360db n'a pas chargé ; pas de filtre DLC/updates.",
         "logs_ignored_dlc": "%d TitleIDs de DLC/update ignorés (absents de l'index des jeux).",
         "logs_god_xdlc": "Jeux GOD/XDLC sur HDD sans dossier GameData : %d (traités via Import)",
+        "logs_total_games": "Total de jeux chargés : %d",
         "logs_fetch_names": "Récupération de %d noms depuis XboxUnity...",
         "logs_title_x360db": "Titre trouvé sur x360db : %s",
         "logs_title_unity": "Titre trouvé sur XboxUnity : %s",
@@ -1928,7 +1927,6 @@ TEXT = {
         "auto_search_titles": "タイトル自動検索 (XboxUnity)",
         "auto_search_on": "タイトル自動検索: オン。",
         "auto_search_off": "タイトル自動検索: オフ。",
-        "show_game_info": "開発者と発売日を表示",
         "show_debug_button": "Debug DB ボタンを表示",
         "auto_update_check": "自動的にアップデートを確認",
         "update_available_title": "アップデート利用可能",
@@ -2048,6 +2046,7 @@ TEXT = {
         "logs_no_index": "警告: x360db のインデックスが読み込めませんでした。DLC/アップデートのフィルタなし。",
         "logs_ignored_dlc": "%d 個の DLC/アップデート TitleID を無視しました（ゲーム索引にありません）。",
         "logs_god_xdlc": "GameData フォルダのない GOD/XDLC ゲーム: %d（Import で処理されます）",
+        "logs_total_games": "読み込んだゲーム総数: %d",
         "logs_fetch_names": "XboxUnity から %d 個の名前を取得中...",
         "logs_title_x360db": "x360db でタイトルが見つかりました: %s",
         "logs_title_unity": "XboxUnity でタイトルが見つかりました: %s",
@@ -2308,7 +2307,6 @@ TEXT = {
         "auto_search_titles": "Автопоиск названий (XboxUnity)",
         "auto_search_on": "Автопоиск названий: ВКЛ.",
         "auto_search_off": "Автопоиск названий: ВЫКЛ.",
-        "show_game_info": "Показывать разработчика и дату релиза",
         "show_debug_button": "Показать кнопку Debug DB",
         "auto_update_check": "Автоматически проверять обновления",
         "update_available_title": "Доступно обновление",
@@ -2428,6 +2426,7 @@ TEXT = {
         "logs_no_index": "Внимание: индекс x360db не загрузился; без фильтра DLC/обновлений.",
         "logs_ignored_dlc": "Пропущено %d TitleID DLC/обновлений (нет в индексе игр).",
         "logs_god_xdlc": "Игры GOD/XDLC на HDD без папки GameData: %d (будут обработаны через Import)",
+        "logs_total_games": "Всего загружено игр: %d",
         "logs_fetch_names": "Получение %d названий из XboxUnity...",
         "logs_title_x360db": "Название найдено в x360db: %s",
         "logs_title_unity": "Название найдено в XboxUnity: %s",
@@ -4840,7 +4839,6 @@ def selftest():
         "show_status": True,
         "show_log": True,
         "auto_search_titles": True,
-        "show_game_info": True,
         "show_debug_button": False,
         "download_missing_only": True,
         "auto_update_check": True,
@@ -5599,6 +5597,7 @@ class App:
                 if missing:
                     self.log(tr("logs_fetch_names", len(missing)))
                     threading.Thread(target=self._fetch_unity_names, args=(missing,), daemon=True).start()
+            self.log(tr("logs_total_games", len(self.games)))
             self.queue.put("__refresh_tree__")
         except Exception as exc:
             self.queue.put("Erro no scan: %s" % exc)
@@ -8434,9 +8433,6 @@ class App:
         auto_search_var = tk.BooleanVar(value=self.cfg.get("auto_search_titles", True))
         add_row(tr("auto_search_titles"), ttk.Checkbutton(outer, text=tr("auto_search_titles"), variable=auto_search_var))
 
-        show_game_info_var = tk.BooleanVar(value=self.cfg.get("show_game_info", True))
-        add_row(tr("show_game_info"), ttk.Checkbutton(outer, text=tr("show_game_info"), variable=show_game_info_var))
-
         show_debug_var = tk.BooleanVar(value=self.cfg.get("show_debug_button", False))
         add_row(tr("show_debug_button"), ttk.Checkbutton(outer, text=tr("show_debug_button"), variable=show_debug_var))
 
@@ -8524,7 +8520,6 @@ class App:
                     show_status=self.show_status,
                     show_log=self.show_log,
                     auto_search_titles=bool(auto_search_var.get()),
-                    show_game_info=bool(show_game_info_var.get()),
                     show_debug_button=bool(show_debug_var.get()),
                     download_missing_only=bool(missing_only_var.get()),
                     auto_update_check=bool(auto_update_var.get()),
