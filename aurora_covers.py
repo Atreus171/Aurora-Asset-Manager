@@ -298,7 +298,6 @@ TEXT = {
         "m_dl_tu": "Baixar TU (atualização)...",
         "m_dl_dlc": "Baixar DLC...",
         "btn_dl_tu": "Baixar TU",
-        "btn_dl_dlc": "Baixar DLC",
         "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
         "logs_unity_tu_none": "XboxUnity não tem TU para %s.",
@@ -678,7 +677,6 @@ TEXT = {
         "m_dl_tu": "Download TU (title update)...",
         "m_dl_dlc": "Download DLC...",
         "btn_dl_tu": "Download TU",
-        "btn_dl_dlc": "Download DLC",
         "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
         "logs_unity_tu_none": "XboxUnity has no TU for %s.",
@@ -1064,7 +1062,6 @@ TEXT = {
         "m_dl_tu": "Descargar TU (actualización)...",
         "m_dl_dlc": "Descargar DLC...",
         "btn_dl_tu": "Descargar TU",
-        "btn_dl_dlc": "Descargar DLC",
         "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
         "logs_unity_tu_none": "XboxUnity no tiene TU para %s.",
@@ -1450,7 +1447,6 @@ TEXT = {
         "m_dl_tu": "Télécharger TU (mise à jour)...",
         "m_dl_dlc": "Télécharger DLC...",
         "btn_dl_tu": "Téléch. TU",
-        "btn_dl_dlc": "Téléch. DLC",
         "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
         "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
         "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s.",
@@ -1831,7 +1827,6 @@ TEXT = {
         "m_dl_tu": "TU（タイトルアップデート）をダウンロード...",
         "m_dl_dlc": "DLC をダウンロード...",
         "btn_dl_tu": "TU 取得",
-        "btn_dl_dlc": "DLC 取得",
         "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
         "logs_unity_tu_none": "XboxUnityに%sのTUがありません。",
@@ -2212,7 +2207,6 @@ TEXT = {
         "m_dl_tu": "Скачать TU (обновление)...",
         "m_dl_dlc": "Скачать DLC...",
         "btn_dl_tu": "Скачать TU",
-        "btn_dl_dlc": "Скачать DLC",
         "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
         "logs_unity_tu_none": "На XboxUnity нет TU для %s.",
@@ -5112,13 +5106,9 @@ class App:
         )
         self.btn_dl.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_dl_tu = ttk.Button(
-            btn_row, text=tr("btn_dl_tu"), command=lambda: self.download_kind_selected("title_update"), state=tk.DISABLED
+            btn_row, text=tr("btn_dl_tu"), command=self.download_latest_tu, state=tk.DISABLED
         )
         self.btn_dl_tu.pack(side=tk.LEFT, padx=(8, 0))
-        self.btn_dl_dlc = ttk.Button(
-            btn_row, text=tr("btn_dl_dlc"), command=lambda: self.download_kind_selected("dlc"), state=tk.DISABLED
-        )
-        self.btn_dl_dlc.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_custom = ttk.Button(
             btn_row, text=tr("custom_cover"), command=self.install_custom, state=tk.DISABLED
         )
@@ -5506,7 +5496,6 @@ class App:
         self.btn_scan.configure(state=state)
         self.btn_dl.configure(state=state if self.games else tk.DISABLED)
         self.btn_dl_tu.configure(state=state if self.games else tk.DISABLED)
-        self.btn_dl_dlc.configure(state=state if self.games else tk.DISABLED)
         self.btn_cancel.configure(state=tk.NORMAL if busy else tk.DISABLED)
 
     def cancel_worker(self):
@@ -6849,24 +6838,22 @@ class App:
             self.btn_search.configure(state=tk.DISABLED)
             self.btn_debug_db.configure(state=tk.DISABLED)
             self.btn_dl_tu.configure(state=tk.DISABLED)
-            self.btn_dl_dlc.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
         self.btn_custom.configure(state=tk.NORMAL)
         self.btn_search.configure(state=tk.NORMAL)
         self.btn_debug_db.configure(state=tk.NORMAL)
         self.btn_dl_tu.configure(state=tk.NORMAL)
-        self.btn_dl_dlc.configure(state=tk.NORMAL)
         self.show_preview(g)
 
-    def download_kind_selected(self, kind):
+    def download_latest_tu(self):
         if self.busy:
             return
         g = self.selected_game()
         if g is None:
             messagebox.showwarning(tr("warn"), tr("pick_game"))
             return
-        self.thread_download_kind(self.aurora_path.get().strip().strip('"'), g, kind)
+        self.thread_download_kind(self.aurora_path.get().strip().strip('"'), g, "title_update")
 
     def load_cover(self, g):
         key = g["tid"] + "|" + (g["folder"] or "import")
