@@ -529,6 +529,7 @@ TEXT = {
         "logs_db_err": "Erro ao atualizar content.db: %s",
         "logs_renamed_folder": "Pasta renomeada: %s -> %s",
         "logs_folder_open_err": "Erro ao abrir pasta: %s",
+        "logs_folder_fallback": "Pasta do jogo não encontrada; abrindo: %s",
         "logs_gamedata_created": "Pasta GameData criada: %s",
         "logs_queue_started": "Iniciando fila: %d jogo(s)",
         "logs_custom_installed": "Capa personalizada instalada para %s (%s)",
@@ -909,6 +910,7 @@ TEXT = {
         "logs_db_err": "Error updating content.db: %s",
         "logs_renamed_folder": "Folder renamed: %s -> %s",
         "logs_folder_open_err": "Error opening folder: %s",
+        "logs_folder_fallback": "Game folder not found; opening: %s",
         "logs_gamedata_created": "GameData folder created: %s",
         "logs_queue_started": "Starting queue: %d game(s)",
         "logs_custom_installed": "Custom cover installed for %s (%s)",
@@ -1294,6 +1296,7 @@ TEXT = {
         "logs_db_err": "Error al actualizar content.db: %s",
         "logs_renamed_folder": "Carpeta renombrada: %s -> %s",
         "logs_folder_open_err": "Error al abrir carpeta: %s",
+        "logs_folder_fallback": "Carpeta del juego no encontrada; abriendo: %s",
         "logs_gamedata_created": "Carpeta GameData creada: %s",
         "logs_queue_started": "Iniciando cola: %d juego(s)",
         "logs_custom_installed": "Portada personalizada instalada para %s (%s)",
@@ -1679,6 +1682,7 @@ TEXT = {
         "logs_db_err": "Erreur de mise à jour de content.db : %s",
         "logs_renamed_folder": "Dossier renommé : %s -> %s",
         "logs_folder_open_err": "Erreur lors de l'ouverture du dossier : %s",
+        "logs_folder_fallback": "Dossier du jeu introuvable ; ouverture : %s",
         "logs_gamedata_created": "Dossier GameData créé : %s",
         "logs_queue_started": "Démarrage de la file : %d jeu(x)",
         "logs_custom_installed": "Jaquette personnalisée installée pour %s (%s)",
@@ -2059,6 +2063,7 @@ TEXT = {
         "logs_db_err": "content.db の更新に失敗: %s",
         "logs_renamed_folder": "フォルダ名を変更: %s -> %s",
         "logs_folder_open_err": "フォルダを開けません: %s",
+        "logs_folder_fallback": "ゲームフォルダが見つかりません。開く: %s",
         "logs_gamedata_created": "GameData フォルダを作成: %s",
         "logs_queue_started": "キューを開始: %d ゲーム",
         "logs_custom_installed": "%s (%s) にカスタムカバーをインストールしました",
@@ -2439,6 +2444,7 @@ TEXT = {
         "logs_db_err": "Ошибка обновления content.db: %s",
         "logs_renamed_folder": "Папка переименована: %s -> %s",
         "logs_folder_open_err": "Ошибка открытия папки: %s",
+        "logs_folder_fallback": "Папка игры не найдена; открытие: %s",
         "logs_gamedata_created": "Папка GameData создана: %s",
         "logs_queue_started": "Запуск очереди: %d игра(ы)",
         "logs_custom_installed": "Пользовательская обложка установлена для %s (%s)",
@@ -2800,7 +2806,11 @@ def download_internet_archive_file(identifier, filename, dest_path, cancel_event
     """Baixa um arquivo específico do Internet Archive direto para dest_path
     (streaming, sem carregar tudo na memória). Aceita cancelamento cooperativo
     via cancel_event e rejeita páginas/erros HTTP servidos como 200."""
-    url = f"{INTERNET_ARCHIVE_DOWNLOAD}{identifier}/{filename}"
+    url = "%s%s/%s" % (
+        INTERNET_ARCHIVE_DOWNLOAD,
+        urllib.parse.quote(identifier, safe=""),
+        urllib.parse.quote(filename, safe=""),
+    )
     tmp_path = dest_path + ".part"
     for _ in range(2):
         try:
@@ -2884,17 +2894,18 @@ def _version_parts(v):
 
 
 def _version_num(v):
-    parts = _version_parts(v)
-    return tuple(parts) if parts else -1e18
+    """Converte uma versão em uma tupla de ints comparável. Versão vazia/não
+    numérica vira () (considerada mais antiga que qualquer versão real)."""
+    return tuple(_version_parts(v))
 
 
 def pick_xboxunity_tu(updates):
     """Escolhe o TU mais recente do XboxUnity (maior versão numérica)."""
     best = None
-    best_v = -1e18
+    best_v = ()
     for u in updates:
         v = _version_num(u.get("version"))
-        if v > best_v:
+        if not best_v or v > best_v:
             best_v = v
             best = u
     return best
@@ -2956,7 +2967,7 @@ def content_roots(root):
     for rr in ([drive] if drive else []) + roots:
         for p in (rr, os.path.join(rr, "Aurora")):
             p = os.path.normpath(p)
-            if p in ordered or not os.path.isdir(p):
+            if os.path.normcase(p) in [os.path.normcase(x) for x in ordered] or not os.path.isdir(p):
                 continue
             ordered.append(p)
     return ordered
@@ -3104,16 +3115,15 @@ def search_title_updates_dlc(tid, game_title=None, ia_id=None, kind=None):
                 continue
             if identifier in seen_items:
                 continue
-            if words:
-                # Pré-filtro rápido antes de buscar metadados (evita chamadas demais)
-                quick = (identifier + " " + (item.get("title") or "")).lower()
-                if not any(w in quick for w in words):
-                    continue
             seen_items.append(identifier)
             for f in get_internet_archive_files(identifier):
                 low = f.lower()
                 if not low.endswith((".xex", ".zip", ".7z")):
                     continue
+                # Relevância só pelas palavras do título (identifier+title+
+                # description+filename). Sem pré-filtro no identifier/title:
+                # itens com título divergente (ex.: "codmw3") seriam perdidos
+                # antes de consultarmos os arquivos do item.
                 if not _relevant(item, f, words):
                     continue
                 # Pontuação: menor = melhor. Prefere console 360, .xex direto,
@@ -3152,11 +3162,14 @@ def search_title_updates_dlc(tid, game_title=None, ia_id=None, kind=None):
 
 
 def pick_ia_result(results, kind):
-    """Escolhe o melhor resultado: prefere .xex direto (evita .zip quando dá)."""
+    """Escolhe o melhor resultado: prefere um .xex direto dentro do top de
+    relevância (evita .zip quando o ranking sofre pouco), mas não ignora um
+    resultado muito melhor só porque é .zip."""
     if not results:
         return None
+    best = min(r.get("kind_hint", 99) for r in results)
     for r in results:
-        if r.get("filename", "").lower().endswith(".xex"):
+        if r.get("filename", "").lower().endswith(".xex") and r.get("kind_hint", 99) <= best + 1:
             return r
     return results[0]
 
@@ -3751,7 +3764,7 @@ def custom_names_path():
 
 def load_custom_names():
     try:
-        with open(custom_names_path(), "r", encoding="utf-8") as f:
+        with open(custom_names_path(), "r", encoding="utf-8-sig") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -3776,7 +3789,7 @@ def extra_games_path():
 def load_extra_games():
     try:
         with _IO_LOCK:
-            with open(extra_games_path(), "r", encoding="utf-8") as f:
+            with open(extra_games_path(), "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
         if isinstance(data, list):
             return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
@@ -3806,7 +3819,7 @@ def load_added_folders():
     """Carrega pastas adicionadas via 'Adicionar pasta para procurar jogos'.
     Retorna lista de dicts: {'folder': path, 'added': timestamp, 'count': n}"""
     try:
-        with open(added_folders_path(), "r", encoding="utf-8") as f:
+        with open(added_folders_path(), "r", encoding="utf-8-sig") as f:
             data = json.load(f)
         if isinstance(data, list):
             return data
@@ -3834,7 +3847,7 @@ def hidden_games_path():
 def load_hidden_games():
     try:
         with _IO_LOCK:
-            with open(hidden_games_path(), "r", encoding="utf-8") as f:
+            with open(hidden_games_path(), "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
         if isinstance(data, list):
             return [t.strip().upper() for t in data if isinstance(t, str) and t.strip()]
@@ -4241,8 +4254,8 @@ def db_rename_by_tid(root, tid, newtitle):
                         'UPDATE "%s" SET "%s" = ? WHERE "%s" = ?' % (table, sc["title"], sc["id"]),
                         (newtitle, rowid),
                     )
-                    found = cur_update.rowcount > 0
-                    break
+                    if cur_update.rowcount > 0:
+                        found = True
             conn.commit()
         return found
     except sqlite3.Error:
@@ -4629,12 +4642,13 @@ def scan_hdd_content(root):
     for drive_entry in os.listdir(root):
         content = os.path.join(root, drive_entry, "Content", "0000000000000000")
         if os.path.isdir(content):
-            ids = [d for d in os.listdir(content) if pattern.match(d)]
+            ids = [d.upper() for d in os.listdir(content) if pattern.match(d)]
             ids.sort()
             tids.extend(ids)
     root_content = os.path.join(root, "Content", "0000000000000000")
     if os.path.isdir(root_content):
         for d in os.listdir(root_content):
+            d = d.upper()
             if pattern.match(d) and d not in tids:
                 tids.append(d)
     return [t for t in tids if t != "00000000"]
@@ -5462,7 +5476,20 @@ class App:
             self.aurora_path.set(path)
             self.root.after(100, self.start_scan)
             return
-        # Caso contrário (pasta manual), tenta detectar a estrutura Aurora
+        # Caso contrário (pasta manual), tenta detectar a estrutura Aurora.
+        # Se a própria pasta já contém Data\GameData, ELA é a raiz do Aurora —
+        # mantém o caminho em vez de descer para dentro da GameData (evita que
+        # start_scan rejeite o caminho por "não ser instalação do Aurora").
+        if os.path.isdir(os.path.join(path, "Data", "GameData")):
+            self.aurora_path.set(path)
+            self.root.after(100, self.start_scan)
+            return
+        # Caso o user escolha ...\Aurora\Data\GameData (raiz física), sobe 2 níveis
+        if path.replace("\\", "/").lower().endswith("/data/gamedata"):
+            self.aurora_path.set(os.path.dirname(os.path.dirname(path)))
+            self.root.after(100, self.start_scan)
+            return
+        # Detecta pasta Aurora aninhada (ex.: E:\algum\Aurora sem Data\GameData)
         for p in (
             os.path.join(path, "Aurora"),
             os.path.join(path, "Data", "GameData"),
@@ -5636,10 +5663,16 @@ class App:
 
     def game_title(self, g):
         tid = g["tid"]
+        # Nome custom/personalizado (renomeado manualmente ou via busca de título)
+        # tem prioridade sobre o nome canônico do x360db, para o user ver o
+        # resultado do rename na árvore imediatamente.
+        dname = (g.get("dname") or "").strip()
+        if dname and not self._looks_like_id(dname):
+            return dname
         name = self.db.title_name(tid)
         if name != tid:
             return name
-        return (g.get("dname") or "").strip() or tid
+        return dname or tid
 
     def toggle_sort(self):
         self.sort_asc = not self.sort_asc
@@ -5731,6 +5764,9 @@ class App:
             if not db_path:
                 return
             self.log(tr("logs_updating_db", tid, new_name))
+            # Backup antes de escrever — igual ao rename_game individual.
+            if not os.path.exists(db_path + ".bak"):
+                db_backup(db_path)
             db_rename_by_tid(path, tid, new_name)
         except Exception as e:
             self.log(tr("logs_db_err", e))
@@ -5804,7 +5840,10 @@ class App:
             except OSError:
                 continue
             for name in names:
-                if name.startswith(prefix):
+                # Case-insensitive e aceita pasta só-TID (ex.: "5454087B") além
+                # do padrão "TID_Nome" — mesmo critério usado no scan/open.
+                up = name.upper()
+                if up == tid.upper() or up.startswith(prefix.upper()):
                     full = os.path.join(base, name)
                     if os.path.isdir(full):
                         return full
@@ -5844,8 +5883,8 @@ class App:
         body.grid_columnconfigure(1, weight=1)
         bf = tk.Frame(dlg, bg=th["bg"])
         bf.pack(pady=(2, 10))
-        if g.get("folder") and os.path.isdir(g["folder"]):
-            ttk.Button(bf, text=tr("m_open_folder"), command=lambda: self.open_game_folder(g)).pack(side=tk.LEFT, padx=4)
+        # open_game_folder resolve via GameData/content.db mesmo sem g["folder"]
+        ttk.Button(bf, text=tr("m_open_folder"), command=lambda: self.open_game_folder(g)).pack(side=tk.LEFT, padx=4)
         ttk.Button(bf, text=tr("close"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
         dlg.grab_set()
 
@@ -5883,6 +5922,7 @@ class App:
         # para não quebrar outros jogos nem perder a capa importada.
         folder = self.find_gamedata_folder(g["tid"])
         renamed_any = False
+        folder_state = None  # None=achou; "same"=já com nome certo; "err"=falhou
         if folder:
             parent = os.path.dirname(folder)
             new_folder = os.path.join(parent, "%s_%s" % (g["tid"], clean))
@@ -5894,8 +5934,11 @@ class App:
                     renamed_any = True
                     self.log(tr("logs_renamed_folder", os.path.basename(folder), os.path.basename(new_folder)))
                 except OSError as exc:
+                    folder_state = "err"
                     self.log(tr("logs_rename_folder_err", exc))
-        if not renamed_any:
+            else:
+                folder_state = "same"
+        if not renamed_any and folder_state != "same":
             self.log(tr("logs_no_dedicated_gamedata", g["tid"]))
         g["dname"] = clean
         # Salva nome customizado permanentemente
@@ -5916,8 +5959,13 @@ class App:
                 self.log(tr("logs_db_row_not_found", g["tid"]))
         except Exception as exc:
             self.log(tr("logs_db_rename_err", exc))
-        # Se o console estiver configurado (FTP), renomeia a pasta no Aurora também
-        if self.ftp_host.strip():
+        # Se o console estiver configurado (FTP) E a pasta local dedicada foi
+        # renomeada, renomeia a pasta correspondente no Aurora também. Para
+        # jogos sem pasta GameData dedicada (renamed_any=False, ex.: homebrew,
+        # pastas adicionadas, GOD), NÃO renomeia no console: o content.db remoto
+        # guardaria o nome antigo no campo Directory e o jogo sumiria/duplicaria
+        # num re-scan.
+        if self.ftp_host.strip() and renamed_any:
             new_folder_name = "%s_%s" % (g["tid"], clean)
             threading.Thread(
                 target=self._ftp_rename_game,
@@ -5999,21 +6047,42 @@ class App:
                         import sqlite3
                         conn = sqlite3.connect(_db_ro_uri(db_path), uri=True)
                         try:
-                            cur = conn.execute(
-                                'SELECT "Directory" FROM "ContentItems" WHERE "TitleId"=? LIMIT 1',
-                                (int(tid, 16) if all(c in "0123456789ABCDEF" for c in tid.upper()) else 0,)
-                            )
-                            row = cur.fetchone()
-                            if row and row[0]:
-                                directory = str(row[0]).strip()
-                                if directory:
-                                    # Resolve contra raiz do drive
-                                    drive_root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
-                                    for base in (drive_root, path, os.path.join(path, "Aurora")):
-                                        cand = os.path.join(base, directory.lstrip("\\/"))
-                                        if os.path.isdir(cand):
-                                            candidates.append(cand)
-                                            break
+                            # Descobre a tabela de forma dinâmica (nem todo banco
+                            # usa "ContentItems") e prefere linhas do jogo base:
+                            # exclui subpastas de DLC/TU/dados (00000002, 000B0000,
+                            # 000D0000, 00008000) para não abrir a pasta errada.
+                            table, sc = db_schema(conn)
+                            tbl = table
+                            col_tid, col_dir = "TitleId", "Directory"
+                            if sc is not None and sc["tid"] and sc["dir"]:
+                                col_tid, col_dir = sc["tid"], sc["dir"]
+                            if tbl is None:
+                                tbl = "ContentItems"
+                            tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+                            if tbl not in tables:
+                                raise sqlite3.OperationalError("table not found")
+                            target = ("%08X" % int(tid, 16)) if re.match(r"^[0-9A-F]{8}$", tid) else tid
+                            found_rows = []
+                            for row in conn.execute('SELECT "%s","%s" FROM "%s"' % (col_tid, col_dir, tbl)):
+                                rawv, directory = row[0], (str(row[1] or "")).strip()
+                                rawc = ("%08X" % rawv) if isinstance(rawv, int) else (str(rawv) or "").strip().upper()
+                                if not directory or not (rawc in (target, tid)):
+                                    continue
+                                parts = [p.upper() for p in directory.split("\\") if p]
+                                if any(p in ("00000002", "000B0000", "000D0000", "00008000") for p in parts):
+                                    continue
+                                found_rows.append(directory)
+                            # Ordena por profundidade (mais simples primeiro) e resolve
+                            for directory in sorted(set(found_rows), key=lambda d: d.count("\\")):
+                                # Resolve contra raiz do drive, removendo prefixo de
+                                # dispositivo (Hdd:, Usb:) como no scan_aurora_db.
+                                rel = re.sub(r"^(?:[A-Za-z]+:)?[\\/]*", "", directory)
+                                drive_root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+                                for base in (drive_root, path, os.path.join(path, "Aurora")):
+                                    cand = os.path.join(base, rel.lstrip("\\/"))
+                                    if os.path.isdir(cand):
+                                        candidates.append(cand)
+                                        break
                         finally:
                             conn.close()
             except Exception:
@@ -6027,11 +6096,12 @@ class App:
                     return
                 except Exception:
                     continue
-        
-        # Fallback: tenta abrir pastas raiz conhecidas de jogos baseado no tipo/caminho
+
+        # Nenhuma pasta real do jogo encontrada: procura raízes prováveis, mas
+        # avisa no log que é um fallback (o Explorador pode abrir pasta não
+        # relacionada ao jogo).
         path = self.aurora_path.get().strip().strip('"')
         if path and os.path.isdir(path):
-            # Determina pasta raiz provável baseada no folder do jogo
             game_folder = g.get("folder", "")
             root_folders = []
             
@@ -6057,6 +6127,7 @@ class App:
             for r in root_folders + common_roots:
                 if os.path.isdir(r):
                     try:
+                        self.log(tr("logs_folder_fallback", r))
                         os.startfile(r)
                         return
                     except Exception:
@@ -6064,6 +6135,7 @@ class App:
             
             # Último fallback: abre a pasta Aurora
             try:
+                self.log(tr("logs_folder_fallback", path))
                 os.startfile(path)
             except Exception as e:
                 self.log(tr("logs_folder_open_err", e))
@@ -6281,7 +6353,7 @@ class App:
         search_var = tk.StringVar()
 
         try:
-            all_rows = db_rows(conn, table, sc)
+            db_rows(conn, table, sc)
         except sqlite3.Error as exc:
             conn.close()
             messagebox.showerror(tr("error"), str(exc))
@@ -6293,7 +6365,13 @@ class App:
                 tree.delete(item)
             kkind = kind_map[kind_opts.index(kind_var.get())]
             text = search_var.get().strip()
-            for r in all_rows:
+            # Consulta o banco novamente (estado atual) em vez de reusar o
+            # snapshot da abertura — assim add/rename/remove aparecem na árvore.
+            try:
+                rows = db_rows(conn, table, sc)
+            except sqlite3.Error:
+                rows = []
+            for r in rows:
                 if kkind is not None and r["kind"] != kkind:
                     continue
                 if text and text.lower() not in " ".join((r["tid"], r["name"], r["dir"])).lower():
@@ -6358,6 +6436,18 @@ class App:
         dlg.grab_set()
         self.root.wait_window(dlg)
         self.refresh_tree()
+
+    def _coerce_rowid(self, sc, value):
+        """Converte o id vindo da Treeview (string) conforme o tipo da coluna."""
+        ctype = (sc.get("col_types") or {}).get(sc["id"]) or ""
+        try:
+            if "INT" in ctype.upper():
+                return int(value)
+            if "CHAR" in ctype.upper() or "TEXT" in ctype.upper() or "CLOB" in ctype.upper():
+                return str(value)
+        except (ValueError, TypeError):
+            pass
+        return value
 
     def _db_add(self, conn, table, sc, ensure_backup, reload_rows, parent):
         dlg = tk.Toplevel(parent)
@@ -6424,6 +6514,9 @@ class App:
             messagebox.showwarning(tr("warn"), tr("db_need_id"))
             return
         rc_id, rc_name = r[0], r[2]
+        # Treeview devolve string; reconverte conforme o tipo da coluna de id
+        # (INTEGER -> int; TEXT com zeros à esquerda permanece string).
+        rc_id = self._coerce_rowid(sc, rc_id)
         newname = simpledialog.askstring(tr("db_rename"), tr("db_new_name"), initialvalue=rc_name, parent=parent)
         if newname is None:
             return
@@ -6446,6 +6539,7 @@ class App:
             messagebox.showwarning(tr("warn"), tr("db_need_id"))
             return
         rc_id, rc_name = r[0], r[2]
+        rc_id = self._coerce_rowid(sc, rc_id)
         if not messagebox.askyesno(tr("db_remove"), tr("db_confirm_remove", rc_name)):
             return
         ensure_backup()
@@ -7595,6 +7689,7 @@ class App:
 
             installed = False
             manual = False
+            sanitized_fname = _sanitize_remote_filename(os.path.basename(filename)) or os.path.basename(filename)
             low = filename.lower()
             if low.endswith((".zip", ".rar", ".7z")):
                 # Extrai em UMA raiz apenas (evita duplicar entre drive/Aurora/caminho)
@@ -7605,28 +7700,49 @@ class App:
                         break
                 if root_used:
                     # Verifica se a estrutura Content\\0000000000000000\\<TID> foi gerada
+                    # e se o conteúdo real (subpasta 00000002 p/ DLC, 000B0000 p/ TU)
+                    # contém ao menos um arquivo — evita marcar como instalado quando
+                    # o arquivo extraiu em pasta incorreta ou direto em <TID>.
                     expected = os.path.join(root_used, "Content", "0000000000000000", tid)
-                    if os.path.isdir(expected):
+                    real_sub = os.path.join(expected, sub)
+                    real_files = False
+                    try:
+                        real_files = bool(os.listdir(real_sub))
+                    except OSError:
+                        real_files = False
+                    if os.path.isdir(real_sub) and real_files:
                         installed = True
                         self.log(tr("ia_download_success", tr("kind_" + kind), filename) + " -> " + expected)
+                    elif os.path.isdir(expected):
+                        # Pasta <TID> existe mas sem o subdiretório esperado: arquivo extraiu
+                        # em local errado — copia o arquivo p/ extração manual.
+                        manual = True
+                        for dest_dir in content_dirs:
+                            try:
+                                os.makedirs(dest_dir, exist_ok=True)
+                                shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
+                                self.log(tr("dlc_manual_extract", dest_dir))
+                                break
+                            except OSError:
+                                continue
                     else:
                         # Layout inesperado: deixa o arquivo p/ extração manual (não marca instalado)
                         manual = True
                         for dest_dir in content_dirs:
                             try:
                                 os.makedirs(dest_dir, exist_ok=True)
-                                shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                                shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
                                 self.log(tr("dlc_manual_extract", dest_dir))
                                 break
                             except OSError:
                                 continue
-                elif low.endswith((".rar", ".7z")):
-                    # Sem 7-Zip: salva o arquivo p/ extração manual (não marca instalado)
+                else:
+                    # Extração falhou em todas as raízes (ou sem 7-Zip): guarda p/ extração manual
                     manual = True
                     for dest_dir in content_dirs:
                         try:
                             os.makedirs(dest_dir, exist_ok=True)
-                            shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                            shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
                             self.log(tr("dlc_manual_extract", dest_dir))
                             break
                         except OSError:
@@ -7636,7 +7752,7 @@ class App:
                 for dest_dir in content_dirs:
                     try:
                         os.makedirs(dest_dir, exist_ok=True)
-                        shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                        shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
                         installed = True
                         break
                     except OSError:
@@ -8044,8 +8160,9 @@ class App:
         menu.add_separator()
         menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
         menu.add_command(label=tr("m_properties"), command=lambda: self.show_properties(g))
-        if g.get("folder"):
-            menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
+        # Sempre disponível: open_game_folder resolve a pasta via GameData/content.db
+        # mesmo quando g["folder"] é None (GOD, XBLA, homebrew, pastas de Import).
+        menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
         menu.add_separator()
         menu.add_command(label=tr("m_remove_cover"), command=lambda: self.remove_cover(g))
         menu.add_command(label=tr("m_remove_game"), command=lambda: self.remove_game(g))
@@ -8256,7 +8373,13 @@ class App:
                         break
                 if root_used:
                     expected = os.path.join(root_used, "Content", "0000000000000000", tid)
-                    if os.path.isdir(expected):
+                    real_sub = os.path.join(expected, sub)
+                    real_files = False
+                    try:
+                        real_files = bool(os.listdir(real_sub))
+                    except OSError:
+                        real_files = False
+                    if os.path.isdir(real_sub) and real_files:
                         installed = True
                         self.log(tr("ia_download_success", tr("kind_" + kind), basename) + " -> " + expected)
                     else:
