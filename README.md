@@ -59,6 +59,9 @@ Perfect for: **homebrew collectors**, **XBLA enthusiasts**, **Aurora users** wan
 - **Screenshot navigation**: Prev/Next buttons for multi-screenshot games
 - **Installed status**: Based on actual preview (empty/corrupt = Missing)
 
+### 🎖️ Alternative Sources
+- **`gamecovers` repo**: Download covers individually from this repository when `"repo": "gamecovers"` — see [Data Sources](#covers-do-repositório)
+
 ### 🆕 v1.5.0 Highlights
 - **Add games dialog redesign**: Detects TID from `.xex` auto, creates GameData folder, adds "Folder to search games" option
 - **Folder management**: "Manage folders..." button to view/remove added scan folders
@@ -76,8 +79,8 @@ Perfect for: **homebrew collectors**, **XBLA enthusiasts**, **Aurora users** wan
 ## 📥 Installation
 
 ### Pre-built (Recommended)
-1. Download latest `AuroraAssetManager.exe` from [Releases](https://github.com/Atreus171/Aurora-Asset-Manager/releases)
-2. Run it — no installation needed
+1. Download the latest installer `AuroraAssetManager_Setup_vX.Y.Z.exe` from [Releases](https://github.com/Atreus171/Aurora-Asset-Manager/releases)
+2. Run the installer and follow the wizard (installs the app + bundled `game_covers` fallback folder)
 
 ### From Source
 ```bash
@@ -151,10 +154,22 @@ After selecting the Aurora folder, scanning starts automatically.
 | **XboxUnity** | Community | Homebrew, XBLA, indie, alt covers | Persistent (local JSON) |
 | **Aurora SQLite** | Local | Your exact library with custom names | Real-time |
 | **Xbox Marketplace** | Official | Official assets (via x360db links) | On-demand |
+| **Repo covers** (game_covers) | Autoral | Covers bundled in this repository, downloaded individually | On-demand (GitHub raw) |
+
+### Covers do repositório
+Seting `"repo": "gamecovers"` in the config makes the app download covers **individually from this GitHub repository** (`game_covers/<Nome>_<TID>/cover.png`), one file at a time via `raw.githubusercontent.com` — no local receive the folder, no batch clone. Lookup patterns (in order):
+
+1. `game_covers/<Nome>_<TID>/cover.png` (folder named after the game)
+2. `game_covers/<TID>/cover.png`
+3. `game_covers/<TID>.png` / `<TID>.jpg`
+4. `game_covers/<HomebrewID>/cover.png` (synthetic SHA1 TID)
+
+The bundled `game_covers/` folder (installed next to the app) acts only as **fallback** when the remote fetch fails.
 
 ### Priority Chain
 ```
 Game name: Aurora DB → x360db → XboxUnity → Folder suffix → TID
+Boxart:    game_covers (repo) → XboxUnity → 360-Game-Art → x360db
 Boxart:    x360db → XboxUnity → Marketplace fallback
 ```
 
@@ -213,17 +228,13 @@ pip install -r requirements.txt
 python -m py_compile aurora_covers.py
 python aurora_covers.py --selftest
 
-# Build single-file exe (release, slower first start)
-python -m PyInstaller --noconfirm --onefile --windowed \
-  --name "AuroraAssetManager" --clean \
-  --icon "assets/icon.ico" --add-data "assets/icon.ico;." aurora_covers.py
-# Output: dist/AuroraAssetManager.exe (~19 MB)
+# Build onedir folder (faster startup, release layout)
+python -m PyInstaller --noconfirm AuroraAssetManager.onedir.spec
+# Output: dist/AuroraAssetManager/ (exe + _internal + game_covers)
 
-# Build folder build (faster startup, recommended for daily use)
-python -m PyInstaller --noconfirm --onedir --windowed \
-  --name "AuroraAssetManager" --clean \
-  --icon "assets/icon.ico" --add-data "assets/icon.ico;." aurora_covers.py
-# Output: dist/AuroraAssetManager/ (exe + _internal folder)
+# Build installer with Inno Setup 7
+build_installer.bat
+# Output: dist/AuroraAssetManager_Setup_vX.Y.Z.exe
 ```
 
 ---
@@ -247,15 +258,19 @@ Auto-detects system language on first run (fallback: English).
 
 ```
 aurora-x360db-covers/
-├── aurora_covers.py        # Main application
+├── aurora_covers.py            # Main application
+├── AuroraAssetManager.iss     # Inno Setup 7 script (installer)
+├── AuroraAssetManager.onedir.spec  # PyInstaller onedir spec (release)
+├── build_installer.bat        # Builds installer via ISCC
 ├── assets/
-│   └── icon.ico            # App icon
-├── AuroraCoversX360db.spec # PyInstaller spec
-├── requirements.txt        # Python dependencies
-├── README.md               # This file
-├── DESCRIPTION.md          # Detailed description
-├── RELEASE.md              # Changelog
-├── LICENSE                 # MIT License
+│   └── icon.ico               # App icon
+├── game_covers/               # Covers repo (download individual GitHub raw)
+│   └── <Nome>_<TID>/
+├── requirements.txt           # Python dependencies
+├── README.md                  # This file
+├── DESCRIPTION.md             # Detailed description
+├── RELEASE.md                 # Changelog
+├── LICENSE                    # MIT License
 ├── aurora_covers_config.json.example
 └── .gitignore
 ```

@@ -7174,8 +7174,8 @@ class App:
                     safe_name = re.sub(r'[\\/:*?"<>|]', "_", raw)
                     for suffix in (tid, tid.lower()):
                         folder_name = f"{safe_name}_{suffix}"
-                        # Tenta cover.png
-                        url = GAME_COVERS_REMOTE + folder_name + "/cover.png"
+                        # Tenta cover.png (percent-encoded p/ nomes com espaços/unicode)
+                        url = GAME_COVERS_REMOTE + urllib.parse.quote(folder_name) + "/cover.png"
                         b = fetch_bytes(url)
                         if b:
                             self.log(tr("gameart_cover_ok", tid) + f" (remote: {folder_name}/cover.png)")

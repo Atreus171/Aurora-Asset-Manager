@@ -80,6 +80,10 @@ Aurora Asset Manager is a Windows application (Python/Tkinter) for managing Xbox
 3. **Aurora SQLite** (local): `Aurora\Data\Databases\content.db`
    - Real game names as displayed in Aurora
    - Region info, paths, media IDs
+4. **Repo covers** (`game_covers/`, este repositório): com `"repo": "gamecovers"`
+   - Capas baixadas **individualmente** do GitHub raw (`game_covers/<Nome>_<TID>/cover.png`)
+   - Fallbacks: `<TID>/cover.png`, `<TID>.png/.jpg`, `<HomebrewID>/cover.png`
+   - Pasta local instalada serve de fallback offline / capa personalizada
 
 ### Requirements
 - Windows 10/11
@@ -91,9 +95,10 @@ Aurora Asset Manager is a Windows application (Python/Tkinter) for managing Xbox
 pip install -r requirements.txt
 python -m py_compile aurora_covers.py
 python aurora_covers.py --selftest
-python -m PyInstaller --noconfirm --onefile --windowed --name "AuroraAssetManager" --clean --icon "assets/icon.ico" aurora_covers.py
+python -m PyInstaller --noconfirm AuroraAssetManager.onedir.spec
+build_installer.bat   # gera o instalador via Inno Setup 7
 ```
-Output: `dist\AuroraAssetManager.exe` (~19 MB)
+Output: `dist\AuroraAssetManager_Setup_vX.Y.Z.exe`
 
 ## License
 MIT License - see LICENSE file

@@ -1,6 +1,34 @@
 # Release Notes
 
-## v1.5.4 (Latest) - "DLC & Title Updates Release"
+## v1.5.5.5 (Latest) - "Code Review Fixes"
+
+### 🧊 Freezes e crashes
+- **poll_queue**: mensagens desconhecidas no loop já não travam a UI; despacho centralizado em `_dispatch_queue` com proteção por mensagem
+- **`_IO_LOCK`** → `threading.RLock()`: "adicionar jogos" e detecção de pasta param de entrar em deadlock
+- **export_assets**: corrigido `UnboundLocalError` (scan_dirs não definido) — export de assets voltou a funcionar
+
+### 📦 DLC / Title Updates
+- **Validação de download**: rejeita HTML/páginas de erro/0-bytes; `download_url_to_file` retorna `(ok, fname)`
+- **Extração em raiz única** com verificação de layout (`Content\0000000000000000\<TID>\`) — sem "instalado" fantasma
+- **Cancelamento cooperativo** por chunk com limpeza do arquivo parcial
+- **`.tu` reconhecido**; **`Content-Disposition`** com `filename*=` (RFC 5987) e nomes sanitizados
+- **Updater**: download/instalação de nova versão não é mais reportado como falha
+- Instalação local de DLC/TU tratada com prioridade local + fallback de extração manual
+
+### 🎨 Covers do repositório (`game_covers`)
+- Covers são baixadas **individualmente do repositório GitHub** (`raw.githubusercontent.com`), uma por jogo, quando `"repo": "gamecovers"`
+- **Percent-encoding** nas URLs de folders com espaços/unicode (ex: `Bad Apple_DCC47332`)
+- `game_covers/<TID>`, `<TID>.png/.jpg` e `<HomebrewID>/cover.png` como fallbacks remotos
+- Pasta local `game_covers/` instalada vira fallback offline / capa personalizada
+
+### 🔧 Outros
+- `status_loop`/`theme_loop` sem duplicata; `has_cover_image` detecta `.dds`
+- `db_rename_by_tid` fecha conexão em erro; handle de arquivo em `_local_asset`
+- `ia_dlc_matches` aceita `.rar/.zip/.xex/.7z`; chooser TU singleton + `set_busy` na instalação local
+- `pick_kind_binary`: `.rar/.7z/.tu` via 7-Zip, raiz única
+- Assinatura do Instalador: `AuroraAssetManager_Setup_v1.5.5.5.exe`
+
+---
 
 ### ✨ New Features
 - **Download DLC & Title Updates (TU)**: new kinds in the assets dialog
