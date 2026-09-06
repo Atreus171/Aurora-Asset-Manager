@@ -29,13 +29,35 @@ def resource_path(name):
     return os.path.join(base, name)
 
 
+_window_icon_photo = None
+
+
 def set_window_icon(root):
+    """Define o ícone que aparece no topo da janela e na interface do app.
+    Usa assets/icone2.jpeg (o user escolheu um JPG); o ícone do EXE/instalador
+    (assets/icon.ico) NÃO é alterado."""
+    global _window_icon_photo
     try:
-        icon = resource_path("icon.ico")
-        if os.path.isfile(icon):
+        icon = resource_path("icone2.jpeg")
+        if not os.path.isfile(icon):
+            icon = resource_path("icon.ico")
+        if not os.path.isfile(icon):
+            return
+        if icon.lower().endswith(".ico"):
             root.iconbitmap(icon)
+            return
+        img = Image.open(icon)
+        img.thumbnail((64, 64))
+        photo = ImageTk.PhotoImage(img)
+        _window_icon_photo = photo
+        root.iconphoto(True, photo)
     except Exception:
-        pass
+        try:
+            icon = resource_path("icon.ico")
+            if os.path.isfile(icon):
+                root.iconbitmap(icon)
+        except Exception:
+            pass
 
 
 X360DB_RAW = "https://raw.githubusercontent.com/xenia-manager/x360db/main/"
