@@ -7754,45 +7754,47 @@ class App:
             except OSError:
                 pass
 
-        # 5) EXTRAI DO CONTAINER GC (RXEA) - contém TODOS os assets: boxart, background, icon, banner, screenshots
-        gc_asset_types = [
-            (ASSET_TYPE_BOXART, "cover.png"),
-            (ASSET_TYPE_BACKGROUND, "background.png"),
-            (ASSET_TYPE_ICON, "icon.png"),
-            (ASSET_TYPE_BANNER, "banner.png"),
+        # 5) EXTRAI DOS CONTAINERS RXEA (GC=boxart, BK=background, GL=icon+banner, SS=screenshots)
+        # Cada container guarda apenas suas próprias slots; é preciso ler cada um.
+        container_types = [
+            ("GC", [(ASSET_TYPE_BOXART, "cover.png")]),
+            ("BK", [(ASSET_TYPE_BACKGROUND, "background.png")]),
+            ("GL", [(ASSET_TYPE_ICON, "icon.png"), (ASSET_TYPE_BANNER, "banner.png")]),
         ]
-        # Screenshots: extrai todos (count dinâmico)
-        # será processado separadamente após
         scan_dirs = import_candidates + ([folder] if folder and os.path.isdir(folder) else [])
         for base in scan_dirs:
             if not os.path.isdir(base):
                 continue
             try:
                 for fname in os.listdir(base):
-                    if fname.upper().startswith(f"GC{tid}") and fname.lower().endswith(".asset"):
-                        gc_path = os.path.join(base, fname)
-                        self.log(f"[EXPORT] Lendo container GC: {fname}")
-                        blob = _read_file(gc_path)
-                        if blob and blob[:4] == b"RXEA":
-                            for atype, dst_name in gc_asset_types:
-                                if dst_name in exported:
-                                    continue
-                                img = decode_asset(blob, atype)
-                                if img is not None:
-                                    dst = os.path.join(target_dir, dst_name)
-                                    if dst_name.startswith("screenshots/"):
-                                        os.makedirs(os.path.join(target_dir, "screenshots"), exist_ok=True)
-                                    img.save(dst, "PNG")
-                                    exported.append(dst_name)
-                                    self.log(f"[EXPORT GC] Extraído {dst_name} ({img.size[0]}x{img.size[1]}) do container")
-                        # Extrai TODAS as screenshots do container GC
+                    up = fname.upper()
+                    if not up.endswith(".ASSET"):
+                        continue
+                    for prefix, slots in container_types:
+                        if not up.startswith(prefix + tid):
+                            continue
+                        cont_path = os.path.join(base, fname)
+                        blob = _read_file(cont_path)
+                        if not blob or blob[:4] != b"RXEA":
+                            continue
+                        self.log(f"[EXPORT] Lendo container {fname}")
+                        for atype, dst_name in slots:
+                            if dst_name in exported:
+                                continue
+                            img = _decode_asset_safe(blob, atype)
+                            if img is not None:
+                                img.save(os.path.join(target_dir, dst_name), "PNG")
+                                exported.append(dst_name)
+                                self.log(f"[EXPORT GC] Extraído {dst_name} ({img.size[0]}x{img.size[1]}) do container")
+                    # Screenshots: container SS (assume-se que screenshots estão no SS)
+                    if up.startswith("SS" + tid):
                         i = 0
                         while True:
                             ss_name = f"screenshots/screenshot{i+1}.png"
                             if ss_name in exported:
                                 i += 1
                                 continue
-                            img = decode_asset(blob, ASSET_TYPE_SCREENSHOT + i)
+                            img = _decode_asset_safe(blob, ASSET_TYPE_SCREENSHOT + i)
                             if img is None:
                                 break
                             dst = os.path.join(target_dir, ss_name)
