@@ -82,7 +82,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.5.4"
+CURRENT_VERSION = "1.5.5.5"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -2510,7 +2510,8 @@ _HTTP_POOL = _HTTPPool()
 
 
 # Sincronização de arquivos persistentes e do asset GL compartilhado
-_IO_LOCK = threading.Lock()
+# RLock: marcadores/extra/hidden são lidos e salvos aninhados em _IO_LOCK.
+_IO_LOCK = threading.RLock()
 _GL_ASSET_LOCK = threading.Lock()
 
 
@@ -2619,7 +2620,7 @@ def ia_dlc_matches(game_title, tid, limit=20):
     entries = get_ia_file_entries(IA_DLC_ITEM)
     scored = []
     for e in entries:
-        if not e["name"].lower().endswith(".rar"):
+        if not e["name"].lower().endswith((".rar", ".zip", ".xex", ".7z")):
             continue
         fset = set(re.split(r"[^a-z0-9]+", e["name"].lower()))
         fset.discard("")
@@ -2640,26 +2641,116 @@ def ia_dlc_matches(game_title, tid, limit=20):
     return out
 
 
-def download_internet_archive_file(identifier, filename, dest_path):
+class _DownloadCanceled(Exception):
+    """Cancelamento cooperativo de download (checado por chunk)."""
+
+
+def _sanitize_remote_filename(name):
+    """Remove traversal e caracteres ilegais de um nome vindo do servidor."""
+    if not name:
+        return None
+    base = os.path.basename((name or "").replace("\\", "/")).strip()
+    base = re.sub(r'[<>:"/\\|?*]', "_", base).strip().strip(".")
+    return base or None
+
+
+def _content_disposition_filename(content_disp):
+    """Extrai o nome de Content-Disposition, preferindo filename*= (RFC 5987)."""
+    if not content_disp:
+        return None
+    m = re.search(r"filename\*=UTF-8''([^;]+)", content_disp, re.IGNORECASE)
+    if m:
+        try:
+            return urllib.parse.unquote(m.group(1).strip())
+        except Exception:
+            pass
+    m = re.search(r'filename="?([^";]+)"?', content_disp)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def validate_downloaded_file(path):
+    """Rejeita payloads vazios ou páginas de erro HTML disfarçadas de arquivo."""
+    if not path or not os.path.isfile(path) or os.path.getsize(path) == 0:
+        return False
+    try:
+        with open(path, "rb") as f:
+            head = f.read(2048)
+    except OSError:
+        return False
+    if not head:
+        return False
+    if head.startswith((b"<", b"<!", b"\xef\xbb\xbf<")):
+        return False
+    low = head.lower()
+    if b"<!doctype" in low or b"<html" in low or b"<title>" in low or b"<body" in low:
+        return False
+    return True
+
+
+def _check_archive_magic(path, low):
+    """Conferência da assinatura de arquivo vs extensão (evita HTML como .rar)."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(8)
+    except OSError:
+        return False
+    if low.endswith(".zip"):
+        return head[:2] == b"PK"
+    if low.endswith(".rar"):
+        return head.startswith(b"Rar!")
+    if low.endswith(".7z"):
+        return head[:6] == b"7z\xbc\xaf'\x1c"
+    return True
+
+
+def _dir_has(directory, exts):
+    """True se a pasta contém ao menos um arquivo com uma das extensões."""
+    try:
+        return any(f.lower().endswith(exts) for f in os.listdir(directory))
+    except OSError:
+        return False
+
+
+def download_internet_archive_file(identifier, filename, dest_path, cancel_event=None):
     """Baixa um arquivo específico do Internet Archive direto para dest_path
-    (streaming, sem carregar tudo na memória)."""
+    (streaming, sem carregar tudo na memória). Aceita cancelamento cooperativo
+    via cancel_event e rejeita páginas/erros HTTP servidos como 200."""
     url = f"{INTERNET_ARCHIVE_DOWNLOAD}{identifier}/{filename}"
+    tmp_path = dest_path + ".part"
     for _ in range(2):
         try:
             req = urllib.request.Request(url, headers=USER_AGENT)
-            tmp_path = dest_path + ".part"
             with _HTTP_POOL.open(req, timeout=60) as resp, open(tmp_path, "wb") as f:
+                if getattr(resp, "status", 200) != 200:
+                    raise urllib.error.HTTPError(
+                        url, resp.status, "status %s" % resp.status, resp.headers, None
+                    )
+                if "html" in (resp.headers.get("Content-Type") or "").lower():
+                    raise urllib.error.HTTPError(
+                        url, 415, "unexpected Content-Type", resp.headers, None
+                    )
                 while True:
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise _DownloadCanceled()
                     chunk = resp.read(64 * 1024)
                     if not chunk:
                         break
                     f.write(chunk)
             os.replace(tmp_path, dest_path)
             return True
+        except _DownloadCanceled:
+            try:
+                if os.path.isfile(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
         except Exception:
             try:
-                if os.path.isfile(dest_path + ".part"):
-                    os.remove(dest_path + ".part")
+                if os.path.isfile(tmp_path):
+                    os.remove(tmp_path)
             except OSError:
                 pass
             time.sleep(1.0)
@@ -2726,32 +2817,49 @@ def pick_xboxunity_tu(updates):
     return best
 
 
-def download_url_to_file(url, dest_path):
-    """Baixa url (streaming) para dest_path. Devolve o nome sugerido pelo
-    servidor (Content-Disposition) ou None em caso de falha."""
+def download_url_to_file(url, dest_path, cancel_event=None):
+    """Baixa url (streaming) para dest_path. Devolve (ok, fname): ok=False em
+    falha (incluindo 200-com-HTML, status != 200 e cancelamento); fname é o
+    nome sugerido pelo servidor (Content-Disposition) ou None se ausente."""
+    tmp_path = dest_path + ".part"
     try:
         req = urllib.request.Request(url, headers=USER_AGENT)
-        tmp_path = dest_path + ".part"
         fname = None
         with _HTTP_POOL.open(req, timeout=120) as resp, open(tmp_path, "wb") as f:
-            content_disp = resp.headers.get("Content-Disposition") or ""
-            m = re.search(r'filename="?([^";]+)"?', content_disp)
-            if m:
-                fname = m.group(1).strip()
+            if getattr(resp, "status", 200) != 200:
+                raise urllib.error.HTTPError(
+                    url, resp.status, "status %s" % resp.status, resp.headers, None
+                )
+            if "html" in (resp.headers.get("Content-Type") or "").lower():
+                raise urllib.error.HTTPError(
+                    url, 415, "unexpected Content-Type", resp.headers, None
+                )
+            fname = _sanitize_remote_filename(
+                _content_disposition_filename(resp.headers.get("Content-Disposition") or "")
+            )
             while True:
+                if cancel_event is not None and cancel_event.is_set():
+                    raise _DownloadCanceled()
                 chunk = resp.read(64 * 1024)
                 if not chunk:
                     break
                 f.write(chunk)
         os.replace(tmp_path, dest_path)
-        return fname
+        return (True, fname)
+    except _DownloadCanceled:
+        try:
+            if os.path.isfile(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
     except Exception:
         try:
             if os.path.isfile(tmp_path):
                 os.remove(tmp_path)
         except OSError:
             pass
-        return None
+        return (False, None)
 
 
 def content_roots(root):
@@ -4021,12 +4129,12 @@ def db_rename_by_tid(root, tid, newtitle):
     db_path = find_content_db(root)
     if not db_path:
         return False
+    conn = None
     try:
         with _IO_LOCK:
             conn = sqlite3.connect(db_path)
             table, sc = db_schema(conn)
             if table is None or not sc["id"] or not sc["tid"] or not sc["title"]:
-                conn.close()
                 return False
             target = ("%08X" % int(tid, 16)) if re.match(r"^[0-9A-F]{8}$", tid) else tid
             conn.row_factory = sqlite3.Row
@@ -4053,10 +4161,15 @@ def db_rename_by_tid(root, tid, newtitle):
                     found = cur_update.rowcount > 0
                     break
             conn.commit()
-            conn.close()
         return found
     except sqlite3.Error:
         return False
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except sqlite3.Error:
+                pass
 
 
 def db_delete_row(conn, table, sc, rowid):
@@ -4579,13 +4692,14 @@ def open_cover_image(path):
 
 def has_cover_image(path):
     """Detecta de forma leve se um arquivo contém uma imagem de capa real:
-    container RXEA do app, JPEG/PNG puro ou JPEG embutido após um header."""
+    container RXEA do app, JPEG/PNG/DDS puro ou JPEG embutido após um header."""
     try:
         with open(path, "rb") as f:
             head = f.read(4096)
     except OSError:
         return False
-    return head[:4] == b"RXEA" or b"\xFF\xD8\xFF" in head or b"\x89PNG\r\n\x1a\n" in head
+    return (head[:4] == b"RXEA" or b"\xFF\xD8\xFF" in head
+            or b"\x89PNG\r\n\x1a\n" in head or head[:3] == b"DDS")
 
 
 def selftest():
@@ -4993,8 +5107,6 @@ class App:
         self._paint_status()
         self.post(tr("loading_index"))
         self.root.after(100, self.poll_queue)
-        threading.Thread(target=self.status_loop, daemon=True).start()
-        threading.Thread(target=self.theme_loop, daemon=True).start()
 
     def _load_config_async(self):
         def _run():
@@ -5047,106 +5159,116 @@ class App:
         try:
             while True:
                 msg = self.queue.get_nowait()
-                if msg == "__config_loaded__":
-                    self._on_config_loaded()
-                elif msg == "__refresh_tree__":
-                    self.refresh_tree()
-                elif msg == "__done__":
-                    self.set_busy(False)
-                elif msg == "__theme_check__":
-                    self.apply_theme()
-                elif isinstance(msg, str) and msg.startswith("__unity_status__:"):
-                    self.unity_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
-                    self._paint_status()
-                elif isinstance(msg, str) and msg.startswith("__x360db_status__:"):
-                    self.x360db_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
-                    self._paint_status()
-                elif isinstance(msg, str) and msg.startswith("__gameart_status__:"):
-                    self.gameart_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
-                    self._paint_status()
-                elif isinstance(msg, str) and msg.startswith("__update_available__:"):
-                    self._show_update_dialog(msg.split(":", 1)[1])
-                elif isinstance(msg, str) and msg.startswith("__preview_info__:"):
-                    self._preview_info_show(msg.split(":", 1)[1])
-                elif msg == "__alt_preview__":
-                    self._alt_preview_show()
-                elif msg == "__assets_refresh__":
-                    self.refresh_assets_dlg()
-                elif isinstance(msg, str) and msg.startswith("__assets_msg__:"):
-                    self._assets_msg_show(msg.split(":", 1)[1])
-                elif msg == "__preview_refresh__":
-                    g = self.selected_game()
-                    if g is not None:
-                        self.show_preview(g)
-                elif msg == "__alt_populate__":
-                    self._alt_populate()
-                elif isinstance(msg, str) and msg.startswith("__alt_installed__:") :
-                    ok = msg.split(":")[1] == "t"
-                    if self._alt_dlg is not None and self._alt_dlg.winfo_exists():
-                        self._alt_msg.configure(text=tr("alt_installed") if ok else tr("alt_failed"))
-                    self.set_busy(False)
-                    # Preserve selection across refresh
-                    sel_tid = None
-                    g = self.selected_game()
-                    if g:
-                        sel_tid = g["tid"]
-                    self.queue.put("__refresh_tree__")
-                    self.queue.put("__preview_refresh__")
-                    if sel_tid:
-                        def _restore_sel():
-                            for item, gg in self.item_to_game.items():
-                                if gg.get("tid") == sel_tid:
-                                    self.tree.selection_set(item)
-                                    self.tree.focus(item)
-                                    self.tree.see(item)
-                                    break
-                        self.root.after(50, _restore_sel)
-                elif isinstance(msg, str) and msg.startswith("__progress__:"):
-                    parts = msg.split(":")
-                    self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
-                elif msg == "__tu_dlg_render__":
-                    cb = getattr(self, "_tu_dlg_state", None)
-                    if cb is not None:
-                        try:
-                            cb()
-                        except tk.TclError:
-                            self._tu_dlg_state = None
-                elif msg == "__add_folder_probe_done__":
-                    # msg é tupla: ("__add_folder_probe_done__", status, folder, games_found/error_msg)
-                    if isinstance(msg, tuple) and len(msg) >= 3:
-                        status = msg[1]
-                        folder = msg[2]
-                        cb = getattr(self, "_add_folder_callback", None)
-                        if cb:
-                            if status == "ok":
-                                games_found = msg[3] if len(msg) > 3 else []
-                                cb(status, folder, games_found)
-                            else:
-                                error_msg = msg[3] if len(msg) > 3 else ""
-                                cb(status, folder, error_msg=error_msg)
-                elif isinstance(msg, tuple) and msg[0] == "__update_download_done__":
-                    ok = msg[1]
-                    if ok:
-                        installer_path = msg[2]
-                        self.log(tr("update_installing"))
-                        try:
-                            subprocess.Popen([installer_path], shell=False)
-                            self.root.after(2000, self.root.destroy)
-                        except Exception as exc:
-                            messagebox.showerror(tr("error"), tr("update_install_failed", exc))
+                try:
+                    self._dispatch_queue(msg)
+                except Exception as exc:
+                    # Nunca deixe uma mensagem desconhecida/errada matar o loop
+                    if isinstance(msg, str):
+                        self.post("ERRO handle '%s': %s" % (msg[:80], exc))
                     else:
-                        error = msg[2] if len(msg) > 2 else tr("update_download_failed")
-                        self.log(tr("update_download_failed", error))
-                        messagebox.showerror(tr("error"), tr("update_download_failed", error))
-                elif isinstance(msg, tuple) and msg[0] == "__update_progress__":
-                    self.log(msg[1])
-                elif msg == "__busy_true__":
-                    self.set_busy(True)
-                else:
-                    self.post(msg)
+                        self.post("ERRO handle %r: %s" % (msg, exc))
         except queue.Empty:
             pass
         self.root.after(100, self.poll_queue)
+
+    def _dispatch_queue(self, msg):
+        if msg == "__config_loaded__":
+            self._on_config_loaded()
+        elif msg == "__refresh_tree__":
+            self.refresh_tree()
+        elif msg == "__done__":
+            self.set_busy(False)
+        elif msg == "__theme_check__":
+            self.apply_theme()
+        elif isinstance(msg, str) and msg.startswith("__unity_status__:"):
+            self.unity_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+            self._paint_status()
+        elif isinstance(msg, str) and msg.startswith("__x360db_status__:"):
+            self.x360db_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+            self._paint_status()
+        elif isinstance(msg, str) and msg.startswith("__gameart_status__:"):
+            self.gameart_status = "ok" if msg.split(":", 1)[1] == "ok" else "down"
+            self._paint_status()
+        elif isinstance(msg, str) and msg.startswith("__update_available__:"):
+            self._show_update_dialog(msg.split(":", 1)[1])
+        elif isinstance(msg, str) and msg.startswith("__preview_info__:"):
+            self._preview_info_show(msg.split(":", 1)[1])
+        elif msg == "__alt_preview__":
+            self._alt_preview_show()
+        elif msg == "__assets_refresh__":
+            self.refresh_assets_dlg()
+        elif isinstance(msg, str) and msg.startswith("__assets_msg__:"):
+            self._assets_msg_show(msg.split(":", 1)[1])
+        elif msg == "__preview_refresh__":
+            g = self.selected_game()
+            if g is not None:
+                self.show_preview(g)
+        elif msg == "__alt_populate__":
+            self._alt_populate()
+        elif isinstance(msg, str) and msg.startswith("__alt_installed__:") :
+            ok = msg.split(":")[1] == "t"
+            if self._alt_dlg is not None and self._alt_dlg.winfo_exists():
+                self._alt_msg.configure(text=tr("alt_installed") if ok else tr("alt_failed"))
+            self.set_busy(False)
+            # Preserve selection across refresh
+            sel_tid = None
+            g = self.selected_game()
+            if g:
+                sel_tid = g["tid"]
+            self.queue.put("__refresh_tree__")
+            self.queue.put("__preview_refresh__")
+            if sel_tid:
+                def _restore_sel():
+                    for item, gg in self.item_to_game.items():
+                        if gg.get("tid") == sel_tid:
+                            self.tree.selection_set(item)
+                            self.tree.focus(item)
+                            self.tree.see(item)
+                            break
+                self.root.after(50, _restore_sel)
+        elif isinstance(msg, str) and msg.startswith("__progress__:"):
+            parts = msg.split(":")
+            self.progress.configure(maximum=int(parts[2]) or 1, value=int(parts[1]))
+        elif msg == "__tu_dlg_render__":
+            cb = getattr(self, "_tu_dlg_state", None)
+            if cb is not None:
+                try:
+                    cb()
+                except tk.TclError:
+                    self._tu_dlg_state = None
+        elif isinstance(msg, tuple) and msg[0] == "__add_folder_probe_done__":
+            # msg é tupla: ("__add_folder_probe_done__", status, folder, games_found/error_msg)
+            if len(msg) >= 3:
+                status = msg[1]
+                folder = msg[2]
+                cb = getattr(self, "_add_folder_callback", None)
+                if cb:
+                    if status == "ok":
+                        games_found = msg[3] if len(msg) > 3 else []
+                        cb(status, folder, games_found)
+                    else:
+                        error_msg = msg[3] if len(msg) > 3 else ""
+                        cb(status, folder, error_msg=error_msg)
+        elif isinstance(msg, tuple) and msg[0] == "__update_download_done__":
+            ok = msg[1]
+            if ok:
+                installer_path = msg[2]
+                self.log(tr("update_installing"))
+                try:
+                    subprocess.Popen([installer_path], shell=False)
+                    self.root.after(2000, self.root.destroy)
+                except Exception as exc:
+                    messagebox.showerror(tr("error"), tr("update_install_failed", exc))
+            else:
+                error = msg[2] if len(msg) > 2 else tr("update_download_failed")
+                self.log(tr("update_download_failed", error))
+                messagebox.showerror(tr("error"), tr("update_download_failed", error))
+        elif isinstance(msg, tuple) and msg[0] == "__update_progress__":
+            self.log(msg[1])
+        elif msg == "__busy_true__":
+            self.set_busy(True)
+        elif isinstance(msg, str):
+            self.post(msg)
 
     def load_db(self):
         try:
@@ -5843,19 +5965,20 @@ class App:
                     pass
         # Limpa o marcador 'instalado' para boxart
         try:
-            p = installed_path()
-            data = {}
-            if os.path.isfile(p):
-                with open(p, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            if tid in data:
-                data[tid].pop("boxart", None)
-                if not data[tid]:
-                    data.pop(tid, None)
-                tmp = p + ".tmp"
-                with open(tmp, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2, ensure_ascii=False)
-                os.replace(tmp, p)
+            with _IO_LOCK:
+                p = installed_path()
+                data = {}
+                if os.path.isfile(p):
+                    with open(p, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                if tid in data:
+                    data[tid].pop("boxart", None)
+                    if not data[tid]:
+                        data.pop(tid, None)
+                    tmp = p + ".tmp"
+                    with open(tmp, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                    os.replace(tmp, p)
         except Exception:
             pass
         g["has_cover"] = False
@@ -6430,7 +6553,6 @@ class App:
             if tid not in extra:
                 extra.append(tid)
                 save_extra_games(extra)
-            save_extra_games(extra)
         self.games.append(g)
         self.log(tr("add_game_added", name or tid, tid))
         threading.Thread(target=self._fetch_unity_names, args=([g],), daemon=True).start()
@@ -6655,7 +6777,8 @@ class App:
             # Baixa o instalador
             self.queue.put(("__update_progress__", "Baixando instalador..."))
             tmp_path = os.path.join(tempfile.gettempdir(), f"AuroraAssetManager_Setup_{version}.exe")
-            if not download_url_to_file(installer_url, tmp_path):
+            ok_dl, _fname = download_url_to_file(installer_url, tmp_path)
+            if not ok_dl or not validate_downloaded_file(tmp_path):
                 self.queue.put(("__update_download_done__", False, "Falha no download do instalador"))
                 return
             self.queue.put(("__update_download_done__", True, tmp_path))
@@ -6740,9 +6863,9 @@ class App:
             "screenshots": self.opt_screenshots.get(),
         }
         force = self.opt_force.get()
+        self.cancel_event.clear()
         self.download_queue.put((targets, path, kinds, force))
         if not self.busy:
-            self.cancel_event.clear()
             self.set_busy(True)
 
     def _download_queue_worker(self):
@@ -6799,17 +6922,17 @@ class App:
         if kind == "title_update":
             for d in game_content_dirs(path, g["tid"]):
                 tu_dir = os.path.join(d, "000B0000")
-                if any(f.lower().endswith(".xex") for f in _list_xex(tu_dir)):
+                if _dir_has(tu_dir, (".xex", ".tu")):
                     return True
             if folder:
                 tu_dir = os.path.join(folder, "$TitleUpdate")
-                if any(f.lower().endswith(".xex") for f in _list_xex(tu_dir)):
+                if _dir_has(tu_dir, (".xex", ".tu")):
                     return True
             return False
         if kind == "dlc":
             for d in game_content_dirs(path, g["tid"]):
                 dlc_dir = os.path.join(d, "00000002")
-                if any(f.lower().endswith(".xex") for f in _list_xex(dlc_dir)):
+                if _dir_has(dlc_dir, (".xex",)):
                     return True
             return False
         return False
@@ -7029,7 +7152,8 @@ class App:
                         slug = re.sub(r"[^a-z0-9]", "", os.path.splitext(name)[0].lower())
                         if slug in names:
                             self.log(tr("game_cover_ok", name))
-                            return open(os.path.join(base, name), "rb").read()
+                            with open(os.path.join(base, name), "rb") as f:
+                                return f.read()
                 except OSError:
                     pass
         return None
@@ -7242,9 +7366,23 @@ class App:
                 tmp = os.path.join(
                     tempfile.gettempdir(), "unity_tu_%s_%s.tu" % (tid, best["tuid"])
                 )
-                fname = download_url_to_file(XBOXUNITY_TU_GET % best["tuid"], tmp)
-                if not os.path.isfile(tmp):
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+                try:
+                    ok_dl, fname = download_url_to_file(
+                        XBOXUNITY_TU_GET % best["tuid"], tmp, cancel_event=self.cancel_event
+                    )
+                except _DownloadCanceled:
+                    self.log(tr("canceled"))
+                    return False
+                if not ok_dl or not validate_downloaded_file(tmp):
                     self.log(tr("logs_unity_tu_dl_fail", tid))
+                    try:
+                        os.remove(tmp)
+                    except OSError:
+                        pass
                     return False
                 if not fname:
                     # Servidor sem Content-Disposition: usa nome no padrão Aurora
@@ -7277,9 +7415,7 @@ class App:
                 if matches:
                     ia_id = IA_DLC_ITEM
                     filename = matches[0]["name"]
-            if ia_id and filename:
-                pass
-            elif ia_id:
+            if ia_id and not filename:
                 fname2 = g.get(f"{kind}_filename")
                 if fname2:
                     filename = fname2
@@ -7290,7 +7426,7 @@ class App:
                         self.log(tr("ia_no_results", ia_id))
                         return False
                     filename = candidates[0]
-            else:
+            elif not (ia_id and filename):
                 results = search_title_updates_dlc(tid, self.game_title(g), kind=kind)
                 result = pick_ia_result(results, kind)
                 if not result:
@@ -7301,7 +7437,14 @@ class App:
 
             self.log(tr("logs_downloading_ia", tr("kind_" + kind), ia_id, filename))
             tmp = os.path.join(tempfile.gettempdir(), "%s_%s_%s" % (tid, kind, os.path.basename(filename)))
-            if not download_internet_archive_file(ia_id, filename, tmp):
+            try:
+                if not download_internet_archive_file(ia_id, filename, tmp, cancel_event=self.cancel_event):
+                    self.log(tr("ia_download_failed", ia_id, filename))
+                    return False
+            except _DownloadCanceled:
+                self.log(tr("canceled"))
+                return False
+            if not validate_downloaded_file(tmp) or not _check_archive_magic(tmp, filename.lower()):
                 self.log(tr("ia_download_failed", ia_id, filename))
                 try:
                     os.remove(tmp)
@@ -7310,23 +7453,43 @@ class App:
                 return False
 
             installed = False
+            manual = False
             low = filename.lower()
             if low.endswith((".zip", ".rar", ".7z")):
-                # Extrai preservando Content\\0000000000000000\\<TID>\\...
+                # Extrai em UMA raiz apenas (evita duplicar entre drive/Aurora/caminho)
+                root_used = None
                 for base_root in content_roots(path):
                     if extract_archive_to(tmp, base_root):
+                        root_used = base_root
+                        break
+                if root_used:
+                    # Verifica se a estrutura Content\\0000000000000000\\<TID> foi gerada
+                    expected = os.path.join(root_used, "Content", "0000000000000000", tid)
+                    if os.path.isdir(expected):
                         installed = True
-                if not installed and low.endswith((".rar", ".7z")):
-                    # Sem 7-Zip: salva o arquivo no local correto p/ extração manual
+                        self.log(tr("ia_download_success", tr("kind_" + kind), filename) + " -> " + expected)
+                    else:
+                        # Layout inesperado: deixa o arquivo p/ extração manual (não marca instalado)
+                        manual = True
+                        for dest_dir in content_dirs:
+                            try:
+                                os.makedirs(dest_dir, exist_ok=True)
+                                shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
+                                self.log(tr("dlc_manual_extract", dest_dir))
+                                break
+                            except OSError:
+                                continue
+                elif low.endswith((".rar", ".7z")):
+                    # Sem 7-Zip: salva o arquivo p/ extração manual (não marca instalado)
+                    manual = True
                     for dest_dir in content_dirs:
                         try:
                             os.makedirs(dest_dir, exist_ok=True)
                             shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
-                            installed = True
+                            self.log(tr("dlc_manual_extract", dest_dir))
+                            break
                         except OSError:
                             continue
-                    if installed:
-                        self.log(tr("dlc_manual_extract", os.path.dirname(os.path.abspath(content_dirs[0])) if content_dirs else ""))
             else:
                 # .xex: copia direto
                 for dest_dir in content_dirs:
@@ -7334,10 +7497,12 @@ class App:
                         os.makedirs(dest_dir, exist_ok=True)
                         shutil.copy2(tmp, os.path.join(dest_dir, os.path.basename(filename)))
                         installed = True
+                        break
                     except OSError:
                         continue
             if not installed:
-                self.log(tr("ia_install_fail", filename))
+                if not manual:
+                    self.log(tr("ia_install_fail", filename))
                 try:
                     os.remove(tmp)
                 except OSError:
@@ -7598,6 +7763,7 @@ class App:
         ]
         # Screenshots: extrai todos (count dinâmico)
         # será processado separadamente após
+        scan_dirs = import_candidates + ([folder] if folder and os.path.isdir(folder) else [])
         for base in scan_dirs:
             if not os.path.isdir(base):
                 continue
@@ -7640,7 +7806,6 @@ class App:
 
         # 6) DEEP SCAN: encontra TODAS as imagens nos diretórios relevantes e classifica por tamanho/nome
         # Isso pega assets mesmo com nomes não padrão
-        scan_dirs = import_candidates + ([folder] if folder and os.path.isdir(folder) else [])
         for base in scan_dirs:
             if not os.path.isdir(base):
                 continue
@@ -7751,11 +7916,14 @@ class App:
     def _open_tu_dlc_chooser(self, g, kind):
         if self.busy:
             return
+        if getattr(self, "_tu_dlg", None) is not None and self._tu_dlg.winfo_exists():
+            return
         path = self.aurora_path.get().strip().strip('"')
         tid = g["tid"]
         is_tu = kind == "title_update"
         sub = "000B0000" if is_tu else "00000002"
         dlg = tk.Toplevel(self.root)
+        self._tu_dlg = dlg
         dlg.transient(self.root)
         dlg.resizable(False, False)
         th = THEMES.get(self._applied_theme, THEMES["escuro"])
@@ -7869,6 +8037,8 @@ class App:
             self.queue.put("__tu_dlg_render__")
 
         def _close():
+            if getattr(self, "_tu_dlg", None) is dlg:
+                self._tu_dlg = None
             self._tu_dlg_state = None
             dlg.destroy()
 
@@ -7907,9 +8077,13 @@ class App:
             if not fname:
                 return
             self.log(tr("tu_installing_local" if is_tu else "dlc_installing_local", os.path.basename(fname)))
+            self.set_busy(True)
             def _worker():
-                self._install_local_content_file(g, path, fname, kind)
-                self.queue.put("__tu_dlg_render__")
+                try:
+                    self._install_local_content_file(g, path, fname, kind)
+                finally:
+                    self.queue.put("__done__")
+                    self.queue.put("__tu_dlg_render__")
             threading.Thread(target=_worker, daemon=True).start()
 
         tree.bind("<Double-1>", lambda _ev: _dl())
@@ -7928,41 +8102,52 @@ class App:
         try:
             low = fname.lower()
             installed = False
+            manual = False
             if low.endswith((".zip", ".rar", ".7z")):
-                extracted = False
+                # Extrai em UMA raiz apenas (evita duplicar entre drive/Aurora/caminho)
+                root_used = None
                 for base_root in content_roots(path):
                     if extract_archive_to(fname, base_root):
+                        root_used = base_root
+                        break
+                if root_used:
+                    expected = os.path.join(root_used, "Content", "0000000000000000", tid)
+                    if os.path.isdir(expected):
                         installed = True
-                        extracted = True
-                if not extracted:
-                    copied = None
+                        self.log(tr("ia_download_success", tr("kind_" + kind), basename) + " -> " + expected)
+                    else:
+                        manual = True
+                        for dest_dir in dests:
+                            try:
+                                os.makedirs(dest_dir, exist_ok=True)
+                                shutil.copy2(fname, os.path.join(dest_dir, basename))
+                                self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract", dest_dir))
+                                break
+                            except OSError:
+                                continue
+                else:
+                    manual = True
                     for dest_dir in dests:
                         try:
                             os.makedirs(dest_dir, exist_ok=True)
                             shutil.copy2(fname, os.path.join(dest_dir, basename))
-                            copied = os.path.join(dest_dir, basename)
-                            installed = True
+                            self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract", dest_dir))
+                            break
                         except OSError:
                             continue
-                        if installed:
-                            break
-                    if installed:
-                        self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract",
-                                    os.path.dirname(copied) if copied else ""))
             else:
                 for dest_dir in dests:
                     try:
                         os.makedirs(dest_dir, exist_ok=True)
                         shutil.copy2(fname, os.path.join(dest_dir, basename))
                         installed = True
+                        break
                     except OSError:
                         continue
-                    if installed:
-                        break
             if installed:
                 mark_installed(tid, kind)
                 self.log(tr("ia_download_success", tr("kind_" + kind), basename))
-            else:
+            elif not manual:
                 self.log(tr("ia_install_fail", basename))
         except Exception as exc:
             self.log(tr("logs_dl_kind_err", kind, exc))
@@ -8740,6 +8925,9 @@ class App:
 
         def _run():
             try:
+                if self.cancel_event.is_set():
+                    self.log(tr("canceled"))
+                    return
                 ok = self.download_kind(path, g, kind, tuid=tuid, version=version,
                                         ia_id=ia_id, filename=filename)
                 self.log(tr("logs_kind_result", kind, "OK" if ok else tr("no_success")))
@@ -8776,6 +8964,9 @@ class App:
 
         def _run():
             try:
+                if self.cancel_event.is_set():
+                    self.log(tr("canceled"))
+                    return
                 for kind in kinds:
                     if self.cancel_event.is_set():
                         break
@@ -8854,7 +9045,7 @@ class App:
         if self.busy:
             return
         filetypes = [
-            ("XEX/Arquivo", "*.xex *.zip *.7z"),
+            ("XEX/Arquivo", "*.xex *.zip *.rar *.7z *.tu"),
             ("Todos", "*.*"),
         ]
         file_name = filedialog.askopenfilename(
@@ -8868,16 +9059,36 @@ class App:
         sub = "000B0000" if kind == "title_update" else "00000002"
         copied = False
         try:
-            if file_name.lower().endswith(".zip"):
+            low_fn = file_name.lower()
+            if low_fn.endswith((".zip", ".rar", ".7z")):
+                # Extrai em UMA raiz apenas; verifica a estrutura Content\...\<TID>
+                root_used = None
                 for base_root in content_roots(path):
-                    if extract_zip_to(file_name, base_root):
-                        copied = True
+                    if extract_archive_to(file_name, base_root):
+                        root_used = base_root
+                        break
+                if root_used and os.path.isdir(
+                    os.path.join(root_used, "Content", "0000000000000000", tid)
+                ):
+                    copied = True
+                else:
+                    # Extração sem layout esperado: copia cru para extração manual
+                    for dest_dir in [os.path.join(d, sub) for d in game_content_dirs(path, tid)]:
+                        try:
+                            os.makedirs(dest_dir, exist_ok=True)
+                            shutil.copy2(file_name, os.path.join(dest_dir, os.path.basename(file_name)))
+                            copied = True
+                            self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract", dest_dir))
+                            break
+                        except OSError:
+                            continue
             else:
                 for dest_dir in [os.path.join(d, sub) for d in game_content_dirs(path, tid)]:
                     try:
                         os.makedirs(dest_dir, exist_ok=True)
                         shutil.copy2(file_name, os.path.join(dest_dir, os.path.basename(file_name)))
                         copied = True
+                        break
                     except OSError:
                         continue
         except Exception as exc:
