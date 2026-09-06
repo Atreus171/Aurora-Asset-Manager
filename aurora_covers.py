@@ -5483,14 +5483,16 @@ class App:
         if not path or not os.path.isdir(path):
             messagebox.showerror(tr("warn"), tr("pick_aurora"))
             return
-        # Valida se é estrutura Aurora (tem Data/GameData ou pasta Aurora)
-        aurora_root = path
-        if not (os.path.isdir(os.path.join(path, "Data", "GameData")) or os.path.isdir(os.path.join(path, "Aurora"))):
-            # Se for raiz de drive, permite (pode ter estrutura na raiz)
-            drive, tail = os.path.splitdrive(path)
-            if tail not in ("\\", "/"):
-                messagebox.showerror(tr("warn"), tr("not_aurora_folder"))
-                return
+        # Valida se é estrutura Aurora (tem Data/GameData, pasta Aurora ou content.db).
+        # Mesmo raiz de drive exige estrutura real — selecionar unidade sem Aurora
+        # não deve produzir uma lista de TIDs "fantasma" vindos de Content/Import.
+        if not (
+            os.path.isdir(os.path.join(path, "Data", "GameData"))
+            or os.path.isdir(os.path.join(path, "Aurora"))
+            or find_content_db(path) is not None
+        ):
+            messagebox.showerror(tr("warn"), tr("not_aurora_folder"))
+            return
         self.cancel_event.clear()
         self.set_busy(True)
         threading.Thread(target=self.scan_worker, args=(path,), daemon=True).start()
@@ -5509,9 +5511,12 @@ class App:
             extra = [t for t in hdd_ids if t not in known_tids]
             if extra and not self.cancel_event.is_set():
                 known_games = set(self.db.titles) | set(self.db.alt_ids)
+                # Só adiciona como jogo os TIDs reconhecidos pelo índice. Quando o
+                # índice não carregou (known_games vazio), NÃO inventa entradas:
+                # TIDs de conteúdo desconhecidos virariam "jogos fantasma" sem nome.
                 dlc_ids, game_ids = [], []
                 for t in sorted(extra):
-                    (game_ids if (t in known_games or not known_games) else dlc_ids).append(t)
+                    (game_ids if t in known_games else dlc_ids).append(t)
                 if dlc_ids:
                     self.log(tr("logs_ignored_dlc", len(dlc_ids)))
                 if game_ids:
@@ -5522,6 +5527,7 @@ class App:
                                 "folder": None,
                                 "tid": t,
                                 "folder_name": t,
+                                "dname": "",
                                 "has_cover": False,
                             }
                         )
