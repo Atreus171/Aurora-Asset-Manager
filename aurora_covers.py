@@ -22,7 +22,7 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 
-from PIL import Image, ImageDraw, ImageOps, ImageTk
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageOps, ImageTk
 
 def resource_path(name):
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
@@ -444,6 +444,12 @@ TEXT = {
         "db_all": "Todos",
         "db_search": "Pesquisar nome, TID ou pasta...",
         "filter_games": "Pesquisar jogos: ",
+        "search_results": "%d de %d jogos",
+        "search_clear": "Limpar",
+        "search_no_results": "Nenhum jogo encontrado.",
+        "aurora_preview": "Ver como no Aurora",
+        "aurora_preview_title": "Visualização Aurora",
+        "aurora_loading": "Gerando visualização...",
         "db_need_name": "Informe um nome.",
         "rename_ftp_start": "Renomeando a pasta no console via FTP...",
         "rename_ftp_ok": "Pasta renomeada no console: %s",
@@ -824,6 +830,12 @@ TEXT = {
         "db_all": "All",
         "db_search": "Search name, TID or folder...",
         "filter_games": "Search games: ",
+        "search_results": "%d of %d games",
+        "search_clear": "Clear",
+        "search_no_results": "No games found.",
+        "aurora_preview": "View in Aurora",
+        "aurora_preview_title": "Aurora preview",
+        "aurora_loading": "Rendering preview...",
         "db_need_name": "Enter a name.",
         "rename_ftp_start": "Renaming folder on the console via FTP...",
         "rename_ftp_ok": "Folder renamed on the console: %s",
@@ -1209,6 +1221,12 @@ TEXT = {
         "db_all": "Todos",
         "db_search": "Buscar nombre, TID o carpeta...",
         "filter_games": "Buscar juegos: ",
+        "search_results": "%d de %d juegos",
+        "search_clear": "Limpiar",
+        "search_no_results": "No se encontraron juegos.",
+        "aurora_preview": "Ver en Aurora",
+        "aurora_preview_title": "Vista Aurora",
+        "aurora_loading": "Generando vista...",
         "db_need_name": "Introduce un nombre.",
         "rename_ftp_start": "Renombrando carpeta en la consola por FTP...",
         "rename_ftp_ok": "Carpeta renombrada en la consola: %s",
@@ -1594,6 +1612,12 @@ TEXT = {
         "db_all": "Tous",
         "db_search": "Rechercher nom, TID ou dossier...",
         "filter_games": "Rechercher des jeux : ",
+        "search_results": "%d sur %d jeux",
+        "search_clear": "Effacer",
+        "search_no_results": "Aucun jeu trouvé.",
+        "aurora_preview": "Voir dans Aurora",
+        "aurora_preview_title": "Aperçu Aurora",
+        "aurora_loading": "Génération de l'aperçu...",
         "db_need_name": "Entrez un nom.",
         "rename_ftp_start": "Renommage du dossier sur la console via FTP...",
         "rename_ftp_ok": "Dossier renommé sur la console : %s",
@@ -1974,6 +1998,12 @@ TEXT = {
         "db_all": "すべて",
         "db_search": "名前・TID・フォルダを検索...",
         "filter_games": "ゲームを検索: ",
+        "search_results": "%d / %d ゲーム",
+        "search_clear": "クリア",
+        "search_no_results": "ゲームが見つかりません。",
+        "aurora_preview": "Auroraで表示",
+        "aurora_preview_title": "Aurora プレビュー",
+        "aurora_loading": "プレビュー生成中...",
         "db_need_name": "名前を入力してください。",
         "rename_ftp_start": "FTPで本体のフォルダ名を変更しています...",
         "rename_ftp_ok": "本体のフォルダ名を変更しました: %s",
@@ -2354,6 +2384,12 @@ TEXT = {
         "db_all": "Все",
         "db_search": "Поиск по имени, TID или папке...",
         "filter_games": "Поиск игр: ",
+        "search_results": "%d из %d игр",
+        "search_clear": "Очистить",
+        "search_no_results": "Игры не найдены.",
+        "aurora_preview": "Просмотр в Aurora",
+        "aurora_preview_title": "Предпросмотр Aurora",
+        "aurora_loading": "Создание предпросмотра...",
         "db_need_name": "Введите название.",
         "rename_ftp_start": "Переименование папки на консоли по FTP...",
         "rename_ftp_ok": "Папка на консоли переименована в: %s",
@@ -5079,9 +5115,16 @@ class App:
         filter_row = ttk.Frame(frm)
         filter_row.pack(fill=tk.X, pady=(6, 0))
         ttk.Label(filter_row, text=tr("filter_games")).pack(side=tk.LEFT)
-        e_filter = ttk.Entry(filter_row, textvariable=self.search_var, width=40)
-        e_filter.pack(side=tk.LEFT, padx=(6, 0))
-        self.search_var.trace_add("write", lambda *_: self.root.after_idle(self.refresh_tree))
+        self.e_filter = ttk.Entry(filter_row, textvariable=self.search_var, width=40)
+        self.e_filter.pack(side=tk.LEFT, padx=(6, 0))
+        self.btn_search_clear = ttk.Button(
+            filter_row, text="\u2715", width=3, command=self.clear_search, state=tk.DISABLED
+        )
+        self.btn_search_clear.pack(side=tk.LEFT, padx=(4, 0))
+        self.search_count_lbl = ttk.Label(filter_row, text="", foreground=UNITY_WAIT)
+        self.search_count_lbl.pack(side=tk.LEFT, padx=(8, 0))
+        self.e_filter.bind("<Return>", lambda e: self.select_first_search_result())
+        self.search_var.trace_add("write", lambda *_: self.root.after_idle(self.on_search_changed))
 
         btn_row = ttk.Frame(frm)
         btn_row.pack(fill=tk.X, pady=(8, 0))
@@ -5178,6 +5221,11 @@ class App:
         self.preview_info.pack(pady=(4, 0), fill=tk.X)
         self.preview_status = ttk.Label(preview_panel, text="")
         self.preview_status.pack()
+        self.btn_aurora_preview = ttk.Button(
+            preview_panel, text=tr("aurora_preview"), command=self.show_aurora_preview,
+            state=tk.DISABLED, width=30,
+        )
+        self.btn_aurora_preview.pack(pady=(8, 0))
 
         self.progress = ttk.Progressbar(frm, mode="determinate")
         self.progress.pack(fill=tk.X, pady=(8, 0))
@@ -5290,6 +5338,10 @@ class App:
             g = self.selected_game()
             if g is not None:
                 self.show_preview(g)
+        elif msg == "__aurora_ready__":
+            self._aurora_show()
+        elif isinstance(msg, str) and msg.startswith("__aurora_fail__:"):
+            self._aurora_show_fail(msg.split(":", 1)[1])
         elif msg == "__alt_populate__":
             self._alt_populate()
         elif isinstance(msg, str) and msg.startswith("__alt_installed__:") :
@@ -5626,13 +5678,23 @@ class App:
         self.item_to_game.clear()
         text = self.search_var.get().strip().lower()
         games = [g for g in self.games if g["tid"].upper() not in self.hidden_tids]
+        total = len(games)
         if text:
+            terms = [t for t in re.split(r"\s+", text) if t]
             games = [
                 g for g in games
-                if text in self.game_title(g).lower()
-                or text in g["tid"].lower()
-                or text in (g.get("dname") or "").lower()
+                if self._game_matches_search(g, terms, text)
             ]
+        if games:
+            self.btn_search_clear.configure(state=tk.NORMAL)
+        else:
+            self.btn_search_clear.configure(state=tk.DISABLED)
+        if text:
+            self.search_count_lbl.configure(
+                text=tr("search_no_results") if not games else tr("search_results", len(games), total)
+            )
+        else:
+            self.search_count_lbl.configure(text=tr("search_results", len(games), total))
         order = sorted(
             games,
             key=lambda g: (
@@ -5649,6 +5711,31 @@ class App:
             self.item_to_game[item] = g
         self.preview_cache.clear()
         self.show_no_preview()
+
+    def _game_matches_search(self, g, terms, text):
+        """Casa busca por todos os termos (e o texto exato no TID)."""
+        if text in g["tid"].lower():
+            return True
+        hay = " ".join(
+            (self.game_title(g) or "", g.get("dname") or "", g["tid"])
+        ).lower()
+        return all(t in hay for t in terms)
+
+    def on_search_changed(self):
+        self.refresh_tree()
+
+    def clear_search(self):
+        self.search_var.set("")
+        self.refresh_tree()
+        self.e_filter.focus_set()
+
+    def select_first_search_result(self):
+        children = self.tree.get_children()
+        if not children:
+            return
+        self.tree.selection_set(children[0])
+        self.tree.focus(children[0])
+        self.on_select()
 
     def game_title(self, g):
         tid = g["tid"]
@@ -6838,12 +6925,14 @@ class App:
             self.btn_search.configure(state=tk.DISABLED)
             self.btn_debug_db.configure(state=tk.DISABLED)
             self.btn_dl_tu.configure(state=tk.DISABLED)
+            self.btn_aurora_preview.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
         self.btn_custom.configure(state=tk.NORMAL)
         self.btn_search.configure(state=tk.NORMAL)
         self.btn_debug_db.configure(state=tk.NORMAL)
         self.btn_dl_tu.configure(state=tk.NORMAL)
+        self.btn_aurora_preview.configure(state=tk.NORMAL)
         self.show_preview(g)
 
     def download_latest_tu(self):
@@ -6948,6 +7037,8 @@ class App:
             return
         menu = tk.Menu(self.root, tearoff=0)
         menu.add_command(label=tr("custom_cover"), command=self.import_cover_from_file)
+        menu.add_separator()
+        menu.add_command(label=tr("aurora_preview"), command=self.show_aurora_preview)
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -7045,6 +7136,197 @@ class App:
         self.preview_info.configure(text="")
         self.preview_status.configure(text="")
         self._photo = None
+
+    def _aurora_font(self, size, bold=False):
+        """Tenta carregar fonte do sistema; usa default do PIL em último caso."""
+        candidates = [
+            ("C:/Windows/Fonts/segoeuil.ttf", False),
+            ("C:/Windows/Fonts/arial.ttf", False),
+            ("C:/Windows/Fonts/arialbd.ttf", True),
+            ("C:/Windows/Fonts/seguisb.ttf", True),
+        ]
+        for path, is_bold in candidates:
+            if os.path.isfile(path) and (not bold or is_bold or "bd" in path):
+                try:
+                    return ImageFont.truetype(path, size)
+                except Exception:
+                    continue
+        col = ImageFont.load_default()
+        try:
+            return ImageFont.truetype("arial.ttf", size)
+        except Exception:
+            return col
+
+    def _aurora_neighbors(self, g):
+        """Pega até 5 jogos ao redor do selecionado na ordem padrão da lista."""
+        order = sorted(
+            self.games,
+            key=lambda x: (
+                x.get("has_cover") is True,
+                (self.game_title(x) or "").lower(),
+            ),
+        )
+        if not self.sort_asc:
+            order.reverse()
+        idx = None
+        for i, x in enumerate(order):
+            if x is g or (
+                x.get("tid") == g.get("tid")
+                and (x.get("folder") or "") == (g.get("folder") or "")
+            ):
+                idx = i
+                break
+        if idx is None:
+            return [g]
+        n = len(order)
+        out = []
+        for off in (-2, -1, 0, 1, 2):
+            j = (idx + off) % n
+            if j >= 0:
+                out.append(order[j])
+        return out
+
+    def _aurora_tile(self, g, w, h, selected):
+        """Renderiza o tile 'capa instalada' de um jogo no estilo Aurora."""
+        img = self.load_cover(g)
+        if img is None:
+            img = Image.new("RGBA", (1, 1), (40, 44, 52, 255))
+        draw = ImageDraw.Draw(img)
+        return img
+
+    def show_aurora_preview(self):
+        g = self.selected_game()
+        if g is None:
+            return
+        if self._aurora_toplevel is not None:
+            try:
+                self._aurora_toplevel.destroy()
+            except Exception:
+                pass
+            self._aurora_toplevel = None
+        dlg = tk.Toplevel(self.root)
+        dlg.title(tr("aurora_preview_title"))
+        dlg.resizable(False, False)
+        dlg.transient(self.root)
+        self._aurora_toplevel = dlg
+        def _close():
+            self._aurora_toplevel = None
+            dlg.destroy()
+        dlg.protocol("WM_DELETE_WINDOW", _close)
+        frame = ttk.Frame(dlg, padding=8)
+        frame.pack(fill=tk.BOTH, expand=True)
+        self._aurora_lbl = tk.Label(frame, text=tr("aurora_loading"))
+        self._aurora_lbl.pack()
+        threading.Thread(target=self._aurora_render_thread, args=(g,), daemon=True).start()
+
+    def _aurora_render_thread(self, g):
+        try:
+            img = self._aurora_render(g)
+        except Exception as exc:
+            self.queue.put("__aurora_fail__:%s" % exc)
+            return
+        self._aurora_img = img
+        self.queue.put("__aurora_ready__")
+
+    def _aurora_render(self, g):
+        """Desenha uma simulação do visual Aurora com o jogo selecionado em
+        destaque no centro de um coverflow."""
+        W, H = 860, 400
+        canvas = Image.new("RGBA", (W, H))
+        draw = ImageDraw.Draw(canvas)
+        # Fundo escuro degradê estilo Aurora
+        top = (14, 18, 26)
+        bottom = (6, 9, 14)
+        for y in range(H):
+            t = y / H
+            r = int(top[0] + (bottom[0] - top[0]) * t)
+            gg = int(top[1] + (bottom[1] - top[1]) * t)
+            b = int(top[2] + (bottom[2] - top[2]) * t)
+            draw.line([(0, y), (W, y)], fill=(r, gg, b, 255))
+
+        neighbors = self._aurora_neighbors(g)
+        title = self.game_title(g)
+        # Cabeçalho estilo Aurora
+        try:
+            hdr = self._aurora_font(30, bold=True)
+        except Exception:
+            hdr = None
+        if hdr is not None:
+            draw.text((28, 22), title[:40], font=hdr, fill=(235, 240, 245, 255))
+            draw.rectangle([28, 62, 300, 64], fill=(255, 170, 60, 255))
+
+        # Coverflow: central grande, laterais menores na borda
+        center_w = 210
+        layout = [
+            (neighbors[0], 150, 0, 70, 0.35),
+            (neighbors[1], 170, 0, 95, 0.60),
+            (g, center_w, center_w - 40, H // 2 - 40, 1.0),
+            (neighbors[3] if len(neighbors) > 3 else neighbors[-1], 170, 0, 95, 0.60),
+            (neighbors[4] if len(neighbors) > 4 else neighbors[-1], 150, 0, 70, 0.35),
+        ]
+        # Sombra do destaque primeiro
+        cx = W // 2
+        cy = 175
+        shadow = Image.new("RGBA", (center_w + 60, center_w + 60), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).ellipse(
+            [10, 38, (center_w + 60) - 10, (center_w + 60) - 6], fill=(0, 0, 0, 110)
+        )
+        canvas.alpha_composite(shadow, (cx - (center_w + 60) // 2, cy - 30))
+        draw = ImageDraw.Draw(canvas)
+
+        for i, (game, w, extra, y, alpha) in enumerate(layout):
+            is_selected = game is g
+            if is_selected:
+                w = center_w
+            cover = self.load_cover(game)
+            h = int(w * 1.42)
+            if cover is None:
+                tile = Image.new("RGBA", (w, h), (34, 38, 46, 255))
+            else:
+                tile = cover_fit(cover, w, h)
+            tile = tile.convert("RGBA")
+            if not is_selected:
+                dim = ImageEnhance.Brightness(tile).enhance(0.35)
+                tile = dim
+                w = int(w * 0.82)
+                tile = tile.resize(
+                    (w, int(w * tile.height / max(1, tile.width))), Image.BILINEAR
+                )
+            t_h = tile.height
+            x = cx + (i - 2) * 190 - tile.width // 2
+            y = cy - t_h // 2 + (0 if is_selected else 8)
+            x = max(4, min(W - tile.width - 4, x))
+            # Moldura/borda sutil estilo Aurora
+            canvas.alpha_composite(tile, (int(x), int(y)))
+            if is_selected:
+                bw = 3
+                draw = ImageDraw.Draw(canvas)
+                draw.rectangle(
+                    [x - bw, y - bw, x + tile.width + bw, y + t_h + bw],
+                    outline=(255, 170, 60, 230), width=bw,
+                )
+                # Sublinhado do nome do jogo sob o tile
+                name = self.game_title(game)[:30]
+                f_big = self._aurora_font(16, bold=True)
+                tw = draw.textlength(name, font=f_big) if hasattr(draw, "textlength") else 0
+                nx = cx - tw // 2
+                draw.text((nx, y + t_h + 12), name, font=f_big, fill=(240, 244, 248, 255))
+        return canvas
+
+    def _aurora_show(self):
+        dlg = self._aurora_toplevel
+        if dlg is None:
+            return
+        try:
+            self._aurora_photo = ImageTk.PhotoImage(self._aurora_img)
+        except Exception:
+            return
+        self._aurora_lbl.configure(text="", image=self._aurora_photo)
+
+    def _aurora_show_fail(self, exc):
+        dlg = self._aurora_toplevel
+        if dlg is not None:
+            self._aurora_lbl.configure(text=tr("err_generic", exc))
 
     def update_tree_row(self, g):
         status = "Capa OK" if g["has_cover"] else "Sem capa"
@@ -8150,6 +8432,7 @@ class App:
         # Sempre disponível: open_game_folder resolve a pasta via GameData/content.db
         # mesmo quando g["folder"] é None (GOD, XBLA, homebrew, pastas de Import).
         menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
+        menu.add_command(label=tr("aurora_preview"), command=lambda: self.show_aurora_preview())
         menu.add_separator()
         menu.add_command(label=tr("m_remove_cover"), command=lambda: self.remove_cover(g))
         menu.add_command(label=tr("m_remove_game"), command=lambda: self.remove_game(g))
