@@ -460,6 +460,16 @@ TEXT = {
         "release_date": "Lançamento",
         "developer": "Desenvolvedora",
         "genres": "Gêneros",
+        "m_properties": "Propriedades",
+        "props_title": "Título",
+        "props_tid": "TitleID",
+        "props_folder": "Pasta",
+        "props_path": "Caminho",
+        "props_dname": "Nome",
+        "props_media": "Media ID",
+        "props_cover": "Capa instalada",
+        "props_yes": "Sim",
+        "props_no": "Não",
         "settings_title": "Configurações",
         "db_notfound": "content.db não encontrado",
         "err_generic": "Erro: %s",
@@ -830,6 +840,16 @@ TEXT = {
         "release_date": "Release",
         "developer": "Developer",
         "genres": "Genres",
+        "m_properties": "Properties",
+        "props_title": "Title",
+        "props_tid": "TitleID",
+        "props_folder": "Folder",
+        "props_path": "Path",
+        "props_dname": "Name",
+        "props_media": "Media ID",
+        "props_cover": "Installed cover",
+        "props_yes": "Yes",
+        "props_no": "No",
         "settings_title": "Settings",
         "db_notfound": "content.db not found",
         "err_generic": "Error: %s",
@@ -1205,6 +1225,16 @@ TEXT = {
         "release_date": "Lanzamiento",
         "developer": "Desarrolladora",
         "genres": "Géneros",
+        "m_properties": "Propiedades",
+        "props_title": "Título",
+        "props_tid": "TitleID",
+        "props_folder": "Carpeta",
+        "props_path": "Ruta",
+        "props_dname": "Nombre",
+        "props_media": "Media ID",
+        "props_cover": "Portada instalada",
+        "props_yes": "Sí",
+        "props_no": "No",
         "settings_title": "Configuración",
         "db_notfound": "content.db no encontrado",
         "err_generic": "Error: %s",
@@ -1580,6 +1610,16 @@ TEXT = {
         "release_date": "Sortie",
         "developer": "Développeur",
         "genres": "Genres",
+        "m_properties": "Propriétés",
+        "props_title": "Titre",
+        "props_tid": "TitleID",
+        "props_folder": "Dossier",
+        "props_path": "Chemin",
+        "props_dname": "Nom",
+        "props_media": "Media ID",
+        "props_cover": "Jaquette installée",
+        "props_yes": "Oui",
+        "props_no": "Non",
         "settings_title": "Paramètres",
         "db_notfound": "content.db introuvable",
         "err_generic": "Erreur : %s",
@@ -1950,6 +1990,16 @@ TEXT = {
         "release_date": "発売日",
         "developer": "開発元",
         "genres": "ジャンル",
+        "m_properties": "プロパティ",
+        "props_title": "タイトル",
+        "props_tid": "TitleID",
+        "props_folder": "フォルダ",
+        "props_path": "パス",
+        "props_dname": "名前",
+        "props_media": "Media ID",
+        "props_cover": "インストール済みカバー",
+        "props_yes": "はい",
+        "props_no": "いいえ",
         "settings_title": "設定",
         "db_notfound": "content.db が見つかりません",
         "err_generic": "エラー: %s",
@@ -2320,6 +2370,16 @@ TEXT = {
         "release_date": "Релиз",
         "developer": "Разработчик",
         "genres": "Жанры",
+        "m_properties": "Свойства",
+        "props_title": "Название",
+        "props_tid": "TitleID",
+        "props_folder": "Папка",
+        "props_path": "Путь",
+        "props_dname": "Имя",
+        "props_media": "Media ID",
+        "props_cover": "Установленная обложка",
+        "props_yes": "Да",
+        "props_no": "Нет",
         "settings_title": "Настройки",
         "db_notfound": "content.db не найден",
         "err_generic": "Ошибка: %s",
@@ -4881,6 +4941,7 @@ class App:
         self._alt_preview = None
         self._alt_items = []
         self._tu_dlg_state = None
+        self._props_dlg = None
         self._add_folder_callback = None
         self._add_folder_context = None
         self._alt_photo = None
@@ -5719,6 +5780,57 @@ class App:
                     if os.path.isdir(full):
                         return full
         return None
+
+    def show_properties(self, g):
+        if self.busy:
+            return
+        if getattr(self, "_props_dlg", None) is not None and self._props_dlg.winfo_exists():
+            return
+        tid = g["tid"]
+        th = THEMES.get(self._applied_theme, THEMES["escuro"])
+        dlg = tk.Toplevel(self.root)
+        self._props_dlg = dlg
+        dlg.title("%s - %s" % (tr("m_properties"), self.game_title(g)))
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        dlg.configure(bg=th["bg"])
+        body = tk.Frame(dlg, bg=th["bg"])
+        body.pack(fill=tk.BOTH, expand=True, padx=12, pady=10)
+        rows = []
+        rows.append((tr("props_title"), self.game_title(g)))
+        rows.append((tr("props_tid"), tid))
+        rows.append((tr("props_dname"), (g.get("dname") or "").strip() or tid))
+        rows.append((tr("props_folder"), (g.get("folder_name") or "").strip() or tid))
+        rows.append((tr("props_path"), g.get("folder") or tr("props_no")))
+        rows.append((tr("props_media"), self._game_media_id(g)))
+        rows.append((tr("props_cover"), tr("props_yes") if g.get("has_cover") else tr("props_no")))
+        for i, (label, value) in enumerate(rows):
+            tk.Label(
+                body, text=label + ":", bg=th["bg"], fg=th["muted"], anchor=tk.W,
+            ).grid(row=i, column=0, sticky=tk.W, pady=2, padx=(0, 8))
+            tk.Label(
+                body, text=value, bg=th["bg"], fg=th["fg"], anchor=tk.W, justify=tk.LEFT,
+                wraplength=420,
+            ).grid(row=i, column=1, sticky=tk.W, pady=2)
+        body.grid_columnconfigure(1, weight=1)
+        bf = tk.Frame(dlg, bg=th["bg"])
+        bf.pack(pady=(2, 10))
+        if g.get("folder") and os.path.isdir(g["folder"]):
+            ttk.Button(bf, text=tr("m_open_folder"), command=lambda: self.open_game_folder(g)).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("close"), command=dlg.destroy).pack(side=tk.LEFT, padx=4)
+        dlg.grab_set()
+
+    def _game_media_id(self, g):
+        folder = g.get("folder")
+        if not folder or not os.path.isdir(folder):
+            return tr("props_no")
+        xex = locate_xex_in_folder(folder)
+        if not xex:
+            return tr("props_no")
+        info = parse_xex2(xex)
+        if info.get("media_id") is None:
+            return tr("props_no")
+        return "%08X" % info["media_id"]
 
     def rename_game(self, g):
         current = self.game_title(g)
@@ -7902,6 +8014,7 @@ class App:
         menu.add_command(label=tr("m_export_assets"), command=lambda: self.export_assets(g))
         menu.add_separator()
         menu.add_command(label=tr("m_rename"), command=lambda: self.rename_game(g))
+        menu.add_command(label=tr("m_properties"), command=lambda: self.show_properties(g))
         if g.get("folder"):
             menu.add_command(label=tr("m_open_folder"), command=lambda: self.open_game_folder(g))
         menu.add_separator()
