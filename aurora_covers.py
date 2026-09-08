@@ -2749,6 +2749,10 @@ INTERNET_ARCHIVE_API = "https://archive.org/advancedsearch.php"
 INTERNET_ARCHIVE_DOWNLOAD = "https://archive.org/download/"
 # Item do Internet Archive com DLCs de Xbox 360 (msx360gcdlc)
 IA_DLC_ITEM = "msx360gcdlc"
+# Item público de DLCs (AlvRo) usado como fallback: msx360gcdlc restringiu
+# downloads (coleção "loggedin" -> HTTP 401 sem login), então tenta-se este
+# espelho público anônimo, casando o arquivo pelo título do jogo.
+IA_DLC_ITEM_ALT = "xbox-360-dlc-alvro"
 
 
 def search_internet_archive(query, rows=20):
@@ -2873,6 +2877,36 @@ def ia_dlc_matches(game_title, tid, limit=20):
         else:
             # Título sem número: evita casar DLCs de sequências posteriores
             # (ex.: "Call of Duty: Black Ops" não pode baixar DLC de BO2/BO3).
+            file_nums = {t for t in fset if t.isdigit()}
+            if file_nums and "1" not in file_nums:
+                continue
+            fnum = 1 if "1" in file_nums else 0
+        scored.append((fnum, len(fset), e))
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    return [e for _f, _l, e in scored[:limit]]
+
+
+def ia_alt_dlc_matches(game_title, tid, limit=5):
+    """Arquivos DLC do item público xbox-360-dlc-alvro que correspondem ao
+    jogo, usando o mesmo matching estrito de ia_dlc_matches. Serve como fonte
+    alternativa quando o item dedicado msx360gcdlc exige login (HTTP 401)."""
+    required, nums = _dlc_words_title(game_title)
+    if not required:
+        return []
+    entries = get_ia_file_entries(IA_DLC_ITEM_ALT)
+    scored = []
+    for e in entries:
+        name = e["name"].lower()
+        if not name.endswith((".rar", ".zip", ".xex", ".7z")):
+            continue
+        fset = {_tok_norm(t) for t in re.split(r"[^a-z0-9]+", name) if t}
+        if not all(any(_tok_norm(w) == ft or w == ft for ft in fset) for w in required):
+            continue
+        if nums:
+            if not (set(nums) & fset):
+                continue
+            fnum = sum(1 for n in nums if n in fset)
+        else:
             file_nums = {t for t in fset if t.isdigit()}
             if file_nums and "1" not in file_nums:
                 continue
@@ -3020,7 +3054,7 @@ def _parse_tu_update(u, media):
     if not isinstance(u, dict):
         return None
     try:
-        tuid = int(u.get("TitleUpdateID") or 0)
+        tuid = int(u.get("TitleUpdateID") or u.get("tuid") or u.get("Id") or 0)
     except (TypeError, ValueError):
         return None
     if not tuid:
@@ -3028,10 +3062,15 @@ def _parse_tu_update(u, media):
     return {
         "tuid": str(tuid),
         "media_id": (media or u.get("MediaID") or "").strip().upper(),
-        "version": (u.get("Version") or "0").strip(),
-        "name": (u.get("Name") or "").strip(),
-        "size": u.get("Size"),
-        "date": (u.get("UploadDate") or "").strip(),
+        "version": str(
+            u.get("Version") or u.get("version") or u.get("TUVersion") or "0"
+        ).strip(),
+        "name": (u.get("Name") or u.get("name") or "").strip(),
+        "size": u.get("Size") or u.get("size"),
+        "date": str(
+            u.get("UploadDate") or u.get("upload_date")
+            or u.get("Date") or u.get("date") or ""
+        ).strip(),
     }
 
 
@@ -3195,6 +3234,38 @@ def list_local_content(path, tid, sub):
         except OSError:
             continue
     return out
+
+
+def cache_tu_files(path, tid):
+    """TUs na pasta Cache (padrão do console e do X360-TU-Manager: arquivos
+    `TU_<TID>_...` sem extensão). Aurora também reconhece essas."""
+    tid = (tid or "").upper()
+    prefix = "tu_%s_" % tid.lower()
+    out = []
+    for rr in content_roots(path):
+        for base in (rr, os.path.join(rr, "Aurora")):
+            cache_dir = os.path.normpath(os.path.join(base, "Cache"))
+            try:
+                for f in sorted(os.listdir(cache_dir)):
+                    if os.path.isfile(os.path.join(cache_dir, f)) and f.lower().startswith(prefix):
+                        out.append(os.path.join(cache_dir, f))
+            except OSError:
+                continue
+    return out
+
+
+def list_local_tus(path, tid):
+    """TUs instaladas localmente: pastas Content\\...\\000B0000 + Cache."""
+    out = list_local_content(path, tid, "000B0000")
+    for fp in cache_tu_files(path, tid):
+        if fp not in out:
+            out.append(fp)
+    return out
+
+
+def list_local_dlcs(path, tid):
+    """DLCs instaladas localmente (pasta 00000002)."""
+    return list_local_content(path, tid, "00000002")
 
 
 def _list_xex(directory):
@@ -3502,6 +3573,9 @@ class X360DB:
             self.titles[tid] = {
                 "title": entry.get("title") or tid,
                 "boxart_url": entry.get("boxart"),
+                "release_date": entry.get("release_date"),
+                "developer": entry.get("developer"),
+                "genre": entry.get("genre") or [],
             }
             for alt in entry.get("alternative_id") or []:
                 self.alt_ids[alt.upper()] = tid
@@ -3531,7 +3605,13 @@ class X360DB:
         tid = self.canonical(tid)
         if tid in self.info_cache:
             return self.info_cache[tid]
-        info = download_json(X360DB_RAW + "titles/" + tid + "/info.json")
+        info = download_json(X360DB_RAW + "titles/" + tid + "/info.json") or {}
+        # Se o info.json falhou ou veio sem campos, completa com o índice
+        # (games.json, que fica em cache local e tem release_date/developer/genre).
+        base = self.titles.get(tid) or {}
+        for k in ("release_date", "developer", "genre"):
+            if not info.get(k) and base.get(k):
+                info[k] = base[k]
         self.info_cache[tid] = info or {}
         return self.info_cache[tid]
 
@@ -7272,6 +7352,12 @@ class App:
         threading.Thread(target=_run, daemon=True).start()
 
     def load_cover(self, g):
+        """Capa do preview (thread principal)."""
+        return self._load_cover_g(g, self.aurora_path.get().strip().strip('"'))
+
+    def _load_cover_g(self, g, path_str):
+        """Idem load_cover, mas recebe o caminho já resolvido (usado em threads
+        de trabalho, onde ler um StringVar do Tk é inseguro e trava o UI)."""
         key = g["tid"] + "|" + (g["folder"] or "import")
         with self._preview_cache_lock:
             if key in self.preview_cache:
@@ -7281,7 +7367,7 @@ class App:
         if cover_file:
             img = open_cover_image(cover_file)
         if img is None:
-            for import_dir in import_dirs_existing(self.aurora_path.get()):
+            for import_dir in import_dirs_existing(path_str):
                 cand = os.path.join(import_dir, g["tid"])
                 if not os.path.isdir(cand):
                     continue
@@ -7544,18 +7630,21 @@ class App:
         frame.pack(fill=tk.BOTH, expand=True)
         self._aurora_lbl = tk.Label(frame, text=tr("aurora_loading"))
         self._aurora_lbl.pack()
-        threading.Thread(target=self._aurora_render_thread, args=(g,), daemon=True).start()
+        # Resolve o caminho na thread principal ANTES de spawnar a thread de
+        # render (ler StringVar do Tk dentro da thread trava o UI).
+        path_str = self.aurora_path.get().strip().strip('"')
+        threading.Thread(target=self._aurora_render_thread, args=(g, path_str), daemon=True).start()
 
-    def _aurora_render_thread(self, g):
+    def _aurora_render_thread(self, g, path_str):
         try:
-            img = self._aurora_render(g)
+            img = self._aurora_render(g, path_str)
         except Exception as exc:
             self.queue.put("__aurora_fail__:%s" % exc)
             return
         self._aurora_img = img
         self.queue.put("__aurora_ready__")
 
-    def _aurora_render(self, g):
+    def _aurora_render(self, g, path_str):
         """Desenha uma simulação do visual Aurora com o jogo selecionado em
         destaque no centro de um coverflow."""
         W, H = 860, 400
@@ -7605,7 +7694,7 @@ class App:
             is_selected = game is g
             if is_selected:
                 w = center_w
-            cover = self.load_cover(game)
+            cover = self._load_cover_g(game, path_str)
             h = int(w * 1.42)
             if cover is None:
                 tile = Image.new("RGBA", (w, h), (34, 38, 46, 255))
@@ -7759,6 +7848,9 @@ class App:
                 tu_dir = os.path.join(folder, "$TitleUpdate")
                 if _dir_has(tu_dir, (".xex", ".tu")):
                     return True
+            # TUs na Cache do console/X360-TU-Manager também contam como instaladas.
+            if cache_tu_files(path, g["tid"]):
+                return True
             return False
         if kind == "dlc":
             for d in game_content_dirs(path, g["tid"]):
@@ -8267,21 +8359,48 @@ class App:
                 ia_id = result["identifier"]
                 filename = result["filename"]
 
-            self.log(tr("logs_downloading_ia", tr("kind_" + kind), ia_id, filename))
-            tmp = os.path.join(tempfile.gettempdir(), "%s_%s_%s" % (tid, kind, os.path.basename(filename)))
+            # Download: tenta a fonte escolhida e, se falhar (ex.: msx360gcdlc
+            # exige login -> HTTP 401), tenta o espelho público AlvRo casado
+            # pelo título do jogo (mesmo matching estrito de DLC).
+            candidates = [(ia_id, filename)]
+            if self.game_title(g):
+                candidates += [
+                    (IA_DLC_ITEM_ALT, m["name"]) for m in ia_alt_dlc_matches(self.game_title(g), tid)
+                ]
             try:
-                if not download_internet_archive_file(ia_id, filename, tmp, cancel_event=self.cancel_event):
+                download_ok = False
+                tmp = None
+                for cand_id, cand_file in candidates:
+                    cand_tmp = os.path.join(
+                        tempfile.gettempdir(),
+                        "%s_%s_%s" % (tid, kind, os.path.basename(cand_file)),
+                    )
+                    self.log(
+                        tr("logs_downloading_ia", tr("kind_" + kind), cand_id, cand_file)
+                    )
+                    try:
+                        got = download_internet_archive_file(
+                            cand_id, cand_file, cand_tmp, cancel_event=self.cancel_event
+                        )
+                    except _DownloadCanceled:
+                        try:
+                            os.remove(cand_tmp)
+                        except OSError:
+                            pass
+                        raise
+                    if got and validate_downloaded_file(cand_tmp) and _check_archive_magic(cand_tmp, cand_file.lower()):
+                        download_ok = True
+                        ia_id, filename, tmp = cand_id, cand_file, cand_tmp
+                        break
+                    try:
+                        os.remove(cand_tmp)
+                    except OSError:
+                        pass
+                if not download_ok:
                     self.log(tr("ia_download_failed", ia_id, filename))
                     return False
             except _DownloadCanceled:
                 self.log(tr("canceled"))
-                return False
-            if not validate_downloaded_file(tmp) or not _check_archive_magic(tmp, filename.lower()):
-                self.log(tr("ia_download_failed", ia_id, filename))
-                try:
-                    os.remove(tmp)
-                except OSError:
-                    pass
                 return False
 
             installed = False
@@ -8880,7 +8999,10 @@ class App:
             if not dlg.winfo_exists():
                 return
             items = [dict(e, local=False) for e in cached_online]
-            for fp in list_local_content(path, tid, sub):
+            local_fps = (
+                list_local_tus(path, tid) if is_tu else list_local_dlcs(path, tid)
+            )
+            for fp in local_fps:
                 try:
                     fsize = os.path.getsize(fp)
                 except OSError:
@@ -8965,9 +9087,11 @@ class App:
         dlg.grab_set()
         self._tu_dlg_state = _render
         threading.Thread(target=_load, daemon=True).start()
-        if not is_tu:
-            # DLC: lista o instalado imediatamente (sem consulta online).
-            self.root.after(0, _render)
+        # TU e DLC: mostra o que já está instalado IMEDIATAMENTE. Para TU, a
+        # consulta ao XboxUnity é lenta (ou pode falhar): se a lista só fosse
+        # montada depois dela, os TUs instalados nunca apareciam. `_load`
+        # repinta depois de ~10s com os TUs online também.
+        self.root.after(0, _render)
 
     def _install_local_content_file(self, g, path, fname, kind):
         """Instala um TU/DLC local (arquivo escolhido) na pasta de conteúdo
