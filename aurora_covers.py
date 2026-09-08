@@ -296,8 +296,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "atualização de título (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "Baixar TU (atualização)...",
-        "m_dl_dlc": "Baixar DLC...",
+        "m_dl_tu": "TUs",
+        "m_dl_dlc": "DLCs",
         "btn_dl_tu": "Baixar TU",
         "btn_dl_dlc": "Baixar DLC",
         "logs_dlc_all_start": "Buscando todas as DLCs de %s...",
@@ -308,6 +308,8 @@ TEXT = {
         "logs_tu_all_start": "Baixando TU de todos os jogos (%d)...",
         "logs_tu_all_progress": "TU %d de %d: %s",
         "logs_tu_all_done": "TUs processadas: %d de %d baixadas/instaladas.",
+        "logs_cover_applied": "Capa aplicada para %s (%s).",
+        "logs_cover_apply_err": "Erro ao aplicar capa: %s",
         "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
         "logs_unity_tu_none": "XboxUnity não tem TU para %s.",
@@ -316,7 +318,7 @@ TEXT = {
         "unity_tu_empty": "Nenhuma TU disponível no XboxUnity.",
         "unity_tu_dl_success": "TU baixado com sucesso do XboxUnity (%s).",
         "dlc_loading": "Carregando DLCs...",
-        "dlc_empty": "Nenhuma DLC encontrada em msx360gcdlc.",
+        "dlc_empty": "Nenhuma DLC instalada.",
         "dlc_manual_extract": "DLC salvo em %s; extraia manualmente com 7-Zip no console.",
         "add_game_folder_scanning": "Escaneando pasta %s...",
         "add_game_folder_err": "Erro ao escanear pasta: %s",
@@ -690,8 +692,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "title update (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "Download TU (title update)...",
-        "m_dl_dlc": "Download DLC...",
+        "m_dl_tu": "TUs",
+        "m_dl_dlc": "DLCs",
         "btn_dl_tu": "Download TU",
         "btn_dl_dlc": "Download DLC",
         "logs_dlc_all_start": "Looking for all DLCs of %s...",
@@ -702,6 +704,8 @@ TEXT = {
         "logs_tu_all_start": "Downloading TU for all games (%d)...",
         "logs_tu_all_progress": "TU %d of %d: %s",
         "logs_tu_all_done": "TUs processed: %d of %d downloaded/installed.",
+        "logs_cover_applied": "Cover applied for %s (%s).",
+        "logs_cover_apply_err": "Error applying cover: %s",
         "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
         "logs_unity_tu_none": "XboxUnity has no TU for %s.",
@@ -710,7 +714,7 @@ TEXT = {
         "unity_tu_empty": "No TUs available on XboxUnity.",
         "unity_tu_dl_success": "TU downloaded successfully from XboxUnity (%s).",
         "dlc_loading": "Loading DLCs...",
-        "dlc_empty": "No DLC found in msx360gcdlc.",
+        "dlc_empty": "No DLCs installed.",
         "dlc_manual_extract": "DLC saved to %s; extract it manually with 7-Zip on the console.",
         "add_game_folder_scanning": "Scanning folder %s...",
         "add_game_folder_err": "Error scanning folder: %s",
@@ -1090,8 +1094,8 @@ TEXT = {
         "kind_screenshots": "screenshot",
         "kind_title_update": "actualización de título (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "Descargar TU (actualización)...",
-        "m_dl_dlc": "Descargar DLC...",
+        "m_dl_tu": "TUs",
+        "m_dl_dlc": "DLCs",
         "btn_dl_tu": "Descargar TU",
         "btn_dl_dlc": "Descargar DLC",
         "logs_dlc_all_start": "Buscando todos los DLC de %s...",
@@ -1102,6 +1106,8 @@ TEXT = {
         "logs_tu_all_start": "Descargando TU de todos los juegos (%d)...",
         "logs_tu_all_progress": "TU %d de %d: %s",
         "logs_tu_all_done": "TU procesados: %d de %d descargados/instalados.",
+        "logs_cover_applied": "Portada aplicada para %s (%s).",
+        "logs_cover_apply_err": "Error al aplicar la portada: %s",
         "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
         "logs_unity_tu_none": "XboxUnity no tiene TU para %s.",
@@ -1110,7 +1116,7 @@ TEXT = {
         "unity_tu_empty": "No hay TUs disponibles en XboxUnity.",
         "unity_tu_dl_success": "TU descargado con éxito de XboxUnity (%s).",
         "dlc_loading": "Cargando DLCs...",
-        "dlc_empty": "No se encontraron DLCs en msx360gcdlc.",
+        "dlc_empty": "Ninguna DLC instalada.",
         "dlc_manual_extract": "DLC guardado en %s; extráigalo manualmente con 7-Zip en la consola.",
         "add_game_folder_scanning": "Escaneando carpeta %s...",
         "add_game_folder_err": "Error al escanear carpeta: %s",
@@ -1490,8 +1496,8 @@ TEXT = {
         "kind_screenshots": "capture",
         "kind_title_update": "mise à jour du titre (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "Télécharger TU (mise à jour)...",
-        "m_dl_dlc": "Télécharger DLC...",
+        "m_dl_tu": "TUs",
+        "m_dl_dlc": "DLCs",
         "btn_dl_tu": "Téléch. TU",
         "btn_dl_dlc": "Téléch. DLC",
         "logs_dlc_all_start": "Recherche de tous les DLC de %s...",
@@ -1502,6 +1508,8 @@ TEXT = {
         "logs_tu_all_start": "Téléchargement des TU de tous les jeux (%d)...",
         "logs_tu_all_progress": "TU %d sur %d : %s",
         "logs_tu_all_done": "TU traités : %d sur %d téléchargés/installés.",
+        "logs_cover_applied": "Jaquette appliquée pour %s (%s).",
+        "logs_cover_apply_err": "Erreur lors de l'application de la jaquette : %s",
         "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
         "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
         "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s.",
@@ -1510,7 +1518,7 @@ TEXT = {
         "unity_tu_empty": "Aucune TU disponible sur XboxUnity.",
         "unity_tu_dl_success": "TU téléchargé avec succès depuis XboxUnity (%s).",
         "dlc_loading": "Chargement des DLC...",
-        "dlc_empty": "Aucun DLC trouvé dans msx360gcdlc.",
+        "dlc_empty": "Aucune DLC installée.",
         "dlc_manual_extract": "DLC enregistré dans %s; extrayez-le manuellement avec 7-Zip sur la console.",
         "add_game_folder_scanning": "Analyse du dossier %s...",
         "add_game_folder_err": "Erreur lors de l'analyse du dossier: %s",
@@ -1885,8 +1893,8 @@ TEXT = {
         "kind_screenshots": "スクリーンショット",
         "kind_title_update": "タイトルアップデート (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "TU（タイトルアップデート）をダウンロード...",
-        "m_dl_dlc": "DLC をダウンロード...",
+        "m_dl_tu": "TU",
+        "m_dl_dlc": "DLC",
         "btn_dl_tu": "TU 取得",
         "btn_dl_dlc": "DLC 取得",
         "logs_dlc_all_start": "%s の全DLCを検索中...",
@@ -1897,6 +1905,8 @@ TEXT = {
         "logs_tu_all_start": "全ゲームのTUをダウンロード中 (%d)...",
         "logs_tu_all_progress": "TU %d/%d: %s",
         "logs_tu_all_done": "TU処理完了: %d/%d がダウンロード/インストールされました。",
+        "logs_cover_applied": "%sにカバーを適用しました（%s）。",
+        "logs_cover_apply_err": "カバーの適用に失敗: %s",
         "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
         "logs_unity_tu_none": "XboxUnityに%sのTUがありません。",
@@ -1905,7 +1915,7 @@ TEXT = {
         "unity_tu_empty": "XboxUnityに利用可能なTUがありません。",
         "unity_tu_dl_success": "XboxUnityからTUをダウンロードしました (%s)。",
         "dlc_loading": "DLCを読み込み中...",
-        "dlc_empty": "msx360gcdlcにDLCは見つかりませんでした。",
+        "dlc_empty": "インストール済みのDLCはありません。",
         "dlc_manual_extract": "DLCを %s に保存しました。コンソール用に7-Zipで手動展開してください。",
         "add_game_folder_scanning": "フォルダ %s をスキャン中...",
         "add_game_folder_err": "フォルダのスキャン中にエラー: %s",
@@ -2280,8 +2290,8 @@ TEXT = {
         "kind_screenshots": "скриншот",
         "kind_title_update": "обновление игры (TU)",
         "kind_dlc": "DLC",
-        "m_dl_tu": "Скачать TU (обновление)...",
-        "m_dl_dlc": "Скачать DLC...",
+        "m_dl_tu": "TU",
+        "m_dl_dlc": "DLC",
         "btn_dl_tu": "Скачать TU",
         "btn_dl_dlc": "Скачать DLC",
         "logs_dlc_all_start": "Поиск всех DLC игры %s...",
@@ -2292,6 +2302,8 @@ TEXT = {
         "logs_tu_all_start": "Загрузка TU для всех игр (%d)...",
         "logs_tu_all_progress": "TU %d из %d: %s",
         "logs_tu_all_done": "TU обработаны: %d из %d загружено/установлено.",
+        "logs_cover_applied": "Обложка применена для %s (%s).",
+        "logs_cover_apply_err": "Ошибка применения обложки: %s",
         "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
         "logs_unity_tu_none": "На XboxUnity нет TU для %s.",
@@ -2300,7 +2312,7 @@ TEXT = {
         "unity_tu_empty": "Нет доступных TU на XboxUnity.",
         "unity_tu_dl_success": "TU успешно скачан с XboxUnity (%s).",
         "dlc_loading": "Загрузка DLC...",
-        "dlc_empty": "DLC не найдены в msx360gcdlc.",
+        "dlc_empty": "Установленных DLC нет.",
         "dlc_manual_extract": "DLC сохранён в %s; извлеките вручную 7-Zip на консоли.",
         "add_game_folder_scanning": "Сканирование папки %s...",
         "add_game_folder_err": "Ошибка сканирования папки: %s",
@@ -2689,10 +2701,13 @@ _IO_LOCK = threading.RLock()
 _GL_ASSET_LOCK = threading.Lock()
 
 
-def fetch_bytes(url, timeout=40, attempts=2):
+def fetch_bytes(url, timeout=40, attempts=2, headers=None):
     for _ in range(attempts):
         try:
-            req = urllib.request.Request(url, headers=USER_AGENT)
+            hdrs = dict(USER_AGENT)
+            if headers:
+                hdrs.update(headers)
+            req = urllib.request.Request(url, headers=hdrs)
             with _HTTP_POOL.open(req, timeout=timeout) as resp:
                 data = resp.read()
                 if getattr(resp, "status", 200) == 200 and len(data) > 0:
@@ -2987,7 +3002,40 @@ def download_internet_archive_file(identifier, filename, dest_path, cancel_event
     return False
 
 
-def xboxunity_title_updates(tid):
+def _unity_tu_headers():
+    """Headers de navegador: o XboxUnity responde vazio para requests sem
+    Referer/X-Requested-With."""
+    return {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/120.0 Safari/537.36"),
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": XBOXUNITY_ROOT,
+    }
+
+
+def _parse_tu_update(u, media):
+    """Converte uma entrada de TU do XboxUnity em dict normalizado, ou None."""
+    if not isinstance(u, dict):
+        return None
+    try:
+        tuid = int(u.get("TitleUpdateID") or 0)
+    except (TypeError, ValueError):
+        return None
+    if not tuid:
+        return None
+    return {
+        "tuid": str(tuid),
+        "media_id": (media or u.get("MediaID") or "").strip().upper(),
+        "version": (u.get("Version") or "0").strip(),
+        "name": (u.get("Name") or "").strip(),
+        "size": u.get("Size"),
+        "date": (u.get("UploadDate") or "").strip(),
+    }
+
+
+def xboxunity_title_updates(tid, timeout=10):
     """Lista Title Updates disponíveis no XboxUnity para um TitleID.
     Retorna lista de dicts com tuid, media_id, version, name, size, date.
     Resultado é cacheado por 5 min (evita re-consulta lenta ao reabrir o diálogo)."""
@@ -2997,33 +3045,33 @@ def xboxunity_title_updates(tid):
         cached = _XBOXUNITY_CACHE.get(tid)
         if cached and now - cached[0] < 300:
             return cached[1]
-    data = download_json(XBOXUNITY_TU_INFO % tid, timeout=15, attempts=1)
-    if not isinstance(data, dict):
-        items = []
-    else:
-        medias = data.get("MediaIDS") or data.get("MediaIds") or []
-        items = []
-        for m in medias:
-            if not isinstance(m, dict):
-                continue
-            media = (m.get("MediaID") or "").strip().upper()
-            for u in m.get("Updates") or []:
-                if not isinstance(u, dict):
+    items = []
+    b = fetch_bytes(
+        XBOXUNITY_TU_INFO % tid, timeout=timeout, attempts=1,
+        headers=_unity_tu_headers(),
+    )
+    if b:
+        try:
+            data = json.loads(b.decode("utf-8"))
+        except Exception:
+            data = None
+        if isinstance(data, dict):
+            # Type 1: {"MediaIDS":[{"MediaID":..,"Updates":[..]}]}
+            medias = data.get("MediaIDS") or data.get("MediaIds") or []
+            for m in medias:
+                if not isinstance(m, dict):
                     continue
-                try:
-                    tuid = int(u.get("TitleUpdateID") or 0)
-                except (TypeError, ValueError):
-                    continue
-                if not tuid:
-                    continue
-                items.append({
-                    "tuid": str(tuid),
-                    "media_id": media,
-                    "version": (u.get("Version") or "0").strip(),
-                    "name": (u.get("Name") or "").strip(),
-                    "size": u.get("Size"),
-                    "date": (u.get("UploadDate") or "").strip(),
-                })
+                media = (m.get("MediaID") or "").strip().upper()
+                for u in m.get("Updates") or []:
+                    it = _parse_tu_update(u, media)
+                    if it:
+                        items.append(it)
+            # Type 2: {"Updates":[{.., "MediaID":..}]} (cada TU traz seu MediaID)
+            if not medias and isinstance(data.get("Updates"), list):
+                for u in data.get("Updates"):
+                    it = _parse_tu_update(u, None)
+                    if it:
+                        items.append(it)
     with _XBOXUNITY_CACHE_LOCK:
         _XBOXUNITY_CACHE[tid] = (now, items)
     return items
@@ -8177,6 +8225,7 @@ class App:
                             shutil.copy2(tmp, os.path.join(dest_dir, fname))
                             mark_installed(tid, kind)
                             self.log(tr("unity_tu_dl_success", fname))
+                            self._ensure_cover_installed(path, g)
                             return True
                         except OSError:
                             continue
@@ -8278,6 +8327,7 @@ class App:
 
             mark_installed(tid, kind)
             self.log(tr("ia_download_success", tr("kind_" + kind), filename))
+            self._ensure_cover_installed(path, g)
             try:
                 os.remove(tmp)
             except OSError:
@@ -8286,6 +8336,51 @@ class App:
         except Exception as exc:
             self.log(tr("logs_dl_kind_err", kind, exc))
             return False
+
+    def _ensure_cover_installed(self, path, g):
+        """Após instalar conteúdo (TU/DLC), aplica a capa do repositório se o
+        jogo ainda não tiver uma instalada (GC no jogo ou cover.png no Import).
+        Usa fontes rápidas (x360db/remote do repo) antes do fallback completo.
+        Roda em thread de trabalho: não toca em variáveis Tk."""
+        try:
+            tid = g["tid"]
+            if find_cover_file(g["folder"], g["tid"]) is not None:
+                return
+            for import_dir in import_dirs_existing(path):
+                cand = os.path.join(import_dir, tid)
+                if not os.path.isdir(cand):
+                    continue
+                for fn in sorted(os.listdir(cand)):
+                    if fn.lower().startswith("cover") and fn.lower().endswith((".png", ".jpg", ".jpeg", ".dds")):
+                        return
+            blob = None
+            if self.repo == "gamecovers":
+                blob = self._gamecovers_remote(tid, g)
+            if blob is None:
+                try:
+                    blob = self.db.download_artwork(tid, "boxart")
+                except Exception:
+                    blob = None
+            if blob is None:
+                try:
+                    blob = self._local_asset(tid, g)
+                except Exception:
+                    blob = None
+            if not blob:
+                blob = self.get_cover_blob(tid, g)
+            if not blob:
+                return
+            img = box_render(Image.open(io.BytesIO(blob)), self.cover_format)
+            if g["folder"]:
+                self.write_asset(g["folder"], tid, "GC", img, ASSET_TYPE_BOXART)
+            self.write_import(path, tid, "cover.png", img)
+            mark_installed(tid, "boxart")
+            key = tid + "|" + (g["folder"] or "import")
+            with self._preview_cache_lock:
+                self.preview_cache.pop(key, None)
+            self.log(tr("logs_cover_applied", self.game_title(g), tid))
+        except Exception as exc:
+            self.log(tr("logs_cover_apply_err", exc))
 
     def apply_gl_slot(self, path, g, slot, new_img, import_name):
         tid = g["tid"]
@@ -8721,14 +8816,19 @@ class App:
         ys.pack(side=tk.RIGHT, fill=tk.Y)
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         msg = tk.Label(
-            dlg, text=tr("unity_tu_loading" if is_tu else "dlc_loading"),
+            dlg, text=tr("unity_tu_loading" if is_tu else "dlc_empty"),
             bg=th["bg"], fg=th["muted"],
         )
         msg.pack(pady=(4, 0))
         bf = ttk.Frame(dlg)
         bf.pack(pady=(6, 10))
-        btn_dl = ttk.Button(bf, text=tr("dl_online"), command=lambda: _dl(), state=tk.DISABLED)
-        btn_dl.pack(side=tk.LEFT, padx=4)
+        # DLC: diálogo mostra apenas o que está instalado (não consulta online);
+        # o botão de baixar online só existe para TUs.
+        if is_tu:
+            btn_dl = ttk.Button(bf, text=tr("dl_online"), command=lambda: _dl(), state=tk.DISABLED)
+            btn_dl.pack(side=tk.LEFT, padx=4)
+        else:
+            btn_dl = None
         btn_local = ttk.Button(
             bf, text=tr("tu_install_local" if is_tu else "dlc_install_local"),
             command=_install_local,
@@ -8768,10 +8868,11 @@ class App:
             if iids:
                 tree.selection_set(iids[0])
                 tree.focus(iids[0])
-            try:
-                btn_dl.configure(state=tk.NORMAL if iids else tk.DISABLED)
-            except tk.TclError:
-                pass
+            if btn_dl is not None:
+                try:
+                    btn_dl.configure(state=tk.NORMAL if iids else tk.DISABLED)
+                except tk.TclError:
+                    pass
 
         cached_online = []
 
@@ -8789,11 +8890,11 @@ class App:
                 _populate(items)
             except tk.TclError:
                 return
-            if not items:
-                try:
-                    msg.configure(text=tr("unity_tu_empty") if is_tu else tr("dlc_empty"))
-                except tk.TclError:
-                    return
+            # Atualiza a mensagem SEMPRE (não fica "Carregando..." eternamente).
+            try:
+                msg.configure(text="" if items else tr("unity_tu_empty" if is_tu else "dlc_empty"))
+            except tk.TclError:
+                return
 
         def _load():
             try:
@@ -8803,7 +8904,8 @@ class App:
                         ups, key=lambda x: _version_num(x.get("version")), reverse=True
                     )
                 else:
-                    cached_online[:] = ia_dlc_matches(self.game_title(g), tid)
+                    # DLC: mostra apenas o que já está instalado (sem listar online).
+                    cached_online[:] = []
             except Exception:
                 cached_online[:] = []
             self.queue.put("__tu_dlg_render__")
@@ -8863,6 +8965,9 @@ class App:
         dlg.grab_set()
         self._tu_dlg_state = _render
         threading.Thread(target=_load, daemon=True).start()
+        if not is_tu:
+            # DLC: lista o instalado imediatamente (sem consulta online).
+            self.root.after(0, _render)
 
     def _install_local_content_file(self, g, path, fname, kind):
         """Instala um TU/DLC local (arquivo escolhido) na pasta de conteúdo
