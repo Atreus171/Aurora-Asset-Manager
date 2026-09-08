@@ -107,7 +107,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.5.5"
+CURRENT_VERSION = "1.5.5.6"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -7611,7 +7611,7 @@ class App:
         g = self.selected_game()
         if g is None:
             return
-        if self._aurora_toplevel is not None:
+        if getattr(self, "_aurora_toplevel", None) is not None:
             try:
                 self._aurora_toplevel.destroy()
             except Exception:
@@ -8950,10 +8950,10 @@ class App:
             btn_dl = None
         btn_local = ttk.Button(
             bf, text=tr("tu_install_local" if is_tu else "dlc_install_local"),
-            command=_install_local,
+            command=lambda: _install_local(),
         )
         btn_local.pack(side=tk.LEFT, padx=4)
-        ttk.Button(bf, text=tr("cancel"), command=_close).pack(side=tk.LEFT, padx=4)
+        ttk.Button(bf, text=tr("cancel"), command=lambda: _close()).pack(side=tk.LEFT, padx=4)
 
         entries = []
         iids = []
