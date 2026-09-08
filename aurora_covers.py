@@ -303,6 +303,11 @@ TEXT = {
         "logs_dlc_all_start": "Buscando todas as DLCs de %s...",
         "logs_dlc_all_progress": "Baixando DLC %d de %d: %s...",
         "logs_dlc_all_done": "DLCs processadas: %d de %d baixadas/instaladas.",
+        "logs_dlc_games_title": "todos os %d jogos",
+        "logs_dlc_games_progress": "Jogo (%d no total): %s",
+        "logs_tu_all_start": "Baixando TU de todos os jogos (%d)...",
+        "logs_tu_all_progress": "TU %d de %d: %s",
+        "logs_tu_all_done": "TUs processadas: %d de %d baixadas/instaladas.",
         "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
         "logs_unity_tu_none": "XboxUnity não tem TU para %s.",
@@ -692,6 +697,11 @@ TEXT = {
         "logs_dlc_all_start": "Looking for all DLCs of %s...",
         "logs_dlc_all_progress": "Downloading DLC %d of %d: %s...",
         "logs_dlc_all_done": "DLCs processed: %d of %d downloaded/installed.",
+        "logs_dlc_games_title": "all %d games",
+        "logs_dlc_games_progress": "Game (%d total): %s",
+        "logs_tu_all_start": "Downloading TU for all games (%d)...",
+        "logs_tu_all_progress": "TU %d of %d: %s",
+        "logs_tu_all_done": "TUs processed: %d of %d downloaded/installed.",
         "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
         "logs_unity_tu_none": "XboxUnity has no TU for %s.",
@@ -1087,6 +1097,11 @@ TEXT = {
         "logs_dlc_all_start": "Buscando todos los DLC de %s...",
         "logs_dlc_all_progress": "Descargando DLC %d de %d: %s...",
         "logs_dlc_all_done": "DLC procesados: %d de %d descargados/instalados.",
+        "logs_dlc_games_title": "todos los %d juegos",
+        "logs_dlc_games_progress": "Juego (%d en total): %s",
+        "logs_tu_all_start": "Descargando TU de todos los juegos (%d)...",
+        "logs_tu_all_progress": "TU %d de %d: %s",
+        "logs_tu_all_done": "TU procesados: %d de %d descargados/instalados.",
         "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
         "logs_unity_tu_none": "XboxUnity no tiene TU para %s.",
@@ -1482,6 +1497,11 @@ TEXT = {
         "logs_dlc_all_start": "Recherche de tous les DLC de %s...",
         "logs_dlc_all_progress": "Téléchargement DLC %d sur %d : %s...",
         "logs_dlc_all_done": "DLC traités : %d sur %d téléchargés/installés.",
+        "logs_dlc_games_title": "tous les %d jeux",
+        "logs_dlc_games_progress": "Jeu (%d au total) : %s",
+        "logs_tu_all_start": "Téléchargement des TU de tous les jeux (%d)...",
+        "logs_tu_all_progress": "TU %d sur %d : %s",
+        "logs_tu_all_done": "TU traités : %d sur %d téléchargés/installés.",
         "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
         "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
         "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s.",
@@ -1872,6 +1892,11 @@ TEXT = {
         "logs_dlc_all_start": "%s の全DLCを検索中...",
         "logs_dlc_all_progress": "DLC %d/%d をダウンロード中: %s...",
         "logs_dlc_all_done": "DLC処理完了: %d/%d がダウンロード/インストールされました。",
+        "logs_dlc_games_title": "全%dゲーム",
+        "logs_dlc_games_progress": "ゲーム (全%d): %s",
+        "logs_tu_all_start": "全ゲームのTUをダウンロード中 (%d)...",
+        "logs_tu_all_progress": "TU %d/%d: %s",
+        "logs_tu_all_done": "TU処理完了: %d/%d がダウンロード/インストールされました。",
         "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
         "logs_unity_tu_none": "XboxUnityに%sのTUがありません。",
@@ -2262,6 +2287,11 @@ TEXT = {
         "logs_dlc_all_start": "Поиск всех DLC игры %s...",
         "logs_dlc_all_progress": "Загрузка DLC %d из %d: %s...",
         "logs_dlc_all_done": "DLC обработаны: %d из %d загружено/установлено.",
+        "logs_dlc_games_title": "все %d игр",
+        "logs_dlc_games_progress": "Игра (всего %d): %s",
+        "logs_tu_all_start": "Загрузка TU для всех игр (%d)...",
+        "logs_tu_all_progress": "TU %d из %d: %s",
+        "logs_tu_all_done": "TU обработаны: %d из %d загружено/установлено.",
         "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
         "logs_unity_tu_none": "На XboxUnity нет TU для %s.",
@@ -2768,38 +2798,73 @@ _IA_CACHE = {}
 _IA_CACHE_LOCK = threading.Lock()
 
 
+_ROMAN_TO_ARABIC = {
+    "i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5, "vi": 6, "vii": 7, "viii": 8,
+    "ix": 9, "x": 10, "xi": 11, "xii": 12, "xiii": 13, "xiv": 14, "xv": 15,
+    "xvi": 16, "xvii": 17, "xviii": 18, "xix": 19, "xx": 20,
+}
+
+_DLC_STOP = {"dlc", "x360", "xb360", "xf", "xbla", "rf", "ztm", "the", "and",
+             "for", "with", "xbox", "360", "game", "games", "edition", "pack",
+             "plus", "dual", "content", "rar", "part", "vol", "volume"}
+
+
+def _tok_norm(word):
+    """Compara tokens tolerando plural simples e numerais romanos."""
+    low = word.strip().lower()
+    if low in _ROMAN_TO_ARABIC:
+        return str(_ROMAN_TO_ARABIC[low])
+    return low[:-1] if low.endswith("s") and len(low) > 3 else low
+
+
+def _dlc_words_title(game_title):
+    """Palavras significativas do título: se houver palavra de 4+ letras, exige
+    apenas essas (subtítulos curtos como "of", "the" viram opcionais); senão
+    usa todas. Retorna (lista de palavras obrigatórias, números do título)."""
+    raw = re.split(r"[^a-z0-9]+", (game_title or "").lower())
+    words = [w for w in raw if len(w) > 1 and w not in _DLC_STOP and not w.isdigit()]
+    nums = [_tok_norm(w) for w in raw if w.isdigit() or w in _ROMAN_TO_ARABIC]
+    long_words = [w for w in words if len(w) >= 4]
+    required = long_words if long_words else words
+    return required, [n for n in nums if n]
+
+
 def ia_dlc_matches(game_title, tid, limit=20):
-    """Arquivos DLC do item msx360gcdlc (374 DLCs de 360) que correspondem ao
-    jogo, ordenados por relevância do nome. Retorna [{name, size}]."""
-    stop = {"dlc", "x360", "xb360", "xf", "xbla", "rf", "ztm", "the", "and",
-            "for", "with", "xbox", "360", "game", "games", "edition", "pack",
-            "plus", "dual", "content", "rar"}
-    words = {w for w in re.split(r"[^a-z0-9]+", (game_title or "").lower())
-             if len(w) > 1 and w not in stop}
-    if not words:
+    """Arquivos DLC do item msx360gcdlc (874 DLCs de 360) que correspondem ao
+    jogo, ordenados por relevância do nome. Retorna [{name, size}].
+
+    Matching estrito: TODAS as palavras obrigatórias do título precisam
+    aparecer no nome do arquivo (tolerando plural) e, quando o título tem
+    número (ex.: "FIFA 14", "Modern Warfare 3", "Assassin's Creed III"), o
+    arquivo precisa conter esse número. Isso evita falsos positivos como
+    "FIFA 14" casando com MotoGP.14/NASCAR.14 ou MW3 casando com MW1/MW2."""
+    required, nums = _dlc_words_title(game_title)
+    if not required:
         return []
     entries = get_ia_file_entries(IA_DLC_ITEM)
     scored = []
     for e in entries:
-        if not e["name"].lower().endswith((".rar", ".zip", ".xex", ".7z")):
+        name = e["name"].lower()
+        if not name.endswith((".rar", ".zip", ".xex", ".7z")):
             continue
-        fset = set(re.split(r"[^a-z0-9]+", e["name"].lower()))
-        fset.discard("")
-        score = sum(1 for w in words if w in fset)
-        if score:
-            scored.append((score, len(fset), e))
+        fset = {_tok_norm(t) for t in re.split(r"[^a-z0-9]+", name) if t}
+        if not all(any(_tok_norm(w) == ft or w == ft for ft in fset) for w in required):
+            continue
+        if nums:
+            # Título tem número (ex.: "FIFA 14"): o arquivo precisa tê-lo.
+            if not (set(nums) & fset):
+                continue
+            fnum = sum(1 for n in nums if n in fset)
+        else:
+            # Título sem número: evita casar DLCs de sequências posteriores
+            # (ex.: "Call of Duty: Black Ops" não pode baixar DLC de BO2/BO3).
+            file_nums = {t for t in fset if t.isdigit()}
+            if file_nums and "1" not in file_nums:
+                continue
+            fnum = 1 if "1" in file_nums else 0
+        scored.append((fnum, len(fset), e))
     scored.sort(key=lambda x: (-x[0], x[1]))
-    if not scored:
-        return []
-    best = scored[0][0]
-    out = []
-    for score, _fsz, e in scored:
-        if score < max(1, best - 1):
-            continue
-        out.append(e)
-        if len(out) >= limit:
-            break
-    return out
+    return [e for _f, _l, e in scored[:limit]]
 
 
 class _DownloadCanceled(Exception):
@@ -3143,6 +3208,62 @@ def extract_archive_to(archive_path, dest_root):
         return proc.returncode == 0
     except Exception:
         return False
+
+
+def _copy_tree_contents(src, dst):
+    """Copia recursivamente o conteúdo de src para dst (merge)."""
+    for name in os.listdir(src):
+        s = os.path.join(src, name)
+        d = os.path.join(dst, name)
+        if os.path.isdir(s):
+            if os.path.exists(d):
+                shutil.rmtree(d, ignore_errors=True)
+            shutil.copytree(s, d)
+        else:
+            os.makedirs(dst, exist_ok=True)
+            shutil.copy2(s, d)
+
+
+def _find_sub_dirs(root, sub, max_depth=8):
+    """Diretórios chamados `sub` (00000002 DLC / 000B0000 TU) que contêm ao
+    menos um arquivo, até `max_depth` níveis abaixo de `root`."""
+    found = []
+    base_depth = root.rstrip(os.sep).count(os.sep)
+    for dirpath, dirnames, filenames in os.walk(root):
+        depth = dirpath.rstrip(os.sep).count(os.sep) - base_depth
+        if depth > max_depth:
+            dirnames[:] = []
+            continue
+        if os.path.basename(dirpath) == sub and filenames:
+            found.append(dirpath)
+    return found
+
+
+def extract_archive_content(archive_path, sub, content_dirs):
+    """Extrai um archive (zip/rar/7z) em diretório temporário, localiza as
+    pastas `sub` (00000002 para DLC, 000B0000 para TU) que tenham conteúdo e
+    copia tudo para a primeira pasta de conteúdo gravável. Importante: funciona
+    mesmo quando o TID dentro do archive difere do jogo ou o layout não é o
+    esperado (ex.: DLC de jogos certos que não instalavam). Retorna
+    (installed, dest_path_ou_None)."""
+    staging = tempfile.mkdtemp(prefix="aurora_arc_")
+    try:
+        if not extract_archive_to(archive_path, staging):
+            return False, None
+        subs = _find_sub_dirs(staging, sub)
+        if not subs:
+            return False, None
+        for dest_dir in content_dirs:
+            try:
+                os.makedirs(dest_dir, exist_ok=True)
+                for s in subs:
+                    _copy_tree_contents(s, dest_dir)
+                return True, dest_dir
+            except OSError:
+                continue
+        return False, None
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
 
 
 def search_title_updates_dlc(tid, game_title=None, ia_id=None, kind=None):
@@ -6981,12 +7102,13 @@ class App:
 
     def on_select(self, _event=None):
         g = self.selected_game()
+        dl_state = tk.NORMAL if (self.games and not self.busy) else tk.DISABLED
         if g is None:
             self.btn_custom.configure(state=tk.DISABLED)
             self.btn_search.configure(state=tk.DISABLED)
             self.btn_debug_db.configure(state=tk.DISABLED)
-            self.btn_dl_tu.configure(state=tk.DISABLED)
-            self.btn_dl_dlc.configure(state=tk.DISABLED)
+            self.btn_dl_tu.configure(state=dl_state)
+            self.btn_dl_dlc.configure(state=dl_state)
             self.btn_aurora_preview.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
@@ -6998,53 +7120,99 @@ class App:
         self.btn_aurora_preview.configure(state=tk.NORMAL)
         self.show_preview(g)
 
+    def download_games_filter(self):
+        """Jogos do modo atual: seleção múltipla, senão o selecionado, senão todos."""
+        multi = self.get_selected_games()
+        if len(multi) > 1:
+            return multi
+        g = self.selected_game()
+        if g is not None:
+            return [g]
+        return list(self.games)
+
     def download_latest_tu(self):
         if self.busy:
             return
-        g = self.selected_game()
-        if g is None:
-            messagebox.showwarning(tr("warn"), tr("pick_game"))
-            return
-        self.thread_download_kind(self.aurora_path.get().strip().strip('"'), g, "title_update")
-
-    def download_all_dlcs(self):
-        """Baixa TODAS as DLCs disponíveis no Internet Archive (item dedicado
-        msx360gcdlc) para o jogo selecionado, uma a uma, em background."""
-        if self.busy:
-            return
-        g = self.selected_game()
-        if g is None:
+        games = self.download_games_filter()
+        if not games:
             messagebox.showwarning(tr("warn"), tr("pick_game"))
             return
         path = self.aurora_path.get().strip().strip('"')
-        tid = g["tid"]
-        title = self.game_title(g)
+        if len(games) == 1:
+            self.thread_download_kind(path, games[0], "title_update")
+            return
         self.cancel_event.clear()
         self.set_busy(True)
-        self.log(tr("logs_dlc_all_start", title))
+        self.log(tr("logs_tu_all_start", len(games)))
+
+        def _run():
+            ok = 0
+            try:
+                for i, gi in enumerate(games, 1):
+                    if self.cancel_event.is_set():
+                        self.log(tr("canceled"))
+                        break
+                    self.log(tr("logs_tu_all_progress", i, len(games), self.game_title(gi)))
+                    try:
+                        if self.download_kind(path, gi, "title_update"):
+                            ok += 1
+                    except Exception as exc:
+                        self.log(tr("logs_kind_err", exc))
+            except Exception as exc:
+                self.log(tr("err_generic", exc))
+            finally:
+                self.log(tr("logs_tu_all_done", ok, len(games)))
+                self.queue.put("__refresh_tree__")
+                self.queue.put("__assets_refresh__")
+                self.queue.put("__done__")
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def download_all_dlcs(self):
+        """Baixa TODAS as DLCs disponíveis no Internet Archive (item dedicado
+        msx360gcdlc) para o(s) jogo(s): selecionado ou todos, uma a uma,
+        em background."""
+        if self.busy:
+            return
+        games = self.download_games_filter()
+        if not games:
+            messagebox.showwarning(tr("warn"), tr("pick_game"))
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        self.cancel_event.clear()
+        self.set_busy(True)
+        self.log(tr("logs_dlc_all_start", self.game_title(games[0]) if len(games) == 1 else tr("logs_dlc_games_title", len(games))))
 
         def _run():
             ok = 0
             total = 0
+            games_total = len(games)
             try:
-                if self.cancel_event.is_set():
-                    self.log(tr("canceled"))
-                    return
-                matches = ia_dlc_matches(title, tid, limit=200)
-                if not matches:
-                    self.log(tr("ia_no_results", title))
-                    return
-                total = len(matches)
-                for i, m in enumerate(matches, 1):
+                for gi in games:
                     if self.cancel_event.is_set():
                         self.log(tr("canceled"))
                         break
-                    self.log(tr("logs_dlc_all_progress", i, total, m["name"]))
-                    try:
-                        if self.download_kind(path, g, "dlc", ia_id=IA_DLC_ITEM, filename=m["name"]):
-                            ok += 1
-                    except Exception as exc:
-                        self.log(tr("logs_kind_err", exc))
+                    tid = gi["tid"]
+                    title = self.game_title(gi)
+                    self.log(tr("logs_dlc_games_progress", games_total, title))
+                    if self.cancel_event.is_set():
+                        self.log(tr("canceled"))
+                        break
+                    matches = ia_dlc_matches(title, tid, limit=200)
+                    if not matches:
+                        self.log(tr("ia_no_results", title))
+                        continue
+                    for i, m in enumerate(matches, 1):
+                        if self.cancel_event.is_set():
+                            self.log(tr("canceled"))
+                            break
+                        total += 1
+                        self.log(tr("logs_dlc_all_progress", i, len(matches), m["name"]))
+                        try:
+                            if self.download_kind(path, gi, "dlc", ia_id=IA_DLC_ITEM, filename=m["name"]):
+                                ok += 1
+                        except Exception as exc:
+                            self.log(tr("logs_kind_err", exc))
             except Exception as exc:
                 self.log(tr("err_generic", exc))
             finally:
@@ -8072,52 +8240,14 @@ class App:
             sanitized_fname = _sanitize_remote_filename(os.path.basename(filename)) or os.path.basename(filename)
             low = filename.lower()
             if low.endswith((".zip", ".rar", ".7z")):
-                # Extrai em UMA raiz apenas (evita duplicar entre drive/Aurora/caminho)
-                root_used = None
-                for base_root in content_roots(path):
-                    if extract_archive_to(tmp, base_root):
-                        root_used = base_root
-                        break
-                if root_used:
-                    # Verifica se a estrutura Content\\0000000000000000\\<TID> foi gerada
-                    # e se o conteúdo real (subpasta 00000002 p/ DLC, 000B0000 p/ TU)
-                    # contém ao menos um arquivo — evita marcar como instalado quando
-                    # o arquivo extraiu em pasta incorreta ou direto em <TID>.
-                    expected = os.path.join(root_used, "Content", "0000000000000000", tid)
-                    real_sub = os.path.join(expected, sub)
-                    real_files = False
-                    try:
-                        real_files = bool(os.listdir(real_sub))
-                    except OSError:
-                        real_files = False
-                    if os.path.isdir(real_sub) and real_files:
-                        installed = True
-                        self.log(tr("ia_download_success", tr("kind_" + kind), filename) + " -> " + expected)
-                    elif os.path.isdir(expected):
-                        # Pasta <TID> existe mas sem o subdiretório esperado: arquivo extraiu
-                        # em local errado — copia o arquivo p/ extração manual.
-                        manual = True
-                        for dest_dir in content_dirs:
-                            try:
-                                os.makedirs(dest_dir, exist_ok=True)
-                                shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
-                                self.log(tr("dlc_manual_extract", dest_dir))
-                                break
-                            except OSError:
-                                continue
-                    else:
-                        # Layout inesperado: deixa o arquivo p/ extração manual (não marca instalado)
-                        manual = True
-                        for dest_dir in content_dirs:
-                            try:
-                                os.makedirs(dest_dir, exist_ok=True)
-                                shutil.copy2(tmp, os.path.join(dest_dir, sanitized_fname))
-                                self.log(tr("dlc_manual_extract", dest_dir))
-                                break
-                            except OSError:
-                                continue
+                # Extrai em diretório temporário e localiza o conteúdo real
+                # (subpasta 00000002 p/ DLC, 000B0000 p/ TU) mesmo quando o TID
+                # interno do archive difere do jogo ou o layout não é o esperado.
+                installed, dest_used = extract_archive_content(tmp, sub, content_dirs)
+                if installed:
+                    self.log(tr("ia_download_success", tr("kind_" + kind), filename) + " -> " + os.path.dirname(dest_used))
                 else:
-                    # Extração falhou em todas as raízes (ou sem 7-Zip): guarda p/ extração manual
+                    # Extração/layout não localizado: guarda o arquivo p/ extração manual
                     manual = True
                     for dest_dir in content_dirs:
                         try:
@@ -8746,33 +8876,9 @@ class App:
             installed = False
             manual = False
             if low.endswith((".zip", ".rar", ".7z")):
-                # Extrai em UMA raiz apenas (evita duplicar entre drive/Aurora/caminho)
-                root_used = None
-                for base_root in content_roots(path):
-                    if extract_archive_to(fname, base_root):
-                        root_used = base_root
-                        break
-                if root_used:
-                    expected = os.path.join(root_used, "Content", "0000000000000000", tid)
-                    real_sub = os.path.join(expected, sub)
-                    real_files = False
-                    try:
-                        real_files = bool(os.listdir(real_sub))
-                    except OSError:
-                        real_files = False
-                    if os.path.isdir(real_sub) and real_files:
-                        installed = True
-                        self.log(tr("ia_download_success", tr("kind_" + kind), basename) + " -> " + expected)
-                    else:
-                        manual = True
-                        for dest_dir in dests:
-                            try:
-                                os.makedirs(dest_dir, exist_ok=True)
-                                shutil.copy2(fname, os.path.join(dest_dir, basename))
-                                self.log(tr("dlc_manual_extract" if kind == "dlc" else "tu_manual_extract", dest_dir))
-                                break
-                            except OSError:
-                                continue
+                installed, dest_used = extract_archive_content(fname, sub, dests)
+                if installed:
+                    self.log(tr("ia_download_success", tr("kind_" + kind), basename) + " -> " + os.path.dirname(dest_used))
                 else:
                     manual = True
                     for dest_dir in dests:
