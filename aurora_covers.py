@@ -70,14 +70,15 @@ GAME_ART_RAW = "https://raw.githubusercontent.com/Element18592/360-Game-Art/main
 # game_covers remoto (este repo): capas em game_covers/<Nome>_<TID>/cover.png ou game_covers/<TID>/cover.png
 GAME_COVERS_REMOTE = "https://raw.githubusercontent.com/Atreus171/Aurora-Asset-Manager/main/game_covers/"
 # Pasta de assets locais (game_covers).
-# - Rodando por código (python aurora_covers.py): usa a pasta do repo.
-# - Rodando compilado (.exe): usa pasta "game_covers" ao lado do executável.
+# Padrão: %USERPROFILE%\Documents\Aurora Asset Manager\game_covers (mesma base
+# do config). Capas exportadas pelo app vão para lá.
 def _get_game_covers_dir():
-    if getattr(sys, "frozen", False):  # PyInstaller
-        base = os.path.dirname(sys.executable)
-    else:
-        base = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base, "game_covers")
+    docs = os.path.join(os.path.expanduser("~"), "Documents", "Aurora Asset Manager", "game_covers")
+    try:
+        os.makedirs(docs, exist_ok=True)
+    except OSError:
+        pass
+    return docs
 
 GAME_COVERS_DIR = _get_game_covers_dir()
 USER_AGENT = {"User-Agent": "Mozilla/5.0 (aurora-covers-x360db)"}
@@ -298,6 +299,10 @@ TEXT = {
         "m_dl_tu": "Baixar TU (atualização)...",
         "m_dl_dlc": "Baixar DLC...",
         "btn_dl_tu": "Baixar TU",
+        "btn_dl_dlc": "Baixar DLC",
+        "logs_dlc_all_start": "Buscando todas as DLCs de %s...",
+        "logs_dlc_all_progress": "Baixando DLC %d de %d: %s...",
+        "logs_dlc_all_done": "DLCs processadas: %d de %d baixadas/instaladas.",
         "logs_unity_tu_search": "Buscando TU no XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versão %s de %s (ID %s). Baixando...",
         "logs_unity_tu_none": "XboxUnity não tem TU para %s.",
@@ -683,6 +688,10 @@ TEXT = {
         "m_dl_tu": "Download TU (title update)...",
         "m_dl_dlc": "Download DLC...",
         "btn_dl_tu": "Download TU",
+        "btn_dl_dlc": "Download DLC",
+        "logs_dlc_all_start": "Looking for all DLCs of %s...",
+        "logs_dlc_all_progress": "Downloading DLC %d of %d: %s...",
+        "logs_dlc_all_done": "DLCs processed: %d of %d downloaded/installed.",
         "logs_unity_tu_search": "Looking for TU on XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU version %s of %s (ID %s). Downloading...",
         "logs_unity_tu_none": "XboxUnity has no TU for %s.",
@@ -1074,6 +1083,10 @@ TEXT = {
         "m_dl_tu": "Descargar TU (actualización)...",
         "m_dl_dlc": "Descargar DLC...",
         "btn_dl_tu": "Descargar TU",
+        "btn_dl_dlc": "Descargar DLC",
+        "logs_dlc_all_start": "Buscando todos los DLC de %s...",
+        "logs_dlc_all_progress": "Descargando DLC %d de %d: %s...",
+        "logs_dlc_all_done": "DLC procesados: %d de %d descargados/instalados.",
         "logs_unity_tu_search": "Buscando TU en XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU versión %s de %s (ID %s). Descargando...",
         "logs_unity_tu_none": "XboxUnity no tiene TU para %s.",
@@ -1465,6 +1478,10 @@ TEXT = {
         "m_dl_tu": "Télécharger TU (mise à jour)...",
         "m_dl_dlc": "Télécharger DLC...",
         "btn_dl_tu": "Téléch. TU",
+        "btn_dl_dlc": "Téléch. DLC",
+        "logs_dlc_all_start": "Recherche de tous les DLC de %s...",
+        "logs_dlc_all_progress": "Téléchargement DLC %d sur %d : %s...",
+        "logs_dlc_all_done": "DLC traités : %d sur %d téléchargés/installés.",
         "logs_unity_tu_search": "Recherche TU sur XboxUnity : %s (%s)...",
         "logs_unity_tu_found": "XboxUnity : TU version %s de %s (ID %s). Téléchargement...",
         "logs_unity_tu_none": "XboxUnity n'a pas de TU pour %s.",
@@ -1851,6 +1868,10 @@ TEXT = {
         "m_dl_tu": "TU（タイトルアップデート）をダウンロード...",
         "m_dl_dlc": "DLC をダウンロード...",
         "btn_dl_tu": "TU 取得",
+        "btn_dl_dlc": "DLC 取得",
+        "logs_dlc_all_start": "%s の全DLCを検索中...",
+        "logs_dlc_all_progress": "DLC %d/%d をダウンロード中: %s...",
+        "logs_dlc_all_done": "DLC処理完了: %d/%d がダウンロード/インストールされました。",
         "logs_unity_tu_search": "XboxUnityでTUを検索中: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: %s のバージョン%sのTU (ID %s)。ダウンロード中...",
         "logs_unity_tu_none": "XboxUnityに%sのTUがありません。",
@@ -2237,6 +2258,10 @@ TEXT = {
         "m_dl_tu": "Скачать TU (обновление)...",
         "m_dl_dlc": "Скачать DLC...",
         "btn_dl_tu": "Скачать TU",
+        "btn_dl_dlc": "Скачать DLC",
+        "logs_dlc_all_start": "Поиск всех DLC игры %s...",
+        "logs_dlc_all_progress": "Загрузка DLC %d из %d: %s...",
+        "logs_dlc_all_done": "DLC обработаны: %d из %d загружено/установлено.",
         "logs_unity_tu_search": "Поиск TU на XboxUnity: %s (%s)...",
         "logs_unity_tu_found": "XboxUnity: TU версии %s игры %s (ID %s). Загрузка...",
         "logs_unity_tu_none": "На XboxUnity нет TU для %s.",
@@ -2647,8 +2672,8 @@ def fetch_bytes(url, timeout=40, attempts=2):
     return None
 
 
-def download_json(url, timeout=40):
-    data = fetch_bytes(url, timeout=timeout)
+def download_json(url, timeout=40, attempts=2):
+    data = fetch_bytes(url, timeout=timeout, attempts=attempts)
     if data is None:
         return None
     try:
@@ -2707,10 +2732,21 @@ def get_internet_archive_files(identifier):
 
 
 def get_ia_file_entries(identifier):
-    """Lista de arquivos de um item do Internet Archive com {name, size}."""
+    """Lista de arquivos de um item do Internet Archive com {name, size}.
+    Resultado é cacheado em memória por 10 min (o item dedicado msx360gcdlc
+    tem ~874 arquivos e baixar o metadata a cada abertura atrasa o diálogo)."""
+    now = time.time()
+    with _IA_CACHE_LOCK:
+        cached = _IA_CACHE.get(identifier)
+        if cached and now - cached[0] < 600:
+            return cached[1]
     url = f"https://archive.org/metadata/{identifier}"
     data = download_json(url)
     if not data:
+        with _IA_CACHE_LOCK:
+            cached = _IA_CACHE.get(identifier)
+            if cached:
+                return cached[1]
         return []
     out = []
     for f in data.get("files") or []:
@@ -2723,7 +2759,13 @@ def get_ia_file_entries(identifier):
         except (TypeError, ValueError):
             size = 0
         out.append({"name": name, "size": size})
+    with _IA_CACHE_LOCK:
+        _IA_CACHE[identifier] = (now, out)
     return out
+
+
+_IA_CACHE = {}
+_IA_CACHE_LOCK = threading.Lock()
 
 
 def ia_dlc_matches(game_title, tid, limit=20):
@@ -2882,34 +2924,48 @@ def download_internet_archive_file(identifier, filename, dest_path, cancel_event
 
 def xboxunity_title_updates(tid):
     """Lista Title Updates disponíveis no XboxUnity para um TitleID.
-    Retorna lista de dicts com tuid, media_id, version, name, size, date."""
-    data = download_json(XBOXUNITY_TU_INFO % tid.upper(), timeout=20)
+    Retorna lista de dicts com tuid, media_id, version, name, size, date.
+    Resultado é cacheado por 5 min (evita re-consulta lenta ao reabrir o diálogo)."""
+    tid = (tid or "").upper()
+    now = time.time()
+    with _XBOXUNITY_CACHE_LOCK:
+        cached = _XBOXUNITY_CACHE.get(tid)
+        if cached and now - cached[0] < 300:
+            return cached[1]
+    data = download_json(XBOXUNITY_TU_INFO % tid, timeout=15, attempts=1)
     if not isinstance(data, dict):
-        return []
-    medias = data.get("MediaIDS") or data.get("MediaIds") or []
-    items = []
-    for m in medias:
-        if not isinstance(m, dict):
-            continue
-        media = (m.get("MediaID") or "").strip().upper()
-        for u in m.get("Updates") or []:
-            if not isinstance(u, dict):
+        items = []
+    else:
+        medias = data.get("MediaIDS") or data.get("MediaIds") or []
+        items = []
+        for m in medias:
+            if not isinstance(m, dict):
                 continue
-            try:
-                tuid = int(u.get("TitleUpdateID") or 0)
-            except (TypeError, ValueError):
-                continue
-            if not tuid:
-                continue
-            items.append({
-                "tuid": str(tuid),
-                "media_id": media,
-                "version": (u.get("Version") or "0").strip(),
-                "name": (u.get("Name") or "").strip(),
-                "size": u.get("Size"),
-                "date": (u.get("UploadDate") or "").strip(),
-            })
+            media = (m.get("MediaID") or "").strip().upper()
+            for u in m.get("Updates") or []:
+                if not isinstance(u, dict):
+                    continue
+                try:
+                    tuid = int(u.get("TitleUpdateID") or 0)
+                except (TypeError, ValueError):
+                    continue
+                if not tuid:
+                    continue
+                items.append({
+                    "tuid": str(tuid),
+                    "media_id": media,
+                    "version": (u.get("Version") or "0").strip(),
+                    "name": (u.get("Name") or "").strip(),
+                    "size": u.get("Size"),
+                    "date": (u.get("UploadDate") or "").strip(),
+                })
+    with _XBOXUNITY_CACHE_LOCK:
+        _XBOXUNITY_CACHE[tid] = (now, items)
     return items
+
+
+_XBOXUNITY_CACHE = {}
+_XBOXUNITY_CACHE_LOCK = threading.Lock()
 
 
 def _version_parts(v):
@@ -5152,6 +5208,10 @@ class App:
             btn_row, text=tr("btn_dl_tu"), command=self.download_latest_tu, state=tk.DISABLED
         )
         self.btn_dl_tu.pack(side=tk.LEFT, padx=(8, 0))
+        self.btn_dl_dlc = ttk.Button(
+            btn_row, text=tr("btn_dl_dlc"), command=self.download_all_dlcs, state=tk.DISABLED
+        )
+        self.btn_dl_dlc.pack(side=tk.LEFT, padx=(8, 0))
         self.btn_custom = ttk.Button(
             btn_row, text=tr("custom_cover"), command=self.install_custom, state=tk.DISABLED
         )
@@ -5548,6 +5608,7 @@ class App:
         self.btn_scan.configure(state=state)
         self.btn_dl.configure(state=state if self.games else tk.DISABLED)
         self.btn_dl_tu.configure(state=state if self.games else tk.DISABLED)
+        self.btn_dl_dlc.configure(state=state if self.games else tk.DISABLED)
         self.btn_cancel.configure(state=tk.NORMAL if busy else tk.DISABLED)
 
     def cancel_worker(self):
@@ -6925,6 +6986,7 @@ class App:
             self.btn_search.configure(state=tk.DISABLED)
             self.btn_debug_db.configure(state=tk.DISABLED)
             self.btn_dl_tu.configure(state=tk.DISABLED)
+            self.btn_dl_dlc.configure(state=tk.DISABLED)
             self.btn_aurora_preview.configure(state=tk.DISABLED)
             self.show_no_preview()
             return
@@ -6932,6 +6994,7 @@ class App:
         self.btn_search.configure(state=tk.NORMAL)
         self.btn_debug_db.configure(state=tk.NORMAL)
         self.btn_dl_tu.configure(state=tk.NORMAL)
+        self.btn_dl_dlc.configure(state=tk.NORMAL)
         self.btn_aurora_preview.configure(state=tk.NORMAL)
         self.show_preview(g)
 
@@ -6943,6 +7006,54 @@ class App:
             messagebox.showwarning(tr("warn"), tr("pick_game"))
             return
         self.thread_download_kind(self.aurora_path.get().strip().strip('"'), g, "title_update")
+
+    def download_all_dlcs(self):
+        """Baixa TODAS as DLCs disponíveis no Internet Archive (item dedicado
+        msx360gcdlc) para o jogo selecionado, uma a uma, em background."""
+        if self.busy:
+            return
+        g = self.selected_game()
+        if g is None:
+            messagebox.showwarning(tr("warn"), tr("pick_game"))
+            return
+        path = self.aurora_path.get().strip().strip('"')
+        tid = g["tid"]
+        title = self.game_title(g)
+        self.cancel_event.clear()
+        self.set_busy(True)
+        self.log(tr("logs_dlc_all_start", title))
+
+        def _run():
+            ok = 0
+            total = 0
+            try:
+                if self.cancel_event.is_set():
+                    self.log(tr("canceled"))
+                    return
+                matches = ia_dlc_matches(title, tid, limit=200)
+                if not matches:
+                    self.log(tr("ia_no_results", title))
+                    return
+                total = len(matches)
+                for i, m in enumerate(matches, 1):
+                    if self.cancel_event.is_set():
+                        self.log(tr("canceled"))
+                        break
+                    self.log(tr("logs_dlc_all_progress", i, total, m["name"]))
+                    try:
+                        if self.download_kind(path, g, "dlc", ia_id=IA_DLC_ITEM, filename=m["name"]):
+                            ok += 1
+                    except Exception as exc:
+                        self.log(tr("logs_kind_err", exc))
+            except Exception as exc:
+                self.log(tr("err_generic", exc))
+            finally:
+                self.log(tr("logs_dlc_all_done", ok, total))
+                self.queue.put("__refresh_tree__")
+                self.queue.put("__assets_refresh__")
+                self.queue.put("__done__")
+
+        threading.Thread(target=_run, daemon=True).start()
 
     def load_cover(self, g):
         key = g["tid"] + "|" + (g["folder"] or "import")
