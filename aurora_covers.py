@@ -107,7 +107,7 @@ UNITY_WAIT = "#9a9a9a"
 GITHUB_REPO = "Atreus171/Aurora-Asset-Manager"
 GITHUB_API_RELEASES = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_API_RELEASES_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
-CURRENT_VERSION = "1.5.5.6"
+CURRENT_VERSION = "1.5.5.7"
 UPDATE_CHECK_INTERVAL = 24 * 3600  # 24 hours
 
 ASSET_TYPE_ICON = 0
@@ -4348,24 +4348,29 @@ def scan_aurora_db(root, logger=None):
                         folder = _cand
                         break
             # Homebrews (TitleId zerado/vazio) recebem TID pela pasta ou TID sintético
+            tid_alt = []
             if not tid or tid == "00000000":
                 m = re.match(r"^([0-9A-F]{8})[_\s]?", os.path.basename(folder)) if folder else None
                 if m:
                     tid = m.group(1)
-                elif folder:
-                    tid = "%08X" % (int(hashlib.sha1(rel.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
-                elif title:
-                    tid = "%08X" % (int(hashlib.sha1(title.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+                elif title or folder:
+                    tids = homebrew_tid_candidates(rel or os.path.basename(folder or ""),
+                                                   os.path.basename(folder) if folder else None)
+                    if not tids:
+                        tids = homebrew_tid_candidates(title, None)
+                    tid = tids[0]
+                    tid_alt = [t for t in tids if t != tid]
                 else:
                     continue
             if not title and folder:
                 title = os.path.basename(folder)
             if not title:
                 title = tid
-            has_cover = bool(folder and find_cover_file(folder, tid))
+            has_cover = bool(folder and any(find_cover_file(folder, t) for t in ([tid] + tid_alt)))
             games.append({
                 "folder": folder,
                 "tid": tid,
+                "tid_alt": tid_alt,
                 "folder_name": os.path.basename(folder) if folder else tid,
                 "dname": title,
                 "has_cover": has_cover,
@@ -4775,7 +4780,9 @@ def scan_homebrew_xex(root, known_folders=None):
                         break
             m = candidate_tid
             src = rel if rel else os.path.basename(dirpath)
-            tid = m if m else "%08X" % (int(hashlib.sha1(src.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+            tids = homebrew_tid_candidates(src, os.path.basename(dirpath))
+            tid = m if m else tids[0]
+            tid_alt = [] if m else [t for t in tids if t != tid]
             # Nome legível: primeiro segmento que não seja código de conteúdo nem TID
             def _bad_seg(s):
                 u = (s or "").upper()
@@ -4786,10 +4793,11 @@ def scan_homebrew_xex(root, known_folders=None):
                     (s for s in reversed(rel_parts) if not _bad_seg(s)),
                     tid,
                 )
-            has_cover = bool(find_cover_file(dirpath, tid))
+            has_cover = bool(any(find_cover_file(dirpath, t) for t in ([tid] + tid_alt)))
             out.append({
                 "folder": folder,
                 "tid": tid,
+                "tid_alt": tid_alt,
                 "folder_name": os.path.basename(folder),
                 "dname": name,
                 "has_cover": has_cover,
@@ -4849,9 +4857,20 @@ def scan_aurora(root):
                 dbg["folder_name"] = fg["folder_name"]
                 dbg["has_cover"] = bool(dbg.get("has_cover")) or bool(fg["has_cover"])
 
+    # Varredura física de homebrews (identificação por executável, como o Aurora/Unity)
+    homebrew = scan_homebrew_xex(
+        root,
+        known_folders=[g.get("folder") for g in games if g.get("folder")],
+    )
+    if homebrew:
+        log(f"  [SCAN] Homebrews encontrados por .xex: {len(homebrew)}")
+        games.extend(homebrew)
+
     # Também escaneia pasta Import para homebrews sem GameData
     # (checa User\Import na raiz do drive E dentro de \Aurora, onde versões
-    # antigas do app gravavam capas baixadas)
+    # antigas do app gravavam capas baixadas). Roda depois do scan de .xex para
+    # que pastas de Import de TIDs alternativos (homebrews) sejam absorvidas
+    # pelo jogo correspondente e não virem entradas fantasma.
     for import_dir in import_dirs_existing(root):
         for tid_dir in os.listdir(import_dir):
             if not re.match(r"^[0-9A-Fa-f]{8}$", tid_dir):
@@ -4875,7 +4894,7 @@ def scan_aurora(root):
                             break
             # Se o jogo já veio do DB/pastas (ex: homebrew via .xex), aproveita o
             # título e só enriquece a capa de Import que o scan anterior não achou.
-            existing = next((g for g in games if g["tid"] == tid), None)
+            existing = next((g for g in games if g["tid"] == tid or tid in (g.get("tid_alt") or [])), None)
             if existing is None:
                 # Reconcile: versões antigas do app gravavam capas de homebrew sob
                 # um TID sintético = SHA1 do NOME do jogo (ex: Sonic Mania = FA5F679D).
@@ -4901,15 +4920,6 @@ def scan_aurora(root):
                 "has_cover": has_cover,
                 "import_cover": import_path if has_cover else None,
             })
-
-    # Varredura física de homebrews (identificação por executável, como o Aurora/Unity)
-    homebrew = scan_homebrew_xex(
-        root,
-        known_folders=[g.get("folder") for g in games if g.get("folder")],
-    )
-    if homebrew:
-        log(f"  [SCAN] Homebrews encontrados por .xex: {len(homebrew)}")
-        games.extend(homebrew)
 
     # Aplica nomes customizados aos jogos (rename do usuário tem prioridade
     # sobre o nome do DB/auto-detetado; se não aplicar, o nome volta ao antigo
@@ -5021,6 +5031,28 @@ def legacy_tid_for(name):
     if not name:
         return None
     return "%08X" % (int(hashlib.sha1(name.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+
+
+def homebrew_tid_candidates(rel, name=None):
+    """Candidatos de TID sintético para capas de homebrew.
+
+    O Aurora gera o TID de um homebrew a partir dos 4 primeiros bytes do SHA1 do
+    caminho relativo do jogo, mas o separador/caso exatos usados não são
+    documentados (pode ser \\, / ou caminho normalizado). Como o gestor não pode
+    confirmar a fórmula sem o fonte, gera TODAS as variantes: a capa é gravada em
+    cada TID candidato, então aparece no Aurora seja qual for a convenção dele.
+    Inclui também o TID de versões antigas do app (SHA1 do NOME)."""
+    variants = [rel, rel.replace("\\", "/"), rel.replace("\\", "/").lower()]
+    if name:
+        variants.append(name)
+    out = []
+    for s in variants:
+        if not s:
+            continue
+        t = "%08X" % (int(hashlib.sha1(s.encode("utf-8", "replace")).hexdigest()[:8], 16) & 0xFFFFFFFF)
+        if t not in out:
+            out.append(t)
+    return out
 
 
 def homebrew_search_queries(g):
@@ -6534,34 +6566,38 @@ class App:
             return
         removed = False
         folder = g.get("folder")
+        tids = [tid] + list(g.get("tid_alt") or [])
+        tids = list(dict.fromkeys(tids))
         if folder:
-            for name in ("GC%s.asset" % tid, "boxart.png", "boxart.jpg", "boxart.jpeg",
-                         "cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
-                p = os.path.join(folder, name)
-                if os.path.isfile(p):
-                    try:
-                        os.remove(p)
-                        removed = True
-                    except OSError:
-                        pass
-        # Remove a capa da Import (todas as bases: raiz do drive e pasta do Aurora)
-        path = self.aurora_path.get().strip().strip('"')
-        for base in import_bases(path):
-            d = os.path.join(base, tid)
-            if os.path.isdir(d):
-                for name in ("cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
-                    p = os.path.join(d, name)
+            for t in tids:
+                for name in ("GC%s.asset" % t, "boxart.png", "boxart.jpg", "boxart.jpeg",
+                             "cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
+                    p = os.path.join(folder, name)
                     if os.path.isfile(p):
                         try:
                             os.remove(p)
                             removed = True
                         except OSError:
                             pass
-                try:
-                    if not os.listdir(d):
-                        os.rmdir(d)
-                except OSError:
-                    pass
+        # Remove a capa da Import (todas as bases: raiz do drive e pasta do Aurora)
+        path = self.aurora_path.get().strip().strip('"')
+        for base in import_bases(path):
+            for t in tids:
+                d = os.path.join(base, t)
+                if os.path.isdir(d):
+                    for name in ("cover.png", "cover.jpg", "cover.jpeg", "cover.dds"):
+                        p = os.path.join(d, name)
+                        if os.path.isfile(p):
+                            try:
+                                os.remove(p)
+                                removed = True
+                            except OSError:
+                                pass
+                    try:
+                        if not os.listdir(d):
+                            os.rmdir(d)
+                    except OSError:
+                        pass
         # Limpa o marcador 'instalado' para boxart
         try:
             with _IO_LOCK:
@@ -8490,9 +8526,7 @@ class App:
             if not blob:
                 return
             img = box_render(Image.open(io.BytesIO(blob)), self.cover_format)
-            if g["folder"]:
-                self.write_asset(g["folder"], tid, "GC", img, ASSET_TYPE_BOXART)
-            self.write_import(path, tid, "cover.png", img)
+            self._install_boxart_tids(path, g, img)
             mark_installed(tid, "boxart")
             key = tid + "|" + (g["folder"] or "import")
             with self._preview_cache_lock:
@@ -8521,10 +8555,10 @@ class App:
         self.write_import(path, tid, import_name, new_img)
         return True
 
-    def write_asset(self, folder, tid, prefix, img, asset_type):
-        self.write_multi_asset(folder, tid, prefix, [(asset_type, img)])
+    def write_asset(self, folder, tid, prefix, img, asset_type, log=True):
+        self.write_multi_asset(folder, tid, prefix, [(asset_type, img)], log=log)
 
-    def write_multi_asset(self, folder, tid, prefix, textures):
+    def write_multi_asset(self, folder, tid, prefix, textures, log=True):
         target = os.path.join(folder, "%s%s.asset" % (prefix, tid))
         if os.path.exists(target) and self.opt_backup.get():
             backup = target + ".bak"
@@ -8536,9 +8570,10 @@ class App:
         blob = make_multi_asset_bytes(textures)
         with open(target, "wb") as f:
             f.write(blob)
-        self.log(tr("logs_saved", display_path(target)))
+        if log:
+            self.log(tr("logs_saved", display_path(target)))
 
-    def write_import(self, root, tid, name, img):
+    def write_import(self, root, tid, name, img, log=True):
         # Grava na raiz do drive (\\User\\Import, onde o Aurora lê) e também na
         # pasta do Aurora (onde versões antigas do app gravavam), para a capa
         # ficar visível em qualquer configuração de caminho.
@@ -8558,7 +8593,8 @@ class App:
                 img.save(target, "PNG")
             except OSError:
                 continue
-            self.log(tr("logs_alt_import", display_path(target)))
+            if log:
+                self.log(tr("logs_alt_import", display_path(target)))
 
     def install_custom(self, g=None):
         if self.busy:
@@ -8590,10 +8626,29 @@ class App:
         self.show_preview(g)
         self.update_tree_row(g)
 
+    def _install_boxart_tids(self, path, g, img):
+        """Instala a capa para TODOS os TIDs candidatos. Homebrews com TID
+        sintético têm hash de caminho incerto (o Aurora pode usar \\, / ou
+        caminho normalizado); gravamos em cada variante + um cover.png/boxart.png
+        solto na pasta do jogo, que o Aurora também reconhece."""
+        tids = [g["tid"]] + list(g.get("tid_alt") or [])
+        tids = list(dict.fromkeys(tids))
+        folder = g.get("folder")
+        first = True
+        for tid in tids:
+            if folder:
+                self.write_asset(folder, tid, "GC", img, ASSET_TYPE_BOXART, log=first)
+            self.write_import(path, tid, "cover.png", img, log=first)
+            first = False
+        if folder and g.get("tid_alt"):
+            for name in ("cover.png", "boxart.png"):
+                try:
+                    img.save(os.path.join(folder, name), "PNG")
+                except OSError:
+                    pass
+
     def install_cover_img(self, path, g, img):
-        if g["folder"]:
-            self.write_asset(g["folder"], g["tid"], "GC", img, ASSET_TYPE_BOXART)
-        self.write_import(path, g["tid"], "cover.png", img)
+        self._install_boxart_tids(path, g, img)
         mark_installed(g["tid"], "boxart")
         g["has_cover"] = True
         with self._preview_cache_lock:
